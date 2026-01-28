@@ -114,8 +114,9 @@ public class PlayerController : MonoBehaviour
     {
         if (dir == 0)
             return;
-        if(dir != transform.localScale.x)
-            transform.localScale = new Vector3(dir, transform.localScale.y, transform.localScale.z);
+
+        if(dir == transform.localScale.x)
+            transform.localScale = new Vector3(dir * -1, transform.localScale.y, transform.localScale.z);
     }
 
     // 해당 방향으로 화살을 발사하는 함수
