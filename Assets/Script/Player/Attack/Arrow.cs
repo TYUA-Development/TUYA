@@ -1,11 +1,14 @@
 using System.Collections;
 using System.Collections.Generic;
+using UnityEditor.ShaderGraph.Internal;
 using UnityEngine;
 
 public class Arrow : MonoBehaviour
 {
     public float speed = 10f;
     public float lifeTime = 5f;
+    public float flyTime = 2.0f;
+    public float gravityValue = 3.0f;
 
     private Rigidbody2D rb;
 
@@ -16,6 +19,8 @@ public class Arrow : MonoBehaviour
 
     private void Start()
     {
+        gravityValue = rb.gravityScale;
+        rb.gravityScale = 0.0f;
     }
 
     // 외부(플레이어)에서 방향을 넘겨서 쏘는 함수
@@ -27,6 +32,14 @@ public class Arrow : MonoBehaviour
         transform.right = dir;            // 화살 앞부분이 방향 보게 회전
 
         Destroy(gameObject, lifeTime);    // 일정 시간 뒤 자동 삭제
+    }
+
+    private void Update()
+    {
+        if(flyTime > 0)
+            flyTime -= Time.deltaTime;
+        else
+            rb.gravityScale = gravityValue;
     }
 
     void FixedUpdate()

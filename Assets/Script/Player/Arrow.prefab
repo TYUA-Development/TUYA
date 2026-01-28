@@ -101,6 +101,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   speed: 30
   lifeTime: 10
+  flyTime: 0.5
+  gravityValue: 3
 --- !u!50 &3129858048820927434
 Rigidbody2D:
   serializedVersion: 4
