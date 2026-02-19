@@ -129,15 +129,30 @@ public class PlayerJumpState : PlayerState
     private float moveSpeed;
     private float jumpPower;
     private bool doubleJump;
+    private bool isFalling;
+    private bool isLanding;
+
+    private float checkGroundDistance = 1.0f;
+
+    private Collider2D col;
+    private LayerMask groundLayer;
+
     public PlayerJumpState(PlayerController controller) : base(controller)
     {
         moveSpeed = controller.moveSpeed;
         jumpPower = controller.jumpPower;
         doubleJump = true;
+        isFalling = false;
+
+        groundLayer = LayerMask.GetMask("Floor");
+        col = controller.GetComponent<Collider2D>();
     }
 
     public override void Enter()
     {
+        isFalling = false;
+        isLanding = false;
+
         Vector2 velocity = controller.Rigidbody2D.velocity;
         velocity.y = 0.0f;
         controller.Rigidbody2D.velocity = velocity;
@@ -148,6 +163,13 @@ public class PlayerJumpState : PlayerState
         Debug.Log("점프 활성화 " + jumpPower);
 
         controller.isGround = false;
+
+        if(controller.animator.GetBool("IsJump"))
+        {
+            controller.animator.CrossFadeInFixedTime("JumpStart", 0.5f);
+            return;
+        }
+
         controller.animator.SetBool("IsJump", true);
     }
 
@@ -176,6 +198,8 @@ public class PlayerJumpState : PlayerState
         {
             if(Mathf.Abs(InputData.moveAxis.x) > 0.01f)
                 controller.OnMove();
+            else if (isLanding)
+                return;
             else
                 controller.OnIdle();
         }
@@ -185,6 +209,27 @@ public class PlayerJumpState : PlayerState
 
     public override void PhysicsUpdate()
     {
+        if(isFalling)
+        {
+            Vector2 origin = new Vector2(col.bounds.center.x, col.bounds.min.y);
+
+            RaycastHit2D hit = Physics2D.Raycast(origin, Vector2.down, checkGroundDistance, groundLayer);
+
+            if(hit.collider != null && !isLanding)
+            {
+                isLanding = true;
+                controller.animator.SetTrigger("DetectFloor");
+            }
+        }
+        else
+        {
+            if(controller.Rigidbody2D.velocity.y < 0)
+            { 
+                isFalling = true;
+                controller.animator.Play("JumpDown");
+            }
+        }
+
         float moveDirect = InputData.moveAxis.x;
 
         controller.ChangeDirection(moveDirect);
@@ -192,6 +237,18 @@ public class PlayerJumpState : PlayerState
         Vector2 velocity = controller.Rigidbody2D.velocity;
         velocity.x = moveDirect * moveSpeed;
         controller.Rigidbody2D.velocity = velocity;
+
+        if(isLanding)
+        {
+            AnimatorStateInfo info = controller.animator.GetCurrentAnimatorStateInfo(0);
+            if(info.IsName("JumpEnd") && info.normalizedTime >= 1f)
+            {
+                if (Mathf.Abs(InputData.moveAxis.x) > 0.01f)
+                    controller.OnMove();
+                else
+                    controller.OnIdle();
+            }
+        }
     }
 }
 

@@ -8,6 +8,7 @@ public class PlayerController : MonoBehaviour
     // 플레이어의 입력을 저장
     public PlayerInputReader InputReader { get; private set; }
     public Rigidbody2D Rigidbody2D;
+    public SpriteRenderer charactorSprite;
 
     // 현재 플레이어가 땅에 닿아있는지
     public bool isGround;
@@ -39,6 +40,11 @@ public class PlayerController : MonoBehaviour
     private void Awake()
     {
         InputReader = GetComponent<PlayerInputReader>();
+        BoxCollider2D temp = GetComponent<BoxCollider2D>();
+        Vector2 origin = charactorSprite.sprite.bounds.size - new Vector3(9.0f, 1.0f, 0);
+        temp.size = origin;
+        temp.offset = charactorSprite.sprite.bounds.center;
+
         //Rigidbody2D = GetComponent<Rigidbody2D>();
         //animator = GetComponent<Animator>();
 
@@ -58,6 +64,9 @@ public class PlayerController : MonoBehaviour
 
         // 현재 상태를 Idle로 설정
         currentState = idleState;
+
+        Camera.main.transform.SetParent(transform);
+        Camera.main.transform.localPosition = new Vector3(0, 10.6f, -10);
     }
 
     // 매 프레임 로직을 체크해 상태 변환
@@ -124,7 +133,7 @@ public class PlayerController : MonoBehaviour
     {
         Vector3 handLength = new Vector3(direction.x * 1.5f, direction.y * 1.5f, 0);
         Arrow arrow = Instantiate(arrowObject, transform.position + handLength, Quaternion.identity).GetComponent<Arrow>();
-        arrow.Launch(direction);
+        arrow.Launch(direction, transform);
         attackTimer = attackCoolTime;
     }
 

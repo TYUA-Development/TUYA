@@ -12,6 +12,8 @@ public class Arrow : MonoBehaviour
 
     private Rigidbody2D rb;
 
+    private Transform shooter;
+
     void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
@@ -24,8 +26,10 @@ public class Arrow : MonoBehaviour
     }
 
     // 외부(플레이어)에서 방향을 넘겨서 쏘는 함수
-    public void Launch(Vector2 dir)
+    public void Launch(Vector2 dir, Transform shooter)
     {
+        this.shooter = shooter;
+
         dir = dir.normalized;
 
         rb.velocity = dir * speed;        // 초기 속도
@@ -49,10 +53,34 @@ public class Arrow : MonoBehaviour
             transform.right = rb.velocity;
     }
 
-    private void OnCollisionEnter2D(Collision2D col)
+    public void OnTriggerEnter2D(Collider2D other)
     {
+        if (shooter == other.transform)
+            return;
+
+        if(other.TryGetComponent<IArrowHit>(out IArrowHit target))
+        {
+            target.OnHit();
+
+            Vector2 hitPoint = other.ClosestPoint(transform.position);
+
+            Stick(other.transform, hitPoint);
+        }
+
         // 맞으면 멈추고, 데미지 주고, 파괴 등등
         // rb.isKinematic = true;  // 벽에 꽂히게 고정하고 싶으면 이런 것도 가능
-        Destroy(gameObject);
+    }
+
+    void Stick(Transform target, Vector2 hitPoint)
+    {
+        transform.position = hitPoint;
+
+        rb.velocity = Vector2.zero;
+        rb.angularVelocity = 0f;
+        rb.simulated = false;
+
+        transform.SetParent(target, true);
+
+        Vector3 p = target.lossyScale;
     }
 }
