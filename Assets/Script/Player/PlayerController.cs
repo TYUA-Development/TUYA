@@ -66,7 +66,7 @@ public class PlayerController : MonoBehaviour
         currentState = idleState;
 
         Camera.main.transform.SetParent(transform);
-        Camera.main.transform.localPosition = new Vector3(0, 10.6f, -10);
+        //Camera.main.transform.localPosition = new Vector3(0, 10.6f, -10);
     }
 
     // 매 프레임 로직을 체크해 상태 변환
