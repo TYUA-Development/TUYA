@@ -952,7 +952,7 @@ MonoBehaviour:
   charactorSprite: {fileID: 33371033}
   isGround: 0
   isDash: 0
-  moveSpeed: 5
+  moveSpeed: 9
   jumpPower: 40
   dashPower: 10
   attackCoolTime: 5

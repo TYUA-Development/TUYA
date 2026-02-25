@@ -196,9 +196,11 @@ public class PlayerJumpState : PlayerState
         // 땅에 닿았을 때 상태 변환
         if (controller.isGround && controller.Rigidbody2D.velocity.y <= 0.01f)
         {
-            if(Mathf.Abs(InputData.moveAxis.x) > 0.01f)
-                controller.OnMove();
-            else if (isLanding)
+            //if(Mathf.Abs(InputData.moveAxis.x) > 0.01f)
+            //    controller.OnMove();
+            //else 
+            
+            if (isLanding)
                 return;
             else
                 controller.OnIdle();
@@ -243,9 +245,9 @@ public class PlayerJumpState : PlayerState
             AnimatorStateInfo info = controller.animator.GetCurrentAnimatorStateInfo(0);
             if(info.IsName("JumpEnd") && info.normalizedTime >= 1f)
             {
-                if (Mathf.Abs(InputData.moveAxis.x) > 0.01f)
-                    controller.OnMove();
-                else
+                ////if (Mathf.Abs(InputData.moveAxis.x) > 0.01f)
+                //    controller.OnMove();
+                
                     controller.OnIdle();
             }
         }
