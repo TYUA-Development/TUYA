@@ -132,9 +132,9 @@ public class PlayerJumpState : PlayerState
 {
     private float moveSpeed;
     private float jumpPower;
-    private bool doubleJump;
     private bool isFalling;
     private bool isLanding;
+    private bool landingSlow;
 
     private float checkGroundDistance = 1.0f;
 
@@ -145,8 +145,8 @@ public class PlayerJumpState : PlayerState
     {
         moveSpeed = controller.moveSpeed;
         jumpPower = controller.jumpPower;
-        doubleJump = true;
         isFalling = false;
+        landingSlow = false;
 
         groundLayer = LayerMask.GetMask("Floor");
         col = controller.GetComponent<Collider2D>();
@@ -179,19 +179,13 @@ public class PlayerJumpState : PlayerState
 
     public override void Exit()
     {
-        doubleJump = true;
+        landingSlow = false;
         controller.animator.SetBool("IsJump", false);
+        controller.moveSpeed = moveSpeed;
     }
 
     public override void LogicUpdate()
     {
-        // 더블 점프 관련
-        if(controller.InputReader.InputData.jumpPressed && doubleJump)
-        {
-            doubleJump = false;
-            Enter();
-        }
-
         if (InputData.dashPressed && controller.isDash)
         {
             controller.OnDash();
@@ -241,11 +235,19 @@ public class PlayerJumpState : PlayerState
         controller.ChangeDirection(moveDirect);
 
         Vector2 velocity = controller.Rigidbody2D.velocity;
-        velocity.x = moveDirect * moveSpeed;
+        velocity.x = moveDirect * controller.moveSpeed;
         controller.Rigidbody2D.velocity = velocity;
 
         if(isLanding)
         {
+            Debug.Log("Landing");
+            if(!landingSlow)
+            {
+                Debug.Log("LandingSlow");
+                landingSlow = true;
+                controller.StartCoroutine(controller.SlowDownSpeed(moveSpeed * 0.3f, 5.0f));
+            }
+
             AnimatorStateInfo info = controller.animator.GetCurrentAnimatorStateInfo(0);
             if(info.IsName("JumpEnd") && info.normalizedTime >= 1f)
             {

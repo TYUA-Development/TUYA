@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections;
 using UnityEngine;
 using static UnityEditor.VersionControl.Asset;
 
@@ -15,7 +16,8 @@ public class PlayerController : MonoBehaviour
     public bool isDash;
 
     // 플레이어의 기본적인 수치를 Inspector에서 설정하기 위해
-    public float moveSpeed;
+    public float setSpeed;
+    [HideInInspector] public float moveSpeed;
     public float jumpPower;
     public float dashPower;
     [SerializeField] private float attackCoolTime;
@@ -47,6 +49,7 @@ public class PlayerController : MonoBehaviour
 
         //Rigidbody2D = GetComponent<Rigidbody2D>();
         //animator = GetComponent<Animator>();
+        moveSpeed = setSpeed;
 
         // PlayerState를 상속받는 상태들을 생성자로 PlayerController를 넘겨주며 초기화
         idleState = new PlayerIdleState(this);
@@ -157,5 +160,32 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    
+    /// <summary>
+    /// 플레이어의 속도를 늦춰주는 함수.
+    /// 시작 속도, 둔화시간, 원래속도로 돌아올 분할 수
+    /// </summary>
+    /// <returns></returns>
+    public IEnumerator SlowDownSpeed(float speed, float time, int divide = 0)
+    {
+        moveSpeed = speed;
+
+        if(divide == 0)
+        {
+            yield return new WaitForSeconds(time);
+
+            moveSpeed = setSpeed;
+        }
+        else
+        {
+            float addSpeed = (setSpeed - speed)/ divide;
+
+            for(int i = 0; i < divide; i++)
+            {
+                yield return new WaitForSeconds(time / divide);
+                moveSpeed += addSpeed;
+            }
+        }
+
+        moveSpeed = setSpeed;
+    }
 }
