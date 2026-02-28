@@ -119,13 +119,17 @@ public class PlayerController : MonoBehaviour
     }
 
     // 플레이어의 방향을 바꾸는 함수
-    public void ChangeDirection(float dir)
+    public bool ChangeDirection(float dir)
     {
         if (dir == 0)
-            return;
+            return false;
 
         if(dir == transform.localScale.x)
+        {
             transform.localScale = new Vector3(dir * -1, transform.localScale.y, transform.localScale.z);
+            return true;
+        }
+       return false;
     }
 
     // 해당 방향으로 화살을 발사하는 함수

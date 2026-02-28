@@ -116,7 +116,11 @@ public class PlayerMoveState : PlayerState
     {
         float moveDirect = InputData.moveAxis.x;
 
-        controller.ChangeDirection(moveDirect);
+        if(controller.ChangeDirection(moveDirect))
+        {
+            Debug.Log("Turn");
+            controller.animator.SetTrigger("IsTurn");
+        }
 
         Vector2 velocity = controller.Rigidbody2D.velocity;
         velocity.x = moveDirect * moveSpeed;
@@ -251,6 +255,34 @@ public class PlayerJumpState : PlayerState
                     controller.OnIdle();
             }
         }
+    }
+}
+
+public class PlayerTurnState : PlayerState
+{
+    public PlayerTurnState(PlayerController controller) : base(controller)
+    {
+
+    }
+
+    public override void Enter()
+    {
+        throw new System.NotImplementedException();
+    }
+
+    public override void Exit()
+    {
+        throw new System.NotImplementedException();
+    }
+
+    public override void LogicUpdate()
+    {
+        throw new System.NotImplementedException();
+    }
+
+    public override void PhysicsUpdate()
+    {
+        throw new System.NotImplementedException();
     }
 }
 
