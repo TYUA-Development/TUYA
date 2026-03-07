@@ -12,13 +12,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bd5ba12096774094e88fadf38ecaec1b, type: 3}
   m_Name: ParticlePreset
   m_EditorClassIdentifier: 
-  position: {fileID: 0}
-  image: {fileID: 0}
-  createCycle: 0
-  survivalCycle: 0
-  spin: 0
-  spinSpeed: 0
-  pulse: 0
-  type: 0
-  pulseSpeed: 0
-  pulseSize: 0
+  random: 1
+  position: {x: 0, y: 0, z: 0}
+  image: {fileID: 7482667652216324306, guid: 75f5f34dc1b5347e0b8351032682f224, type: 3}
+  createCycle: 1
+  survivalCycle: 3
+  createCount: 1
+  spin: 1
+  spinSpeed: 70
+  pulseType: 3
+  pulseSpeed: 30
+  pulseTime: 1
+  pulseCount: 2
+  fadeType: 2
+  fadeSpeed: 0.1
+  fadeInterval: 0.5
+  fadeTime: 2
+  fadeCount: 1
