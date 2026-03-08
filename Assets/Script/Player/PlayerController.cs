@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Collections;
 using UnityEngine;
-using static UnityEditor.VersionControl.Asset;
 
 public class PlayerController : MonoBehaviour
 {
