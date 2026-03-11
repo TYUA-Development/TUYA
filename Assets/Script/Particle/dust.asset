@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   random: 1
   position: {x: 0, y: 0, z: 0}
-  scale: 5
+  scale: 0.19
   image: {fileID: -2413806693520163455, guid: ebe73ca9363db456bacf42c025bb4847, type: 3}
   createCycle: 1
   survivalCycle: 2
@@ -25,8 +25,8 @@ MonoBehaviour:
   pulseSpeed: 0
   pulseTime: 0
   pulseCount: 1
-  fadeType: 0
-  fadeSpeed: 0
-  fadeInterval: 0
-  fadeTime: 0
-  fadeCount: 1
+  fadeType: 4
+  fadeSpeed: 0.3
+  fadeInterval: 0.19
+  fadeTime: 1.66
+  fadeCount: 2

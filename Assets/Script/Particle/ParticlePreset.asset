@@ -14,16 +14,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   random: 0
   position: {x: -0.5, y: -4, z: 0}
-  scale: 3
+  scale: 0.00005
   image: {fileID: -2413806693520163455, guid: ebe73ca9363db456bacf42c025bb4847, type: 3}
   createCycle: 0.3
-  survivalCycle: 2
-  createCount: 1
+  survivalCycle: 1.5
+  createCount: 6
   spin: 1
   spinSpeed: 70
   pulseType: 3
   pulseSpeed: 3
-  pulseTime: 1
+  pulseTime: 2
   pulseCount: 2
   fadeType: 0
   fadeSpeed: 0.1
