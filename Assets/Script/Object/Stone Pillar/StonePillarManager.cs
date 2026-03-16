@@ -1,7 +1,7 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using static UnityEditor.PlayerSettings;
 
 public enum StonePillarDirection
 {
@@ -32,6 +32,7 @@ public class StonePillarManager : BasicObject
 {
     public Sprite stonePillarImage;
     public GameObject windMill;
+    public GameObject StonePillar;
     public int maxStep;
     public int minStep;
     public int stepHeight;
@@ -39,6 +40,8 @@ public class StonePillarManager : BasicObject
 
     public List<StonePillar> pillars;
     public List<GameObject> stonePillarObject;
+    public Action[] OnMoveStart;
+    public Action[] OnMoveEnd;
 
     private void Awake()
     {
@@ -48,11 +51,14 @@ public class StonePillarManager : BasicObject
     // Start is called before the first frame update
     void Start()
     {
+        OnMoveStart = new Action[pillars.Count];
+        OnMoveEnd = new Action[pillars.Count];
+
         for(int i = 0; i < pillars.Count; i++)
         {
             Vector3 pos = new Vector3(pillars[i].position, pillars[i].startStep * stepHeight, 0);
 
-            GameObject stonePillarOb = DrawImage(stonePillarImage, pos, 1);
+            GameObject stonePillarOb = Instantiate(StonePillar, pos, Quaternion.identity);
 
             GameObject windMillOb = Instantiate(windMill);
 
@@ -64,6 +70,13 @@ public class StonePillarManager : BasicObject
 
             windMillscript.Init(this, i);
 
+            PerlinNoise noise = stonePillarOb.GetComponent<PerlinNoise>();
+
+            if (noise != null)
+            {
+                OnMoveStart[i] += noise.noise;
+            }
+
             stonePillarObject.Add(stonePillarOb);
         }
     }
@@ -73,7 +86,7 @@ public class StonePillarManager : BasicObject
         StonePillar target = pillars[stonePillarId];
         GameObject targetPillar = stonePillarObject[stonePillarId];
 
-        StartCoroutine(MoveCoroutine(targetPillar, GetNextPosition(target, targetPillar), moveDuration));
+        StartCoroutine(MoveCoroutine(targetPillar, GetNextPosition(target, targetPillar), moveDuration, stonePillarId));
 
         for(int i = 0; i < target.connection.Count; i++)
         {
@@ -82,7 +95,7 @@ public class StonePillarManager : BasicObject
             StonePillar connectTarget = pillars[connectIndex];
             GameObject connectTargetPillar = stonePillarObject[connectIndex];
 
-            StartCoroutine(MoveCoroutine(connectTargetPillar, GetNextPosition(connectTarget, connectTargetPillar), moveDuration));
+            StartCoroutine(MoveCoroutine(connectTargetPillar, GetNextPosition(connectTarget, connectTargetPillar), moveDuration, connectIndex));
         }
     }
 
@@ -110,7 +123,7 @@ public class StonePillarManager : BasicObject
         return pos;
     }
 
-    IEnumerator MoveCoroutine(GameObject target, Vector3 pos, float duration)
+    IEnumerator MoveCoroutine(GameObject target, Vector3 pos, float duration, int index)
     {
         Vector3 start = target.transform.position;
         float time = 0;
@@ -119,9 +132,13 @@ public class StonePillarManager : BasicObject
         {
             target.transform.position = Vector3.Lerp(start, pos, time / duration);
             time += Time.deltaTime;
+
+            OnMoveStart[index].Invoke();
+
             yield return null;
         }
 
         target.transform.position = pos;
+        OnMoveEnd[index].Invoke();
     }
 }

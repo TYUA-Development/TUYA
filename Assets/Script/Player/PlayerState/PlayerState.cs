@@ -49,7 +49,7 @@ public class PlayerIdleState : PlayerState
         if (controller.ChangeDirection(InputData.moveAxis.x))
         {
             Debug.Log("Turn");
-            controller.animator.SetTrigger("IsTurn");
+            //controller.animator.SetTrigger("IsTurn");
             return;
         }
 
@@ -138,7 +138,7 @@ public class PlayerMoveState : PlayerState
             if (controller.ChangeDirection(moveDirect))
             {
                 Debug.Log("Turn");
-                controller.animator.SetTrigger("IsTurn");
+                //controller.animator.SetTrigger("IsTurn");
             }
         }
         

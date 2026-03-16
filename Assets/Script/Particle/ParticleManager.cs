@@ -138,8 +138,6 @@ public class ParticleManager : MonoBehaviour
                 DicParticle[i] = ob;
             }
 
-            Debug.Log(queue.Count);
-
             // objectPool을 objectPool 리스트에 저장
             particleObjectPool.Add(queue);
             Debug.Log(particleObjectPool.Count);
