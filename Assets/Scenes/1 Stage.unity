@@ -170,7 +170,7 @@ Transform:
   m_GameObject: {fileID: 33371030}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.12, y: -4.3, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 0.42000002, y: 0.42000002, z: 0.42000002}
   m_ConstrainProportionsScale: 1
   m_Children: []
@@ -259,31 +259,32 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   stonePillarImage: {fileID: 21300000, guid: afaf3777c251dea46842e1b4dc9580c4, type: 3}
   windMill: {fileID: 28035945842200773, guid: 2b94652e0eb8a7d4991317109cf1517d, type: 3}
+  StonePillar: {fileID: 430199930438227338, guid: 458de3ed2274d334eab9f473029070b4, type: 3}
   maxStep: 4
   minStep: 0
   stepHeight: 5
   moveDuration: 3
+  windMillSpinSpeed: 300
+  windMillSpinMinSpeed: 50
   pillars:
   - position: 55
     startStep: 1
     moveDirection: 1
-    windMillPosition: {x: 0, y: 2, z: 0}
-    connection:
-    - index: 1
   - position: 65
     startStep: 0
     moveDirection: -1
-    windMillPosition: {x: 0, y: 3, z: 0}
-    connection:
-    - index: 2
-    - index: 0
   - position: 75
     startStep: 2
     moveDirection: -1
-    windMillPosition: {x: 0, y: 3, z: 0}
+  windMills:
+  - windMillPosition: {x: 60, y: 25, z: 0}
     connection:
     - index: 0
-  stonePillarObject: []
+    - index: 1
+  - windMillPosition: {x: 70, y: 25, z: 0}
+    connection:
+    - index: 1
+    - index: 2
 --- !u!4 &195252544
 Transform:
   m_ObjectHideFlags: 0
@@ -1023,7 +1024,7 @@ Transform:
   m_GameObject: {fileID: 1372822285}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1.31, y: 2.16, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 1
   m_Children:
@@ -1125,7 +1126,7 @@ BoxCollider2D:
   m_IsTrigger: 0
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: 0, y: 0}
+  m_Offset: {x: -0.43990088, y: 0}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0, y: 0}
@@ -1136,7 +1137,7 @@ BoxCollider2D:
     adaptiveTiling: 0
   m_AutoTiling: 0
   serializedVersion: 2
-  m_Size: {x: 1, y: 7}
+  m_Size: {x: 1.6767707, y: 3.988368}
   m_EdgeRadius: 0
 --- !u!1 &1861157515
 GameObject:
@@ -1213,6 +1214,7 @@ GameObject:
   - component: {fileID: 2011648819}
   - component: {fileID: 2011648818}
   - component: {fileID: 2011648821}
+  - component: {fileID: 2011648822}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -1338,6 +1340,20 @@ MonoBehaviour:
     m_MipBias: 0
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
+--- !u!114 &2011648822
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2011648817}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b3e773038679eec4dbd88fc4991d8b37, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Charactor: {fileID: 1372822285}
+  cameraHeight: 14
 --- !u!1 &2115480510
 GameObject:
   m_ObjectHideFlags: 0

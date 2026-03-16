@@ -1,7 +1,9 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
+using static UnityEditor.PlayerSettings;
 
 public enum StonePillarDirection
 {
@@ -22,7 +24,11 @@ public struct StonePillar
     public int position;
     public int startStep;
     public StonePillarDirection moveDirection;
-    [Space(5)]
+}
+
+[System.Serializable]
+public struct StoneWindMill
+{
     public Vector3 windMillPosition;
 
     public List<NodeStonePillar> connection;
@@ -38,14 +44,23 @@ public class StonePillarManager : BasicObject
     public int stepHeight;
     public float moveDuration;
 
+    [Header("WindMill")]
+    public float windMillSpinSpeed;
+    public float windMillSpinMinSpeed;
+
+    [Space(10)]
     public List<StonePillar> pillars;
-    public List<GameObject> stonePillarObject;
+    public List<StoneWindMill> windMills;
+
+    private List<GameObject> stonePillarObject;
+    private List<GameObject> windMillObject;
     public Action[] OnMoveStart;
     public Action[] OnMoveEnd;
 
     private void Awake()
     {
         stonePillarObject = new List<GameObject>();
+        windMillObject = new List<GameObject>();
     }
 
     // Start is called before the first frame update
@@ -60,16 +75,6 @@ public class StonePillarManager : BasicObject
 
             GameObject stonePillarOb = Instantiate(StonePillar, pos, Quaternion.identity);
 
-            GameObject windMillOb = Instantiate(windMill);
-
-            windMillOb.transform.SetParent(stonePillarOb.transform, false);
-            windMillOb.transform.localPosition = pillars[i].windMillPosition;
-
-
-            WindMillObject windMillscript = windMillOb.GetComponent<WindMillObject>();
-
-            windMillscript.Init(this, i);
-
             PerlinNoise noise = stonePillarOb.GetComponent<PerlinNoise>();
 
             if (noise != null)
@@ -79,14 +84,28 @@ public class StonePillarManager : BasicObject
 
             stonePillarObject.Add(stonePillarOb);
         }
+
+        for(int i = 0; i < windMills.Count; i++)
+        {
+            GameObject windMillOb = Instantiate(windMill);
+
+            windMillOb.transform.localPosition = windMills[i].windMillPosition;
+
+
+            WindMillObject windMillscript = windMillOb.GetComponent<WindMillObject>();
+
+            windMillscript.Init(this, i);
+
+            windMillObject.Add(windMillOb);
+        }
     }
 
-    public void PillarMove(int stonePillarId)
+    public void PillarMove(int windMillId)
     {
-        StonePillar target = pillars[stonePillarId];
-        GameObject targetPillar = stonePillarObject[stonePillarId];
+        StoneWindMill target = windMills[windMillId];
+        GameObject targetWindMill = windMillObject[windMillId];
 
-        StartCoroutine(MoveCoroutine(targetPillar, GetNextPosition(target, targetPillar), moveDuration, stonePillarId));
+        StartCoroutine(MoveWindMillCoroutine(targetWindMill, moveDuration, windMillSpinSpeed));
 
         for(int i = 0; i < target.connection.Count; i++)
         {
@@ -95,7 +114,7 @@ public class StonePillarManager : BasicObject
             StonePillar connectTarget = pillars[connectIndex];
             GameObject connectTargetPillar = stonePillarObject[connectIndex];
 
-            StartCoroutine(MoveCoroutine(connectTargetPillar, GetNextPosition(connectTarget, connectTargetPillar), moveDuration, connectIndex));
+            StartCoroutine(MovePillarCoroutine(connectTargetPillar, GetNextPosition(connectTarget, connectTargetPillar), moveDuration, connectIndex));
         }
     }
 
@@ -123,7 +142,7 @@ public class StonePillarManager : BasicObject
         return pos;
     }
 
-    IEnumerator MoveCoroutine(GameObject target, Vector3 pos, float duration, int index)
+    IEnumerator MovePillarCoroutine(GameObject target, Vector3 pos, float duration, int index)
     {
         Vector3 start = target.transform.position;
         float time = 0;
@@ -140,5 +159,44 @@ public class StonePillarManager : BasicObject
 
         target.transform.position = pos;
         OnMoveEnd[index].Invoke();
+    }
+
+    IEnumerator MoveWindMillCoroutine(GameObject target, float duration, float speed)
+    {
+        float time = 0;
+        float currentSpeed = 0;
+
+        while (time < duration)
+        {
+            float t = time / duration;
+
+            // 속도를 점점 감소
+            currentSpeed = Mathf.Lerp(speed, windMillSpinMinSpeed, t);
+
+            target.transform.Rotate(Vector3.forward * currentSpeed * Time.deltaTime);
+
+            time += Time.deltaTime;
+
+            yield return null;
+        }
+
+        time = 0;
+
+        while (time < 0.1f)
+        {
+            target.transform.Rotate(Vector3.back * currentSpeed * Time.deltaTime);
+
+            time += Time.deltaTime;
+            yield return null;
+        }
+
+        time = 0;
+        while (time < 0.1f)
+        {
+            target.transform.Rotate(Vector3.forward * currentSpeed * Time.deltaTime);
+
+            time += Time.deltaTime;
+            yield return null;
+        }
     }
 }

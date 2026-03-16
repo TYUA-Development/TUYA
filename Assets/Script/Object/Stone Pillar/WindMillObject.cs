@@ -5,16 +5,16 @@ using UnityEngine;
 public class WindMillObject : MonoBehaviour, IArrowHit
 {
     private StonePillarManager manager;
-    private int stonePillarId;
+    private int windMillId;
 
     public void OnHit()
     {
-        manager.PillarMove(stonePillarId);
+        manager.PillarMove(windMillId);
     }
 
-    public void Init(StonePillarManager manager, int stonePillarId)
+    public void Init(StonePillarManager manager, int windMillId)
     {
         this.manager = manager;
-        this.stonePillarId = stonePillarId;
+        this.windMillId = windMillId;
     }
 }

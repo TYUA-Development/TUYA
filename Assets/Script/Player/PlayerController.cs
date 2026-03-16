@@ -41,10 +41,10 @@ public class PlayerController : MonoBehaviour
     private void Awake()
     {
         InputReader = GetComponent<PlayerInputReader>();
-        BoxCollider2D temp = GetComponent<BoxCollider2D>();
-        Vector2 origin = charactorSprite.sprite.bounds.size - new Vector3(9.0f, 1.0f, 0);
-        temp.size = origin;
-        temp.offset = charactorSprite.sprite.bounds.center;
+        //BoxCollider2D temp = GetComponent<BoxCollider2D>();
+        //Vector2 origin = charactorSprite.sprite.bounds.size - new Vector3(9.0f, 1.0f, 0);
+        //temp.size = origin;
+        //temp.offset = charactorSprite.sprite.bounds.center;
 
         //Rigidbody2D = GetComponent<Rigidbody2D>();
         //animator = GetComponent<Animator>();
@@ -134,9 +134,10 @@ public class PlayerController : MonoBehaviour
     // 해당 방향으로 화살을 발사하는 함수
     public void ShootArrow(Vector2 direction)
     {
-        Vector3 handLength = new Vector3(direction.x * 1.5f, direction.y * 1.5f, 0);
-        Arrow arrow = Instantiate(arrowObject, transform.position + handLength, Quaternion.identity).GetComponent<Arrow>();
-        arrow.Launch(direction, transform);
+        Vector3 handLength = new Vector3(direction.x * 0.3f, direction.y * 0.3f, 0);
+
+        Instantiate(arrowObject, transform.position + handLength, Quaternion.identity).GetComponent<Arrow>().Launch(direction, transform);
+
         attackTimer = attackCoolTime;
     }
 
