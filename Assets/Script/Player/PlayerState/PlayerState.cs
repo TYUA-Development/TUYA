@@ -263,7 +263,7 @@ public class PlayerJumpState : PlayerState
             {
                 Debug.Log("LandingSlow");
                 landingSlow = true;
-                controller.StartCoroutine(controller.SlowDownSpeed(moveSpeed * 0.3f, 5.0f));
+                controller.StartCoroutine(controller.SlowDownSpeed(moveSpeed * 0.0f, 5.0f));
             }
 
             AnimatorStateInfo info = controller.animator.GetCurrentAnimatorStateInfo(0);
