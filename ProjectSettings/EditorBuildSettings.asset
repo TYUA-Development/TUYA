@@ -5,10 +5,13 @@ EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Scenes:
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/1 Stage.unity
     guid: a259844b178f27145a94a74765ba6987
   - enabled: 0
     path: Assets/Scenes/TitleScene.unity
     guid: 4d81625940f08b64da91bd29ba7b04a3
+  - enabled: 1
+    path: Assets/Scenes/Jinho.unity
+    guid: 4c94f4d20039d88489e2575f7b1dfdcc
   m_configObjects: {}
