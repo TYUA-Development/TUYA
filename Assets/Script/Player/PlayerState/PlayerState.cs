@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting;
@@ -212,13 +213,13 @@ public class PlayerJumpState : PlayerState
         // ¶¥¿¡ ´ê¾ÒÀ» ¶§ »óÅÂ º¯È¯
         if (controller.isGround && controller.Rigidbody2D.velocity.y <= 0.01f)
         {
-            //if(Mathf.Abs(InputData.moveAxis.x) > 0.01f)
-            //    controller.OnMove();
-            //else 
-            
-            if (isLanding)
-                return;
+            if (Mathf.Abs(InputData.moveAxis.x) > 0.01f)
+                controller.OnMove();
             else
+
+            //if (isLanding)
+            //    return;
+            //else
                 controller.OnIdle();
         }
 
@@ -259,12 +260,12 @@ public class PlayerJumpState : PlayerState
         if(isLanding)
         {
             Debug.Log("Landing");
-            if(!landingSlow)
-            {
-                Debug.Log("LandingSlow");
-                landingSlow = true;
-                controller.StartCoroutine(controller.SlowDownSpeed(moveSpeed * 0.0f, 5.0f));
-            }
+            //if(!landingSlow)
+            //{
+            //    Debug.Log("LandingSlow");
+            //    landingSlow = true;
+            //    controller.StartCoroutine(controller.SlowDownSpeed(moveSpeed * 0.0f, 5.0f));
+            //}
 
             AnimatorStateInfo info = controller.animator.GetCurrentAnimatorStateInfo(0);
             if(info.IsName("JumpEnd") && info.normalizedTime >= 1f)
@@ -348,33 +349,72 @@ public class PlayerDashState : PlayerState
 
 public class PlayerAttackState : PlayerState
 {
+    private float minAngle;
+    private float maxAngle;
+
     public PlayerAttackState(PlayerController controller) : base(controller)
     {
+        minAngle = controller.upperBodyMinAngle * -1;
+        maxAngle = controller.upperBodyMaxAngle;
     }
 
     public override void Enter()
     {
-        
+        controller.upperAnimator.SetBool("IsAttack", true);
     }
 
     public override void Exit()
     {
-        
+        controller.upperAnimator.SetBool("IsAttack", false);
     }
 
     public override void LogicUpdate()
     {
-        if(InputData.attackPressed && controller.attackTimer <= 0)
+        Debug.Log("Attack");
+
+        Vector3 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        Vector2 direction = new Vector2(mousePosition.x - controller.transform.position.x, mousePosition.y - controller.transform.position.y).normalized;
+
+        float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+
+        if (angle >= 0)
         {
-            Vector3 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-            Vector2 direction = new Vector2(mousePosition.x - controller.transform.position.x, mousePosition.y - controller.transform.position.y).normalized;
-
-            controller.ShootArrow(direction);
-
-            controller.OnIdle();
+            if (angle >= 90)
+            {
+                if (angle < 180 - maxAngle)
+                    direction = new Vector2(Mathf.Cos((180 - maxAngle) * Mathf.Deg2Rad), Mathf.Sin((180 - maxAngle) * Mathf.Deg2Rad));
+            }
+            else
+            {
+                if (maxAngle < angle)
+                    direction = new Vector2(Mathf.Cos(maxAngle * Mathf.Deg2Rad), Mathf.Sin(maxAngle * Mathf.Deg2Rad));
+            }
+        }
+        else
+        {
+            if (angle > -90)
+            {
+                if (angle < minAngle)
+                    direction = new Vector2(Mathf.Cos(minAngle * Mathf.Deg2Rad), Mathf.Sin(minAngle * Mathf.Deg2Rad));
+            }
+            else
+            {
+                if (angle > -180 - minAngle)
+                    direction = new Vector2(Mathf.Cos((-180 - minAngle) * Mathf.Deg2Rad), Mathf.Sin((-180 - minAngle) * Mathf.Deg2Rad));
+            }
         }
 
-        if(controller.attackTimer > 0)
+        float armAngle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+
+        controller.upperBody.transform.localRotation = Quaternion.Euler(0, 0, armAngle);
+
+
+        if (InputData.attackPressed && controller.attackTimer <= 0)
+        {
+            controller.ShootArrow(direction);
+        }
+
+        if(!InputData.aimingPressed)
         {
             controller.OnIdle();
         }

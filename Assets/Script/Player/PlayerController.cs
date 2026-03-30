@@ -34,6 +34,13 @@ public class PlayerController : MonoBehaviour
     public List<PlayerState> states = new List<PlayerState>();
 
     public Animator animator;
+    public Animator upperAnimator;
+    public GameObject upperBody;
+
+    [Tooltip("0~90, 정면에서 위로")]
+    public float upperBodyMaxAngle;
+    [Tooltip("0~90, 정면에서 아래로")]
+    public float upperBodyMinAngle;
 
     // 플레이어 공격 화살 prefab
     public GameObject arrowObject;
@@ -71,6 +78,8 @@ public class PlayerController : MonoBehaviour
     // 매 프레임 로직을 체크해 상태 변환
     void Update()
     {
+        InputReader.ReadInput();
+
         currentState.LogicUpdate();
         CoolDown();
     }
@@ -144,7 +153,7 @@ public class PlayerController : MonoBehaviour
     // 쿨타임들을 관리해주는 함수
     private void CoolDown()
     {
-        if(attackTimer > 0)
+        if(attackTimer >= 0)
             attackTimer -= Time.deltaTime;
     }
 
