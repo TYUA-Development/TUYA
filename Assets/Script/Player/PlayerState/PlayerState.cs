@@ -360,12 +360,18 @@ public class PlayerAttackState : PlayerState
 
     public override void Enter()
     {
+        controller.upperBody.SetActive(true);
+
         controller.upperAnimator.SetBool("IsAttack", true);
+        controller.animator.SetBool("IsAttack", true);
     }
 
     public override void Exit()
     {
+        controller.upperBody.SetActive(false);
+
         controller.upperAnimator.SetBool("IsAttack", false);
+        controller.animator.SetBool("IsAttack", false);
     }
 
     public override void LogicUpdate()
@@ -377,6 +383,8 @@ public class PlayerAttackState : PlayerState
 
         float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
 
+        float Inversioni = direction.x > 0 ? -1 : 1;
+
         if (angle >= 0)
         {
             if (angle >= 90)
@@ -387,7 +395,9 @@ public class PlayerAttackState : PlayerState
             else
             {
                 if (maxAngle < angle)
-                    direction = new Vector2(Mathf.Cos(maxAngle * Mathf.Deg2Rad), Mathf.Sin(maxAngle * Mathf.Deg2Rad));
+                    direction = new Vector2(Mathf.Cos((180 - maxAngle) * Mathf.Deg2Rad), Mathf.Sin((180 - maxAngle) * Mathf.Deg2Rad));
+                //if (maxAngle < angle)
+                //    direction = new Vector2(Mathf.Cos(maxAngle * Mathf.Deg2Rad), Mathf.Sin(maxAngle * Mathf.Deg2Rad));
             }
         }
         else
@@ -400,13 +410,17 @@ public class PlayerAttackState : PlayerState
             else
             {
                 if (angle > -180 - minAngle)
-                    direction = new Vector2(Mathf.Cos((-180 - minAngle) * Mathf.Deg2Rad), Mathf.Sin((-180 - minAngle) * Mathf.Deg2Rad));
+                    direction = new Vector2(Mathf.Cos(minAngle * Mathf.Deg2Rad), Mathf.Sin(minAngle * Mathf.Deg2Rad));
+                //if (angle > -180 - minAngle)
+                //    direction = new Vector2(Mathf.Cos((-180 - minAngle) * Mathf.Deg2Rad), Mathf.Sin((-180 - minAngle) * Mathf.Deg2Rad));
             }
         }
 
         float armAngle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
 
-        controller.upperBody.transform.localRotation = Quaternion.Euler(0, 0, armAngle);
+        controller.upperBody.transform.localRotation = Quaternion.Euler(0, 0, (armAngle + 180f) * Inversioni);
+
+        controller.upperBody.transform.localScale = new Vector3(Mathf.Abs(controller.upperBody.transform.localScale.x) * Inversioni, controller.upperBody.transform.localScale.y, controller.upperBody.transform.localScale.z);
 
 
         if (InputData.attackPressed && controller.attackTimer <= 0)
