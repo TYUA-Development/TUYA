@@ -349,6 +349,9 @@ public class PlayerDashState : PlayerState
 
 public class PlayerAttackState : PlayerState
 {
+    private bool isAiming;
+    private float aimingTimer;
+
     private float minAngle;
     private float maxAngle;
 
@@ -356,14 +359,17 @@ public class PlayerAttackState : PlayerState
     {
         minAngle = controller.upperBodyMinAngle * -1;
         maxAngle = controller.upperBodyMaxAngle;
+
+        isAiming = false;
     }
 
     public override void Enter()
     {
-        controller.upperBody.SetActive(true);
 
-        controller.upperAnimator.SetBool("IsAttack", true);
-        controller.animator.SetBool("IsAttack", true);
+        isAiming = true;
+
+        controller.animator.SetBool("IsAiming", true);
+        aimingTimer = controller.aimingTime;
     }
 
     public override void Exit()
@@ -376,6 +382,34 @@ public class PlayerAttackState : PlayerState
 
     public override void LogicUpdate()
     {
+        if(isAiming)
+        {
+            Debug.Log("Aiming");
+
+            aimingTimer -= Time.deltaTime;
+
+            if(aimingTimer < 0)
+            {
+                controller.animator.SetBool("IsAiming", false);
+                controller.animator.SetBool("IsAttack", true);
+
+                controller.upperAnimator.SetBool("IsAttack", true);
+
+
+                AnimatorStateInfo info = controller.animator.GetCurrentAnimatorStateInfo(0);
+
+                Debug.Log(info.ToString());
+
+                if (info.IsName("Attack"))
+                {
+                    controller.upperBody.SetActive(true);
+
+                    isAiming = false;
+                }
+            }
+            return;
+        }
+
         Debug.Log("Attack");
 
         Vector3 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
@@ -426,6 +460,7 @@ public class PlayerAttackState : PlayerState
         if (InputData.attackPressed && controller.attackTimer <= 0)
         {
             controller.ShootArrow(direction);
+            controller.animator.SetBool("IsAttack", false);
         }
 
         if(!InputData.aimingPressed)
@@ -433,6 +468,14 @@ public class PlayerAttackState : PlayerState
             controller.OnIdle();
         }
 
+        {
+            AnimatorStateInfo info = controller.animator.GetCurrentAnimatorStateInfo(0);
+
+            if (info.IsName("AttackEnd"))
+            {
+                controller.upperBody.SetActive(false);
+            }
+        }
         // TODO:: AttackState가 해제되는 조건 추가
     }
 

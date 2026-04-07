@@ -42,6 +42,8 @@ public class PlayerController : MonoBehaviour
     [Tooltip("0~90, 정면에서 아래로")]
     public float upperBodyMinAngle;
 
+    public float aimingTime;
+
     // 플레이어 공격 화살 prefab
     public GameObject arrowObject;
 
