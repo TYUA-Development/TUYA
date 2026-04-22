@@ -7,7 +7,7 @@ using UnityEngine;
 public class ParticleScript : MonoBehaviour
 {
     // 미리 본인의 GameObject들을 캐싱
-    private GameObject self;
+    protected GameObject self;
     // 생존 시간
     private float LifeTime;
     // 해당 파티클이 어떤 파티클인지 구별하기 위한 Id
