@@ -25,15 +25,17 @@ public class ParallaxManager : MonoBehaviour
 
         if (cameraTransform == null && Camera.main != null)
             cameraTransform = Camera.main.transform;
-    }
 
-    private void Start()
-    {
         if (cameraTransform != null)
         {
             cameraStartPosition = cameraTransform.position;
             previousCameraPosition = cameraTransform.position;
         }
+    }
+
+    private void Start()
+    {
+
     }
 
     public void Register(ParallaxImage image)
@@ -43,6 +45,12 @@ public class ParallaxManager : MonoBehaviour
 
         if (!activeImages.Contains(image))
             activeImages.Add(image);
+
+        if (cameraTransform != null)
+        {
+            Vector3 totalCameraDelta = cameraTransform.position - cameraStartPosition;
+            image.ApplyParallaxFromStart(totalCameraDelta, globalStrength);
+        }
     }
 
     public void Unregister(ParallaxImage image)

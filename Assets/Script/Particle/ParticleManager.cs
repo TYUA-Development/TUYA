@@ -129,6 +129,14 @@ public class ParticleManager : MonoBehaviour
                     script.particleComponents.Add(fade);
                 }
 
+                if(scriptable.moveMent)
+                {
+                    ParticleMovement move = ob.AddComponent<ParticleMovement>();
+                    move.Init(scriptable.moveParrtern, scriptable.moveSpeed, scriptable.position, targetObject[i]);
+                    move.OnSpawn();
+                    script.particleComponents.Add(move);
+                }
+
                 // 게임 오브젝트 비활성화
                 ob.SetActive(false);
                 // ObjectPool에 추가

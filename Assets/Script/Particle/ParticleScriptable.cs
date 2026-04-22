@@ -76,4 +76,10 @@ public class ParticleScriptable : ScriptableObject
     public float fadeTime;
     [Tooltip("Particle이 몇번 fadein fadeout을 반복할지")]
     public int fadeCount = 1;
+
+    [Space(10)]
+    [Tooltip("Particle이 정해진 위치로 순차적으로 이동")]
+    public bool moveMent = false;
+    public List<Vector3> moveParrtern;
+    public float moveSpeed;
 }
