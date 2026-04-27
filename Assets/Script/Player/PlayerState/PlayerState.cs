@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.UIElements;
 using static UnityEngine.RuleTile.TilingRuleOutput;
 
 // 추상 클래스로 생성
@@ -412,94 +413,108 @@ public class PlayerAttackState : PlayerState
 
         Debug.Log("Attack");
 
-        Vector3 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        Vector2 direction = new Vector2(mousePosition.x - controller.transform.position.x, mousePosition.y - controller.transform.position.y).normalized;
+        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
 
-        float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+        Plane plane = new Plane(Vector3.forward, controller.transform.position);
 
-        //float Inversioni = direction.x > 0 ? -1 : 1;
+        float angle;
 
-        if (angle >= 0)
+        if (plane.Raycast(ray, out float distance))
         {
-            if (angle >= 90)
-            {
-                controller.transform.localScale = new Vector3(Math.Abs(controller.transform.localScale.x), controller.transform.localScale.y, controller.transform.localScale.z);
+            Vector3 mouseWorldPosition = ray.GetPoint(distance);
 
-                if (180 > angle && angle > 180 - maxAngle)
-                    direction = new Vector2(Mathf.Cos(angle * Mathf.Deg2Rad), Mathf.Sin(angle * Mathf.Deg2Rad));
+            Vector2 direction = new Vector2(mouseWorldPosition.x - controller.transform.position.x, mouseWorldPosition.y - controller.transform.position.y).normalized;
+
+            angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+
+
+            //Vector3 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+            //Vector2 direction = new Vector2(mousePosition.x - controller.transform.position.x, mousePosition.y - controller.transform.position.y).normalized;
+
+            //angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+
+            if (angle >= 0)
+            {
+                if (angle >= 90)
+                {
+                    controller.transform.localScale = new Vector3(Math.Abs(controller.transform.localScale.x), controller.transform.localScale.y, controller.transform.localScale.z);
+
+                    if (180 > angle && angle > 180 - maxAngle)
+                        direction = new Vector2(Mathf.Cos(angle * Mathf.Deg2Rad), Mathf.Sin(angle * Mathf.Deg2Rad));
+                    else
+                        direction = new Vector2(Mathf.Cos((180 - maxAngle) * Mathf.Deg2Rad), Mathf.Sin((180 - maxAngle) * Mathf.Deg2Rad));
+                }
                 else
-                    direction = new Vector2(Mathf.Cos((180 - maxAngle) * Mathf.Deg2Rad), Mathf.Sin((180 - maxAngle) * Mathf.Deg2Rad));
+                {
+                    controller.transform.localScale = new Vector3(Math.Abs(controller.transform.localScale.x) * -1, controller.transform.localScale.y, controller.transform.localScale.z);
+
+                    if (0 < angle && angle < maxAngle)
+                        direction = new Vector2(Mathf.Cos(angle * Mathf.Deg2Rad), Mathf.Sin(angle * Mathf.Deg2Rad));
+                    else
+                        direction = new Vector2(Mathf.Cos(maxAngle * Mathf.Deg2Rad), Mathf.Sin(maxAngle * Mathf.Deg2Rad));
+                    //if (maxAngle < angle)
+                    //    direction = new Vector2(Mathf.Cos(maxAngle * Mathf.Deg2Rad), Mathf.Sin(maxAngle * Mathf.Deg2Rad));
+                }
             }
             else
             {
-                controller.transform.localScale = new Vector3(Math.Abs(controller.transform.localScale.x) * -1, controller.transform.localScale.y, controller.transform.localScale.z);
+                if (angle < -90)
+                {
+                    controller.transform.localScale = new Vector3(Math.Abs(controller.transform.localScale.x), controller.transform.localScale.y, controller.transform.localScale.z);
 
-                if (0 < angle && angle < maxAngle)
-                    direction = new Vector2(Mathf.Cos(angle * Mathf.Deg2Rad), Mathf.Sin(angle * Mathf.Deg2Rad));
+                    if (-180 < angle && angle < -180 + minAngle)
+                        direction = new Vector2(Mathf.Cos(angle * Mathf.Deg2Rad), Mathf.Sin(angle * Mathf.Deg2Rad));
+                    else
+                        direction = new Vector2(Mathf.Cos((-minAngle - 180
+                            ) * Mathf.Deg2Rad), Mathf.Sin((-minAngle - 180
+                            ) * Mathf.Deg2Rad));
+                }
                 else
-                    direction = new Vector2(Mathf.Cos(maxAngle * Mathf.Deg2Rad), Mathf.Sin(maxAngle * Mathf.Deg2Rad));
-                //if (maxAngle < angle)
-                //    direction = new Vector2(Mathf.Cos(maxAngle * Mathf.Deg2Rad), Mathf.Sin(maxAngle * Mathf.Deg2Rad));
+                {
+                    controller.transform.localScale = new Vector3(Math.Abs(controller.transform.localScale.x) * -1, controller.transform.localScale.y, controller.transform.localScale.z);
+
+                    if (0 > angle && angle > minAngle * -1)
+                        direction = new Vector2(Mathf.Cos(angle * Mathf.Deg2Rad), Mathf.Sin(angle * Mathf.Deg2Rad));
+                    else
+                        direction = new Vector2(Mathf.Cos(minAngle * Mathf.Deg2Rad), Mathf.Sin(minAngle * Mathf.Deg2Rad));
+                    //if (angle > -180 - minAngle)
+                    //    direction = new Vector2(Mathf.Cos((-180 - minAngle) * Mathf.Deg2Rad), Mathf.Sin((-180 - minAngle) * Mathf.Deg2Rad));
+                }
             }
-        }
-        else
-        {
-            if (angle < -90)
-            {
-                controller.transform.localScale = new Vector3(Math.Abs(controller.transform.localScale.x), controller.transform.localScale.y, controller.transform.localScale.z);
 
-                if (-180 < angle && angle < -180 + minAngle)
-                    direction = new Vector2(Mathf.Cos(angle * Mathf.Deg2Rad), Mathf.Sin(angle * Mathf.Deg2Rad));
-                else
-                    direction = new Vector2(Mathf.Cos((-minAngle - 180
-                        ) * Mathf.Deg2Rad), Mathf.Sin((-minAngle - 180 
-                        ) * Mathf.Deg2Rad));
+            float armAngle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+
+            if (controller.transform.localScale.x > 0)
+            {
+                controller.upperBody.transform.localRotation = Quaternion.Euler(0, 0, (armAngle - 180f));
             }
             else
             {
-                controller.transform.localScale = new Vector3(Math.Abs(controller.transform.localScale.x) * -1, controller.transform.localScale.y, controller.transform.localScale.z);
-
-                if (0 > angle && angle > minAngle * -1)
-                    direction = new Vector2(Mathf.Cos(angle * Mathf.Deg2Rad), Mathf.Sin(angle * Mathf.Deg2Rad));
-                else
-                    direction = new Vector2(Mathf.Cos(minAngle * Mathf.Deg2Rad), Mathf.Sin(minAngle * Mathf.Deg2Rad));
-                //if (angle > -180 - minAngle)
-                //    direction = new Vector2(Mathf.Cos((-180 - minAngle) * Mathf.Deg2Rad), Mathf.Sin((-180 - minAngle) * Mathf.Deg2Rad));
+                controller.upperBody.transform.localRotation = Quaternion.Euler(0, 0, (armAngle * -1));
             }
-        }
-
-        float armAngle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
-
-        if(controller.transform.localScale.x > 0)
-        {
-            controller.upperBody.transform.localRotation = Quaternion.Euler(0, 0, (armAngle - 180f));
-        }
-        else
-        {
-            controller.upperBody.transform.localRotation = Quaternion.Euler(0, 0, (armAngle * -1));
-        }
 
 
-        if (InputData.attackPressed && controller.attackTimer <= 0)
-        {
-            controller.ShootArrow(direction);
-            controller.animator.SetBool("IsAttack", false);
-        }
-
-        if(!InputData.aimingPressed)
-        {
-            controller.OnIdle();
-        }
-
-        {
-            AnimatorStateInfo info = controller.animator.GetCurrentAnimatorStateInfo(0);
-
-            if (info.IsName("AttackEnd"))
+            if (InputData.attackPressed && controller.attackTimer <= 0)
             {
-                controller.upperBody.SetActive(false);
+                controller.ShootArrow(direction);
+                controller.animator.SetBool("IsAttack", false);
             }
+
+            if (!InputData.aimingPressed)
+            {
+                controller.OnIdle();
+            }
+
+            {
+                AnimatorStateInfo info = controller.animator.GetCurrentAnimatorStateInfo(0);
+
+                if (info.IsName("AttackEnd"))
+                {
+                    controller.upperBody.SetActive(false);
+                }
+            }
+            // TODO:: AttackState가 해제되는 조건 추가
         }
-        // TODO:: AttackState가 해제되는 조건 추가
     }
 
     public override void PhysicsUpdate()
