@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections;
 using UnityEngine;
+using Unity.IO.LowLevel.Unsafe;
 
 public class PlayerController : MonoBehaviour
 {
@@ -28,6 +29,7 @@ public class PlayerController : MonoBehaviour
     public PlayerMoveState moveState;
     public PlayerJumpState jumpState;
     public PlayerDashState dashState;
+    public PlayerFallState fallState;
     public PlayerAttackState attackState;
 
     //플레이어 상태들을 저장한 상태리스트
@@ -64,6 +66,7 @@ public class PlayerController : MonoBehaviour
         moveState = new PlayerMoveState(this);
         jumpState = new PlayerJumpState(this);
         dashState = new PlayerDashState(this);
+        fallState = new PlayerFallState(this);
         attackState = new PlayerAttackState(this); 
 
         states.Add(idleState); states.Add(moveState); states.Add(jumpState); states.Add(dashState); states.Add(attackState);
@@ -109,10 +112,14 @@ public class PlayerController : MonoBehaviour
         ChangeState(jumpState);
     }
 
-    public void OnDash()
+    public void OnFall()
     {
-        ChangeState(dashState);
+        ChangeState(fallState);
     }
+    //public void OnDash()
+    //{
+    //    ChangeState(dashState);
+    //}
 
     public void OnAttack()
     {
@@ -161,10 +168,18 @@ public class PlayerController : MonoBehaviour
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        if (collision.collider.CompareTag("Floor"))
+        if (collision.collider.CompareTag("Floor") || collision.collider.CompareTag("Runway"))
         {
-            isDash = true;
+            //isDash = true;
             isGround = true;
+        }
+    }
+
+    private void OnCollisionExit2D(Collision2D collision)
+    {
+        if (collision.collider.CompareTag("Floor") || collision.collider.CompareTag("Runway"))
+        {
+            isGround = false;
         }
     }
 
