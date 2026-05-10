@@ -105,6 +105,12 @@ public class PlayerMoveState : PlayerState
 
     public override void LogicUpdate()
     {
+        if (InputData.aimingPressed)
+        {
+            controller.OnAttack();
+            return;
+        }
+
         if (CheckFall() && !controller.isGround)
         {
             controller.OnFall();
@@ -390,6 +396,8 @@ public class PlayerAttackState : PlayerState
     {
 
         isAiming = true;
+
+        controller.Rigidbody2D.velocity = new Vector2(0f, controller.Rigidbody2D.velocity.y);
 
         controller.animator.SetBool("IsAiming", true);
         aimingTimer = controller.aimingTime;
