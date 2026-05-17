@@ -22,6 +22,8 @@ public class PlayerController : MonoBehaviour
     public float dashPower;
     [SerializeField] private float attackCoolTime;
     public float attackTimer;
+
+    private bool lockPlayerInput;
     
     // 플레이어의 상태들
     public PlayerState currentState;
@@ -78,12 +80,16 @@ public class PlayerController : MonoBehaviour
 
         // 현재 상태를 Idle로 설정
         currentState = idleState;
+        lockPlayerInput = false;
     }
 
     // 매 프레임 로직을 체크해 상태 변환
     void Update()
     {
-        InputReader.ReadInput();
+        if(currentState.CanInput && !lockPlayerInput)
+        {
+            InputReader.ReadInput();
+        }
 
         currentState.LogicUpdate();
         CoolDown();
@@ -210,5 +216,17 @@ public class PlayerController : MonoBehaviour
         }
 
         moveSpeed = setSpeed;
+    }
+
+    public void LockPlayerInput(float time)
+    {
+        StartCoroutine(LockPlayerInputHelper(time));
+    }
+
+    public IEnumerator LockPlayerInputHelper(float time)
+    {
+        lockPlayerInput = true;
+        yield return new WaitForSeconds(time);
+        lockPlayerInput = false;
     }
 }
