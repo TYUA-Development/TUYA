@@ -25,7 +25,8 @@ public class StoneBridge : MonoBehaviour, ICoreEvent, IArrowHit
     public void OnCoreEvent()
     {
         //CameraMovement.Instance.MoveCamera(CameraPos, 5.0f);
-        CameraMovement.Instance.MoveCamera(CameraPos, 5.0f, CameraSpeed);
+        CameraMovement.Instance.MoveCamera(CameraPos, 5.0f, 1.0f, CameraSpeed, true);
+        CameraMovement.Instance.MoveCameraNoise(5.0f, 6.0f, false, true);
 
         foreach (StoneBridgeInfo info in gameObjects)
         {
@@ -45,6 +46,8 @@ public class StoneBridge : MonoBehaviour, ICoreEvent, IArrowHit
 
     private IEnumerator MoveBridge(StoneBridgeInfo info)
     {
+        yield return new WaitForSeconds(1.0F);
+
         Transform bridge = info.stoneBridge.transform;
 
         Vector3 targetPos = bridge.localPosition;

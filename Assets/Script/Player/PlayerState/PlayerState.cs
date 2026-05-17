@@ -14,6 +14,9 @@ public abstract class PlayerState
     // 플레이어의 InputReader를 매번 불러와 InputData에 스크랩
     protected PlayerInputData InputData => controller.InputReader.InputData;
     // 생성자로 PlayerController를 받아서 저장
+
+    public virtual bool CanInput => true;
+
     protected PlayerState(PlayerController controller)
     {
         this.controller = controller;
@@ -405,6 +408,8 @@ public class PlayerAttackState : PlayerState
 
     public override void Exit()
     {
+        controller.LockPlayerInput(1.0f);
+
         controller.upperBody.SetActive(false);
 
         controller.upperAnimator.SetBool("IsAttack", false);
@@ -578,7 +583,6 @@ public class PlayerFallState : PlayerState
     public override void Exit()
     {
         controller.animator.SetBool("IsFall", false);
-        
     }
 
     public override void LogicUpdate()
