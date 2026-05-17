@@ -17536,7 +17536,7 @@ ParticleSystemRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: a5ae0827e35ef1d4ab0fb174449a2f60, type: 2}
+  - {fileID: 2100000, guid: 43a5fd1a01531b942849963a7d09cc24, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -31953,7 +31953,7 @@ ParticleSystemRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: a5ae0827e35ef1d4ab0fb174449a2f60, type: 2}
+  - {fileID: 2100000, guid: 43a5fd1a01531b942849963a7d09cc24, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -44311,7 +44311,7 @@ ParticleSystemRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: a5ae0827e35ef1d4ab0fb174449a2f60, type: 2}
+  - {fileID: 2100000, guid: 43a5fd1a01531b942849963a7d09cc24, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -79378,7 +79378,7 @@ ParticleSystemRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: a5ae0827e35ef1d4ab0fb174449a2f60, type: 2}
+  - {fileID: 2100000, guid: 43a5fd1a01531b942849963a7d09cc24, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -100140,7 +100140,7 @@ Camera:
     height: 1
   near clip plane: 0.3
   far clip plane: 1000
-  field of view: 79
+  field of view: 70.3
   orthographic: 0
   orthographic size: 21.238499
   m_Depth: -1
@@ -100167,7 +100167,7 @@ Transform:
   m_GameObject: {fileID: 1669697200}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 463.1, y: 19.6, z: -35.53}
+  m_LocalPosition: {x: 39.5, y: 17.2, z: -35.53}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
