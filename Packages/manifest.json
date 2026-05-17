@@ -1,6 +1,5 @@
 {
   "dependencies": {
-    "com.backsani.base": "file:C:/Users/hj577/Documents/GitHub/com.backsani.base",
     "com.unity.collab-proxy": "2.11.2",
     "com.unity.feature.2d": "2.0.1",
     "com.unity.ide.rider": "3.0.31",

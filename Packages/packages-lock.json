@@ -1,11 +1,5 @@
 {
   "dependencies": {
-    "com.backsani.base": {
-      "version": "file:C:/Users/hj577/Documents/GitHub/com.backsani.base",
-      "depth": 0,
-      "source": "local",
-      "dependencies": {}
-    },
     "com.unity.2d.animation": {
       "version": "9.1.1",
       "depth": 1,
