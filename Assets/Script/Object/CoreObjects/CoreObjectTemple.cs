@@ -13,6 +13,8 @@ public class TemplePiece
     [Tooltip("1~100")]
     public float slowPower;
     [HideInInspector] public PerlinNoise noise;
+
+    public float delayTime;
 }
 public class CoreObjectTemple : MonoBehaviour, IArrowHit, ICoreEvent
 {
@@ -53,6 +55,8 @@ public class CoreObjectTemple : MonoBehaviour, IArrowHit, ICoreEvent
 
     private IEnumerator RisingTemple(TemplePiece piece)
     {
+        yield return new WaitForSeconds(piece.delayTime);
+
         Transform target = piece.piece.transform;
 
         // 시작 위치

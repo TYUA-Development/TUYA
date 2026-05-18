@@ -36,7 +36,7 @@ public class CameraMovement : MonoBehaviour
         {
             return;
         }
-        Vector3 pos = new Vector3(Charactor.transform.position.x, cameraHeight, transform.position.z);
+        Vector3 pos = new Vector3(Charactor.transform.position.x, Charactor.transform.position.y, transform.position.z);
         transform.position = pos;
     }
 
