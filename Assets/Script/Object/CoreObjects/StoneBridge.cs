@@ -17,6 +17,10 @@ public class StoneBridge : MonoBehaviour, ICoreEvent, IArrowHit
     public float stoneMoveSpeed;
     private bool IsBridge;
 
+    public bool riseUp;
+    public float risePosY;
+    public float riseSpeed;
+
     private void Awake()
     {
         IsBridge = false;
@@ -27,6 +31,9 @@ public class StoneBridge : MonoBehaviour, ICoreEvent, IArrowHit
         //CameraMovement.Instance.MoveCamera(CameraPos, 5.0f);
         CameraMovement.Instance.MoveCamera(CameraPos, 5.0f, 1.0f, CameraSpeed, true);
         CameraMovement.Instance.MoveCameraNoise(5.0f, 6.0f, false, true);
+
+        if (riseUp)
+            StartCoroutine(RisingCore());
 
         foreach (StoneBridgeInfo info in gameObjects)
         {
@@ -43,6 +50,26 @@ public class StoneBridge : MonoBehaviour, ICoreEvent, IArrowHit
         }
     }
 
+    private IEnumerator RisingCore()
+    {
+        Vector3 targetPos = new Vector3(
+        transform.position.x,
+        risePosY,
+        transform.position.z);
+
+        while (Mathf.Abs(transform.position.y - risePosY) > 0.01f)
+        {
+            transform.position = Vector3.MoveTowards(
+                transform.position,
+                targetPos,
+                riseSpeed * Time.deltaTime);
+
+            yield return null;
+        }
+
+        // 정확한 위치 보정
+        transform.position = targetPos;
+    }
 
     private IEnumerator MoveBridge(StoneBridgeInfo info)
     {

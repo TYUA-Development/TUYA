@@ -40,6 +40,11 @@ public class CameraMovement : MonoBehaviour
         transform.position = pos;
     }
 
+    public void SetCameraHeight(float height)
+    {
+        cameraHeight = height;
+    }
+
     /// <summary>
     /// 카메라가 목표로 순간이동 후 몇초간 해당 위치 비춤.
     /// </summary>
