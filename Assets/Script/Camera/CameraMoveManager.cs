@@ -8,6 +8,7 @@ public struct CameraMoveInfo
 
     public Vector3 startPos;
     public Vector3 endPos;
+    public Vector3 targetPos;
 
     // 0 이하라면 줌 변경 안 함
     public float zoom;
@@ -18,7 +19,8 @@ public class CameraMoveManager : MonoBehaviour
     [Header("Camera Move Infos")]
     public List<CameraMoveInfo> list = new List<CameraMoveInfo>();
 
-    private Camera targetCamera;
+    public GameObject targetCameraRig;
+    private Camera cameraComponent;
 
     [SerializeField] public PlayerController player;
     private CameraMovement cameraMovement;
@@ -29,26 +31,25 @@ public class CameraMoveManager : MonoBehaviour
 
     private void Awake()
     {
-        if (targetCamera == null)
-            targetCamera = Camera.main;
+        if(targetCameraRig != null)
+            cameraMovement = targetCameraRig.GetComponent<CameraMovement>();
 
-        if(targetCamera != null)
-            cameraMovement = targetCamera.GetComponent<CameraMovement>();
+        cameraComponent = Camera.main;
 
-        if (targetCamera != null)
-            defaultFov = targetCamera.fieldOfView;
+        if (targetCameraRig != null)
+            defaultFov = cameraComponent.fieldOfView;
     }
 
     private void Update()
     {
-        if (targetCamera == null)
+        if (targetCameraRig == null)
             return;
 
         if (currentIndex >= list.Count)
             return;
 
         CameraMoveInfo info = list[currentIndex];
-        Vector3 cameraPos = targetCamera.transform.position;
+        Vector3 cameraPos = player.transform.position;
 
         ApplyCameraMoveInfo(info, cameraPos);
 
@@ -64,11 +65,21 @@ public class CameraMoveManager : MonoBehaviour
         if (cameraMovement != null)
             cameraMovement.enabled = info.followPlayer;
 
+        if(!info.followPlayer)
+        {
+            cameraMovement.enabled = false;
+            CameraMovement.Instance.MoveCamera(info.targetPos);
+        }
+        else
+        {
+            cameraMovement.enabled = true;
+        }
+
         if (info.zoom > 0f)
         {
             float t = GetProgress(cameraPos, info.startPos, info.endPos);
 
-            targetCamera.fieldOfView = Mathf.Lerp(
+            cameraComponent.fieldOfView = Mathf.Lerp(
                 defaultFov,
                 info.zoom,
                 t
@@ -80,7 +91,7 @@ public class CameraMoveManager : MonoBehaviour
     {
         if (info.zoom > 0f)
         {
-            targetCamera.fieldOfView = info.zoom;
+            cameraComponent.fieldOfView = info.zoom;
             defaultFov = info.zoom;
         }
     }
