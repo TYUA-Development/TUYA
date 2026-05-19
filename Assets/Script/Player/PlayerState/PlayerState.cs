@@ -89,11 +89,16 @@ public class PlayerMoveState : PlayerState
     private float moveSpeed;
     private Collider2D col;
     private LayerMask groundLayer;
+
+    private float sensorX;
+    private float sensorDistance;
     public PlayerMoveState(PlayerController controller) : base(controller)
     {
         moveSpeed = controller.moveSpeed;
         col = controller.GetComponent<BoxCollider2D>();
         groundLayer = LayerMask.GetMask("Floor");
+        sensorDistance = 1.0f;
+        sensorX = 3.0f;
     }
 
     public override void Enter()
@@ -143,6 +148,8 @@ public class PlayerMoveState : PlayerState
 
     public override void PhysicsUpdate()
     {
+        CheckRunWayFromFront();
+
         float moveDirect = InputData.moveAxis.x;
 
         Vector2 velocity = controller.Rigidbody2D.velocity;
@@ -172,6 +179,35 @@ public class PlayerMoveState : PlayerState
         RaycastHit2D hit = Physics2D.Raycast( origin, Vector2.down, 0.2f, groundLayer);
 
         return hit.collider == null;
+    }
+
+    private bool CheckRunWayFromFront()
+    {
+        Bounds bounds = col.bounds;
+
+        float footY = bounds.min.y;
+        float footX = bounds.min.x - sensorX;
+
+        Vector2 rayOrigin = new Vector2(footX, footY);
+
+        RaycastHit2D hit = Physics2D.Raycast(rayOrigin, Vector2.down, sensorDistance, groundLayer);
+
+        Debug.DrawRay(rayOrigin, Vector2.down * sensorDistance, Color.red);
+
+        if (hit.collider != null && hit.collider.CompareTag("Runway"))
+        {
+            RunwayObject runway = hit.collider.GetComponent<RunwayObject>();
+            if (runway == null)
+            {
+                Debug.LogError("Runway 태그는 있지만 RunwayObject 컴포넌트가 없습니다: " + hit.collider.name);
+                return false;
+            }
+
+            runway.OnRunWayCollider();
+            return true;
+        }
+
+        return false;
     }
 }
 
