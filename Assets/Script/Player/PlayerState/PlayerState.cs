@@ -188,7 +188,7 @@ public class PlayerMoveState : PlayerState
         Bounds bounds = col.bounds;
 
         float footY = bounds.min.y;
-        float footX = bounds.min.x - sensorX;
+        float footX = bounds.min.x + (controller.transform.localScale.x > 0 ? -sensorX : sensorX);
 
         Vector2 rayOrigin = new Vector2(footX, footY);
 
