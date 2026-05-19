@@ -172,6 +172,8 @@ public class PlayerMoveState : PlayerState
         }
     }
 
+    //TODO:: Runway가 바닥이면 velocity.x를 0으로. 기본 state로.
+
     private bool CheckFall()
     {
         Vector2 origin = new Vector2(col.bounds.center.x, col.bounds.min.y);
