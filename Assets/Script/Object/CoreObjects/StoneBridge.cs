@@ -17,7 +17,7 @@ public class StoneBridge : MonoBehaviour, ICoreEvent, IArrowHit
     public float stoneMoveSpeed;
     private bool IsBridge;
 
-    public bool riseUp;
+    public bool coreRiseUp;
     public float risePosY;
     public float riseSpeed;
 
@@ -30,9 +30,9 @@ public class StoneBridge : MonoBehaviour, ICoreEvent, IArrowHit
     {
         //CameraMovement.Instance.MoveCamera(CameraPos, 5.0f);
         CameraMovement.Instance.MoveCamera(CameraPos, 5.0f, 1.0f, CameraSpeed, true);
-        CameraMovement.Instance.MoveCameraNoise(5.0f, 6.0f, false, true);
+        CameraMovement.Instance.MoveCameraNoise(2.0f, 5.0f, false, true);
 
-        if (riseUp)
+        if (coreRiseUp)
             StartCoroutine(RisingCore());
 
         foreach (StoneBridgeInfo info in gameObjects)

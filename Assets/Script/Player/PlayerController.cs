@@ -136,6 +136,7 @@ public class PlayerController : MonoBehaviour
     // 플레이어의 상태를 변경시키고 Enter 함수를 실행
     private void ChangeState(PlayerState state)
     {
+        Debug.Log(state.ToString());
         currentState.Exit();
         currentState = state;
         currentState.Enter();
