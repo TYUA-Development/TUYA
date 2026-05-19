@@ -6,14 +6,14 @@ using UnityEngine;
 using UnityEngine.UIElements;
 using static UnityEngine.RuleTile.TilingRuleOutput;
 
-// Ãß»ó Å¬·¡½º·Î »ı¼º
+// ì¶”ìƒ í´ë˜ìŠ¤ë¡œ ìƒì„±
 public abstract class PlayerState
 {
-    // ÇÃ·¹ÀÌ¾îÀÇ playerController¸¦ ÀúÀåÇÏ´Â º¯¼ö
+    // í”Œë ˆì´ì–´ì˜ playerControllerë¥¼ ì €ì¥í•˜ëŠ” ë³€ìˆ˜
     protected PlayerController controller;
-    // ÇÃ·¹ÀÌ¾îÀÇ InputReader¸¦ ¸Å¹ø ºÒ·¯¿Í InputData¿¡ ½ºÅ©·¦
+    // í”Œë ˆì´ì–´ì˜ InputReaderë¥¼ ë§¤ë²ˆ ë¶ˆëŸ¬ì™€ InputDataì— ìŠ¤í¬ë©
     protected PlayerInputData InputData => controller.InputReader.InputData;
-    // »ı¼ºÀÚ·Î PlayerController¸¦ ¹Ş¾Æ¼­ ÀúÀå
+    // ìƒì„±ìë¡œ PlayerControllerë¥¼ ë°›ì•„ì„œ ì €ì¥
 
     public virtual bool CanInput => true;
 
@@ -125,10 +125,10 @@ public class PlayerMoveState : PlayerState
             return;
         }
 
-        // ¸ØÃß¾ú´ÂÁö Ã¼Å©
+        // ë©ˆì¶”ì—ˆëŠ”ì§€ ì²´í¬
         if (Mathf.Abs(InputData.moveAxis.x) == 0 && Mathf.Abs(controller.Rigidbody2D.velocity.x) < 0.01f)
         {
-            Debug.Log("¿À·ù ¹ß»ı");
+            Debug.Log("ì˜¤ë¥˜ ë°œìƒ");
             controller.OnIdle();
         }
 
@@ -137,7 +137,7 @@ public class PlayerMoveState : PlayerState
         //    controller.OnDash();
         //}
 
-        // Á¡ÇÁ°¡ °¡´ÉÇÑ »óÅÂÀÎÁö Ã¼Å©
+        // ì í”„ê°€ ê°€ëŠ¥í•œ ìƒíƒœì¸ì§€ ì²´í¬
         if (InputData.jumpPressed && controller.isGround)
         {
             controller.OnJump();
@@ -172,7 +172,7 @@ public class PlayerMoveState : PlayerState
         }
     }
 
-    //TODO:: Runway°¡ ¹Ù´ÚÀÌ¸é velocity.x¸¦ 0À¸·Î. ±âº» state·Î.
+    //TODO:: Runwayê°€ ë°”ë‹¥ì´ë©´ velocity.xë¥¼ 0ìœ¼ë¡œ. ê¸°ë³¸ stateë¡œ.
 
     private bool CheckFall()
     {
@@ -201,7 +201,7 @@ public class PlayerMoveState : PlayerState
             RunwayObject runway = hit.collider.GetComponent<RunwayObject>();
             if (runway == null)
             {
-                Debug.LogError("Runway ÅÂ±×´Â ÀÖÁö¸¸ RunwayObject ÄÄÆ÷³ÍÆ®°¡ ¾ø½À´Ï´Ù: " + hit.collider.name);
+                Debug.LogError("Runway íƒœê·¸ëŠ” ìˆì§€ë§Œ RunwayObject ì»´í¬ë„ŒíŠ¸ê°€ ì—†ìŠµë‹ˆë‹¤: " + hit.collider.name);
                 return false;
             }
 
@@ -246,7 +246,7 @@ public class PlayerJumpState : PlayerState
         controller.Rigidbody2D.AddForce(Vector2.up * jumpPower, ForceMode2D.Impulse);
         //controller.isGround = false;
 
-        Debug.Log("Á¡ÇÁ È°¼ºÈ­ " + jumpPower);
+        Debug.Log("ì í”„ í™œì„±í™” " + jumpPower);
 
         controller.isGround = false;
 
@@ -272,7 +272,7 @@ public class PlayerJumpState : PlayerState
         //    controller.OnDash();
         //}
 
-        // ¶¥¿¡ ´ê¾ÒÀ» ¶§ »óÅÂ º¯È¯
+        // ë•…ì— ë‹¿ì•˜ì„ ë•Œ ìƒíƒœ ë³€í™˜
         if (controller.isGround && controller.Rigidbody2D.velocity.y <= 0.01f)
         {
             if (Mathf.Abs(InputData.moveAxis.x) > 0.01f)
@@ -586,7 +586,7 @@ public class PlayerAttackState : PlayerState
                     controller.upperBody.SetActive(false);
                 }
             }
-            // TODO:: AttackState°¡ ÇØÁ¦µÇ´Â Á¶°Ç Ãß°¡
+            // TODO:: AttackStateê°€ í•´ì œë˜ëŠ” ì¡°ê±´ ì¶”ê°€
         }
     }
 

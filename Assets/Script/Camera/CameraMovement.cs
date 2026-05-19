@@ -45,6 +45,15 @@ public class CameraMovement : MonoBehaviour
         cameraHeight = height;
     }
 
+
+    public void MoveCamera(Vector3 targetPos)
+    {
+        transform.position = new Vector3(
+            targetPos.x,
+            targetPos.y,
+            transform.position.z);
+    }
+
     /// <summary>
     /// 카메라가 목표로 순간이동 후 몇초간 해당 위치 비춤.
     /// </summary>
