@@ -42,6 +42,9 @@ public class StonePillarManager : BasicObject
     public int minStep;
     public int stepHeight;
     public float moveDuration;
+    public float basicPosition;
+    public float startPositionY;
+    
 
     [Header("WindMill")]
     public float windMillSpinSpeed;
@@ -70,16 +73,16 @@ public class StonePillarManager : BasicObject
 
         for(int i = 0; i < pillars.Count; i++)
         {
-            Vector3 pos = new Vector3(pillars[i].position, pillars[i].startStep * stepHeight, 0);
+            Vector3 pos = new Vector3(pillars[i].position,basicPosition+ pillars[i].startStep * stepHeight, 0);
 
             GameObject stonePillarOb = Instantiate(StonePillar, pos, Quaternion.identity);
 
-            PerlinNoise noise = stonePillarOb.GetComponent<PerlinNoise>();
+            //PerlinNoise noise = stonePillarOb.GetComponent<PerlinNoise>();
 
-            if (noise != null)
-            {
-                OnMoveStart[i] += noise.noise;
-            }
+            //if (noise != null)
+            //{
+            //    OnMoveStart[i] += noise.noise;
+            //}
 
             stonePillarObject.Add(stonePillarOb);
         }
@@ -125,11 +128,11 @@ public class StonePillarManager : BasicObject
 
         Vector3 pos;
 
-        if(npos.y > stepHeight * maxStep)
+        if(npos.y > startPositionY + stepHeight * maxStep)
         {
             pos = new Vector3(npos.x, minStep * stepHeight, 0);
         }
-        else if (npos.y < stepHeight * minStep)
+        else if (npos.y < startPositionY + stepHeight * minStep)
         {
             pos = new Vector3(npos.x, maxStep * stepHeight, 0);
         }
@@ -151,13 +154,13 @@ public class StonePillarManager : BasicObject
             target.transform.position = Vector3.Lerp(start, pos, time / duration);
             time += Time.deltaTime;
 
-            OnMoveStart[index].Invoke();
+            //OnMoveStart[index].Invoke();
 
             yield return null;
         }
 
         target.transform.position = pos;
-        OnMoveEnd[index].Invoke();
+        //OnMoveEnd[index].Invoke();
     }
 
     IEnumerator MoveWindMillCoroutine(GameObject target, float duration, float speed)
