@@ -68,7 +68,7 @@ public class CameraMoveManager : MonoBehaviour
         if(!info.followPlayer)
         {
             cameraMovement.enabled = false;
-            CameraMovement.Instance.MoveCamera(info.targetPos);
+            CameraMovement.Instance.MoveCameraFix(info.targetPos);
         }
         else
         {
