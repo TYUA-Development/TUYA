@@ -9,8 +9,13 @@ public class CameraMovement : MonoBehaviour
     public UnityEngine.Transform shakeCamera;
     public GameObject Charactor;
     public float cameraHeight;
-    private bool isMovingEvent;
+
+    [Tooltip("카메라가 따라가는 강도 0.1 ~ 0.5")]
+    public float followSmoothTime = 0.2f;
+
+    [HideInInspector] public bool isMovingEvent;
     private float cameraSpeedUp = 3.0f;
+    private Vector3 velocity;
 
     public static CameraMovement Instance { get; private set; }
 
@@ -36,8 +41,16 @@ public class CameraMovement : MonoBehaviour
         {
             return;
         }
-        Vector3 pos = new Vector3(Charactor.transform.position.x, Charactor.transform.position.y+15.13f, transform.position.z);
-        transform.position = pos;
+        Vector3 targetPos = new Vector3(
+        Charactor.transform.position.x,
+        Charactor.transform.position.y + 15.13f,
+        transform.position.z);
+
+        transform.position = Vector3.SmoothDamp(
+            transform.position,
+            targetPos,
+            ref velocity,
+            followSmoothTime);
     }
 
     public void SetCameraHeight(float height)
@@ -46,7 +59,20 @@ public class CameraMovement : MonoBehaviour
     }
 
 
-    public void MoveCamera(Vector3 targetPos)
+    public void MoveCameraFix(Vector3 targetPos)
+    {
+        transform.position = new Vector3(
+            targetPos.x,
+            targetPos.y,
+            transform.position.z);
+    }
+
+    /// <summary>
+    /// 카메라가 목표로 speed 속도로 이동 및 고정
+    /// </summary>
+    /// <param name="targetPos"></param>
+    /// <param name="speed"></param>
+    public void MoveCameraFix(Vector3 targetPos, float speed)
     {
         transform.position = new Vector3(
             targetPos.x,
