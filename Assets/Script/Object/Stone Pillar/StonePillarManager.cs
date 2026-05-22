@@ -124,21 +124,34 @@ public class StonePillarManager : BasicObject
     {
         float ny = (int)target.moveDirection * stepHeight + targetPillar.transform.position.y;
 
-        Vector3 npos = new Vector3(targetPillar.transform.position.x, ny, 0);
+        float minY = startPositionY + minStep * stepHeight;
+        float maxY = startPositionY + maxStep * stepHeight;
 
         Vector3 pos;
 
-        if(npos.y > startPositionY + stepHeight * maxStep)
+        if (ny > maxY)
         {
-            pos = new Vector3(npos.x, minStep * stepHeight, 0);
+            pos = new Vector3(
+                targetPillar.transform.position.x,
+                minY,
+                0
+            );
         }
-        else if (npos.y < startPositionY + stepHeight * minStep)
+        else if (ny < minY)
         {
-            pos = new Vector3(npos.x, maxStep * stepHeight, 0);
+            pos = new Vector3(
+                targetPillar.transform.position.x,
+                maxY,
+                0
+            );
         }
         else
         {
-            pos = npos;
+            pos = new Vector3(
+                targetPillar.transform.position.x,
+                ny,
+                0
+            );
         }
 
         return pos;

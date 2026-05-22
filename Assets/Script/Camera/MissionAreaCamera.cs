@@ -123,7 +123,11 @@ public class MissionAreaCamera : MonoBehaviour
         enterCameraPos = cameraRig.transform.position;
 
         // 핵심: targetPos와 enterCameraPos의 간격만큼 targetPos 이후로 이동
-        exitCameraPos = targetPos + (targetPos - enterCameraPos);
+        exitCameraPos = new Vector3(
+    targetPos.x + (targetPos.x - enterCameraPos.x),
+    enterCameraPos.y,
+    enterCameraPos.z
+);
 
         startZoomSize = targetCamera.fieldOfView;
 
