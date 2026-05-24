@@ -54,6 +54,7 @@ public class MissionAreaCamera : MonoBehaviour
 
         float leftZoomEndX = targetPos.x - maxSizeXPos;
         float rightZoomStartX = targetPos.x + maxSizeXPos;
+        targetPos.y = player.position.y + 15.13f;
 
         if (isLeftToRight)
         {
