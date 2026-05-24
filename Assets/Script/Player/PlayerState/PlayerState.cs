@@ -41,12 +41,12 @@ public class PlayerIdleState : PlayerState
 
     public override void Enter()
     {
-        
+        controller.Rigidbody2D.gravityScale = 0f;
     }
 
     public override void Exit()
     {
-        
+        controller.Rigidbody2D.gravityScale = 5.0f;
     }
 
     public override void LogicUpdate()
@@ -80,7 +80,7 @@ public class PlayerIdleState : PlayerState
 
     public override void PhysicsUpdate()
     {
-        
+        controller.Rigidbody2D.velocity = Vector3.zero;
     }
 }
 
@@ -290,22 +290,44 @@ public class PlayerJumpState : PlayerState
 
     public override void PhysicsUpdate()
     {
-        if(isFalling)
+        if (isFalling)
         {
-            Vector2 origin = new Vector2(col.bounds.center.x, col.bounds.min.y);
+            //Vector2 origin = new Vector2(col.bounds.center.x, col.bounds.min.y);
 
+            //{
+            //    RaycastHit2D hit;
+            //    Physics2D.BoxCast(col.bounds.center, col.bounds.size, 0f, Vector2.down, checkGroundDistance, groundLayer);
+
+            //    if (hit.collider != null && hit.collider.CompareTag("Runway"))
+            //    {
+            //        hit.collider.GetComponent<RunwayObject>().OnRunWayCollider();
+            //        Debug.Log("Runway On");
+            //    }
+
+            //    if (hit.collider != null && !isLanding)
+            //    {
+            //        isLanding = true;
+            //        controller.animator.SetTrigger("DetectFloor");
+            //    }
+            //}
+
+            Vector2 checkPos = new Vector2(col.bounds.center.x, col.bounds.min.y - 0.05f);
+
+            Vector2 checkSize = new Vector2(col.bounds.size.x * 0.9f, 0.1f);
+
+            Collider2D hit = Physics2D.OverlapBox(checkPos, checkSize, 0f, groundLayer);
+
+            if(hit != null)
             {
-                RaycastHit2D hit = Physics2D.Raycast(origin, Vector2.down, checkGroundDistance, groundLayer);
-
-                if (hit.collider != null && hit.collider.CompareTag("Runway"))
+                if(hit.CompareTag("Runway"))
                 {
-                    hit.collider.GetComponent<RunwayObject>().OnRunWayCollider();
-                    Debug.Log("Runway On");
+                    hit.GetComponent<RunwayObject>().OnRunWayCollider();
                 }
 
-                if (hit.collider != null && !isLanding)
+                if (!isLanding)
                 {
                     isLanding = true;
+
                     controller.animator.SetTrigger("DetectFloor");
                 }
             }
@@ -649,6 +671,7 @@ public class PlayerFallState : PlayerState
             {
                 isLanding = true;
                 controller.animator.SetTrigger("DetectFloor");
+                Debug.Log("DetectFloor Falling");
             }
         }
 
@@ -665,7 +688,7 @@ public class PlayerFallState : PlayerState
             Debug.Log("Landing");
 
             AnimatorStateInfo info = controller.animator.GetCurrentAnimatorStateInfo(0);
-            if (info.IsName("JumpEnd"))
+            if (info.IsName("JumpEnd") || info.IsName("Idle"))
             {
                 if (Mathf.Abs(InputData.moveAxis.x) > 0.01f)
                     controller.OnMove();
