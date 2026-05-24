@@ -21,37 +21,32 @@ public class CameraMovement : MonoBehaviour
 
     private void Awake()
     {
-        if (Instance != null && Instance != this)
-        {
-            Destroy(gameObject);
-            return;
-        }
-
         Instance = this;
-
-        DontDestroyOnLoad(gameObject);
-
         isMovingEvent = false;
     }
 
     // Update is called once per frame
-    void Update()
+    void LateUpdate()
     {
         if (isMovingEvent)
         {
             return;
         }
+
         Vector3 targetPos = new Vector3(
-        Charactor.transform.position.x,
-        Charactor.transform.position.y + 15.13f,
-        transform.position.z);
+            Charactor.transform.position.x,
+            Charactor.transform.position.y + 15.13f,
+            transform.position.z
+        );
 
         transform.position = Vector3.SmoothDamp(
             transform.position,
             targetPos,
             ref velocity,
-            followSmoothTime);
+            followSmoothTime
+        );
     }
+
 
     public void SetCameraHeight(float height)
     {
