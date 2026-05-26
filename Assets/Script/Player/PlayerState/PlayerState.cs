@@ -51,6 +51,7 @@ public class PlayerIdleState : PlayerState
 
     public override void LogicUpdate()
     {
+        controller.animator.SetTrigger("DetectFloor");
         if (controller.ChangeDirection(InputData.moveAxis.x))
         {
             Debug.Log("Turn");

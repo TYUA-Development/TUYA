@@ -15,6 +15,9 @@ public class PlayerController : MonoBehaviour
     public bool isGround;
     public bool isDash;
 
+    // 풀밭 위에 있는지
+    public bool isOnGrass;
+
     // 플레이어의 기본적인 수치를 Inspector에서 설정하기 위해
     public float setSpeed;
     [HideInInspector] public float moveSpeed;
@@ -23,8 +26,14 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float attackCoolTime;
     public float attackTimer;
 
+    // 발소리 관련
+    public AudioSource footstepSource;
+    public AudioClip[] grassFootsteps;
+    public float footstepInterval = 0.35f;
+    private float footstepTimer;
+
     private bool lockPlayerInput;
-    
+
     // 플레이어의 상태들
     public PlayerState currentState;
     public PlayerIdleState idleState;
@@ -34,7 +43,7 @@ public class PlayerController : MonoBehaviour
     public PlayerFallState fallState;
     public PlayerAttackState attackState;
 
-    //플레이어 상태들을 저장한 상태리스트
+    // 플레이어 상태들을 저장한 상태리스트
     public List<PlayerState> states = new List<PlayerState>();
 
     public Animator animator;
@@ -54,55 +63,49 @@ public class PlayerController : MonoBehaviour
     private void Awake()
     {
         InputReader = GetComponent<PlayerInputReader>();
-        //BoxCollider2D temp = GetComponent<BoxCollider2D>();
-        //Vector2 origin = charactorSprite.sprite.bounds.size - new Vector3(9.0f, 1.0f, 0);
-        //temp.size = origin;
-        //temp.offset = charactorSprite.sprite.bounds.center;
 
-        //Rigidbody2D = GetComponent<Rigidbody2D>();
-        //animator = GetComponent<Animator>();
+        if (Rigidbody2D == null)
+            Rigidbody2D = GetComponent<Rigidbody2D>();
+
+        if (footstepSource == null)
+            footstepSource = GetComponent<AudioSource>();
+
         moveSpeed = setSpeed;
 
-        // PlayerState를 상속받는 상태들을 생성자로 PlayerController를 넘겨주며 초기화
         idleState = new PlayerIdleState(this);
         moveState = new PlayerMoveState(this);
         jumpState = new PlayerJumpState(this);
         dashState = new PlayerDashState(this);
         fallState = new PlayerFallState(this);
-        attackState = new PlayerAttackState(this); 
+        attackState = new PlayerAttackState(this);
 
-        states.Add(idleState); states.Add(moveState); states.Add(jumpState); states.Add(dashState); states.Add(attackState);
+        states.Add(idleState);
+        states.Add(moveState);
+        states.Add(jumpState);
+        states.Add(dashState);
+        states.Add(attackState);
 
-        foreach (PlayerState s in states)
-        {
-            //s.Init();
-        }
-
-        // 현재 상태를 Idle로 설정
         currentState = idleState;
         lockPlayerInput = false;
     }
 
-    // 매 프레임 로직을 체크해 상태 변환
     void Update()
     {
-        if(currentState.CanInput && !lockPlayerInput)
+        if (currentState.CanInput && !lockPlayerInput)
         {
             InputReader.ReadInput();
         }
 
         currentState.LogicUpdate();
         CoolDown();
+        PlayFootstep();
     }
 
-    // 플레이어 현재 상태의 움직임에 관한 처리
     private void FixedUpdate()
     {
         currentState.PhysicsUpdate();
     }
 
-    // 플레이어의 현재 상태를 변경시키기 위한 함수
-    //----------------------------------
     public void OnIdle()
     {
         ChangeState(idleState);
@@ -122,18 +125,12 @@ public class PlayerController : MonoBehaviour
     {
         ChangeState(fallState);
     }
-    //public void OnDash()
-    //{
-    //    ChangeState(dashState);
-    //}
 
     public void OnAttack()
     {
         ChangeState(attackState);
     }
-    //----------------------------------
 
-    // 플레이어의 상태를 변경시키고 Enter 함수를 실행
     private void ChangeState(PlayerState state)
     {
         Debug.Log(state.ToString());
@@ -142,43 +139,89 @@ public class PlayerController : MonoBehaviour
         currentState.Enter();
     }
 
-    // 플레이어의 방향을 바꾸는 함수
     public bool ChangeDirection(float dir)
     {
         if (dir == 0)
             return false;
 
-        if(dir == transform.localScale.x)
+        if (dir == transform.localScale.x)
         {
             transform.localScale = new Vector3(dir * -1, transform.localScale.y, transform.localScale.z);
             return true;
         }
-       return false;
+
+        return false;
     }
 
-    // 해당 방향으로 화살을 발사하는 함수
     public void ShootArrow(Vector2 direction)
     {
         Vector3 handLength = new Vector3(direction.x * 0.3f, direction.y * 0.3f, 0);
 
-        Instantiate(arrowObject, transform.position + handLength, Quaternion.identity).GetComponent<Arrow>().Launch(direction, transform);
+        Instantiate(arrowObject, transform.position + handLength, Quaternion.identity)
+            .GetComponent<Arrow>()
+            .Launch(direction, transform);
 
         attackTimer = attackCoolTime;
     }
 
-    // 쿨타임들을 관리해주는 함수
     private void CoolDown()
     {
-        if(attackTimer >= 0)
+        if (attackTimer >= 0)
             attackTimer -= Time.deltaTime;
+    }
+
+    private void PlayFootstep()
+    {
+        if (Rigidbody2D == null)
+            Rigidbody2D = GetComponent<Rigidbody2D>();
+
+        if (footstepSource == null)
+            footstepSource = GetComponent<AudioSource>();
+
+        if (Rigidbody2D == null)
+            return;
+
+        if (footstepSource == null)
+            return;
+
+        if (grassFootsteps == null || grassFootsteps.Length == 0)
+            return;
+
+        bool isMoving = Mathf.Abs(Rigidbody2D.velocity.x) > 0.05f;
+
+        if (isGround && isOnGrass && isMoving)
+        {
+            footstepTimer += Time.deltaTime;
+
+            if (footstepTimer >= footstepInterval)
+            {
+                int randomIndex = UnityEngine.Random.Range(0, grassFootsteps.Length);
+                AudioClip clipToPlay = grassFootsteps[randomIndex];
+
+                if (clipToPlay != null)
+                {
+                    footstepSource.PlayOneShot(clipToPlay);
+                }
+
+                footstepTimer = 0f;
+            }
+        }
+        else
+        {
+            footstepTimer = footstepInterval;
+        }
     }
 
     private void OnCollisionStay2D(Collision2D collision)
     {
         if (collision.collider.CompareTag("Floor") || collision.collider.CompareTag("Runway"))
         {
-            //isDash = true;
             isGround = true;
+        }
+
+        if (collision.collider.CompareTag("Floor"))
+        {
+            isOnGrass = true;
         }
     }
 
@@ -188,18 +231,18 @@ public class PlayerController : MonoBehaviour
         {
             isGround = false;
         }
+
+        if (collision.collider.CompareTag("Floor"))
+        {
+            isOnGrass = false;
+        }
     }
 
-    /// <summary>
-    /// 플레이어의 속도를 늦춰주는 함수.
-    /// 시작 속도, 둔화시간, 원래속도로 돌아올 분할 수
-    /// </summary>
-    /// <returns></returns>
     public IEnumerator SlowDownSpeed(float speed, float time, int divide = 0)
     {
         moveSpeed = speed;
 
-        if(divide == 0)
+        if (divide == 0)
         {
             yield return new WaitForSeconds(time);
 
@@ -207,9 +250,9 @@ public class PlayerController : MonoBehaviour
         }
         else
         {
-            float addSpeed = (setSpeed - speed)/ divide;
+            float addSpeed = (setSpeed - speed) / divide;
 
-            for(int i = 0; i < divide; i++)
+            for (int i = 0; i < divide; i++)
             {
                 yield return new WaitForSeconds(time / divide);
                 moveSpeed += addSpeed;
