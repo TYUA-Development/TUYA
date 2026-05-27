@@ -8,8 +8,9 @@ public class Arrow : MonoBehaviour
     public float gravityValue = 3.0f;
 
     private Rigidbody2D rb;
-
     private Transform shooter;
+
+    private bool hasHit = false;
 
     void Awake()
     {
@@ -37,7 +38,10 @@ public class Arrow : MonoBehaviour
 
     private void Update()
     {
-        if(flyTime > 0)
+        if (hasHit)
+            return;
+
+        if (flyTime > 0)
             flyTime -= Time.deltaTime;
         else
             rb.gravityScale = gravityValue;
@@ -45,6 +49,9 @@ public class Arrow : MonoBehaviour
 
     void FixedUpdate()
     {
+        if (hasHit)
+            return;
+
         // 속도 방향으로 계속 회전(포물선 꺾일 때 화살도 같이 숙여짐)
         if (rb.velocity.sqrMagnitude > 0.01f)
             transform.right = rb.velocity;
@@ -52,11 +59,22 @@ public class Arrow : MonoBehaviour
 
     public void OnTriggerEnter2D(Collider2D other)
     {
+        if (hasHit)
+            return;
+
         if (shooter == other.transform)
             return;
 
-        if(other.TryGetComponent<IArrowHit>(out IArrowHit target))
+        if (other.TryGetComponent<IArrowHit>(out IArrowHit target))
         {
+            hasHit = true;
+
+            // 맞을 때 사운드 재생
+            BowSFXRandomizer bowSFX = FindObjectOfType<BowSFXRandomizer>();
+
+            if (bowSFX != null)
+                bowSFX.PlayHit();
+
             target.OnHit();
 
             Vector2 hitPoint = other.ClosestPoint(transform.position);
@@ -64,8 +82,7 @@ public class Arrow : MonoBehaviour
             Stick(other.transform, hitPoint);
         }
 
-        // 맞으면 멈추고, 데미지 주고, 파괴 등등
-        // rb.isKinematic = true;  // 벽에 꽂히게 고정하고 싶으면 이런 것도 가능
+        // IArrowHit이 없는 오브젝트에 닿았을 때는 반응하지 않음
     }
 
     void Stick(Transform target, Vector2 hitPoint)

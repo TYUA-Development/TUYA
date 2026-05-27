@@ -17,4 +17,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/SeungHyun.unity
     guid: 4ccef17ed26f91c4aaf7712708db8207
+  - enabled: 1
+    path: Assets/Scenes/InGameScene/Forest.unity
+    guid: 796b92bb1e99165459c8d4d01911c6c4
   m_configObjects: {}

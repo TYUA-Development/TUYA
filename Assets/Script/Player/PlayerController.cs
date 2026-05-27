@@ -32,6 +32,9 @@ public class PlayerController : MonoBehaviour
     public float footstepInterval = 0.35f;
     private float footstepTimer;
 
+    // 활 사운드 관련
+    public BowSFXRandomizer bowSFX;
+
     private bool lockPlayerInput;
 
     // 플레이어의 상태들
@@ -69,6 +72,9 @@ public class PlayerController : MonoBehaviour
 
         if (footstepSource == null)
             footstepSource = GetComponent<AudioSource>();
+
+        if (bowSFX == null)
+            bowSFX = GetComponent<BowSFXRandomizer>();
 
         moveSpeed = setSpeed;
 
@@ -128,6 +134,9 @@ public class PlayerController : MonoBehaviour
 
     public void OnAttack()
     {
+        if (bowSFX != null)
+            bowSFX.PlayPull();
+
         ChangeState(attackState);
     }
 
@@ -155,6 +164,9 @@ public class PlayerController : MonoBehaviour
 
     public void ShootArrow(Vector2 direction)
     {
+        if (bowSFX != null)
+            bowSFX.PlayShoot();
+
         Vector3 handLength = new Vector3(direction.x * 0.3f, direction.y * 0.3f, 0);
 
         Instantiate(arrowObject, transform.position + handLength, Quaternion.identity)
