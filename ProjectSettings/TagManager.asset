@@ -6,6 +6,7 @@ TagManager:
   tags:
   - Floor
   - Runway
+  - grass
   layers:
   - Default
   - TransparentFX
