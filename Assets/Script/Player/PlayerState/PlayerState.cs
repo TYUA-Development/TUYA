@@ -523,12 +523,6 @@ public class PlayerAttackState : PlayerState
 
             angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
 
-
-            //Vector3 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-            //Vector2 direction = new Vector2(mousePosition.x - controller.transform.position.x, mousePosition.y - controller.transform.position.y).normalized;
-
-            //angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
-
             if (angle >= 0)
             {
                 if (angle >= 90)
