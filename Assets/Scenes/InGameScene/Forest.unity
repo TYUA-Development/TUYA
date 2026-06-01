@@ -36289,6 +36289,10 @@ PrefabInstance:
       value: MissionArea (1)
       objectReference: {fileID: 0}
     - target: {fileID: 3126395318707761731, guid: 9d6350832ecbf9b47a4c547dc331ba49, type: 3}
+      propertyPath: fixPosY
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3126395318707761731, guid: 9d6350832ecbf9b47a4c547dc331ba49, type: 3}
       propertyPath: maxSizeXPos
       value: 60
       objectReference: {fileID: 0}
@@ -186016,6 +186020,10 @@ PrefabInstance:
       value: MissionArea (2)
       objectReference: {fileID: 0}
     - target: {fileID: 3126395318707761731, guid: 9d6350832ecbf9b47a4c547dc331ba49, type: 3}
+      propertyPath: fixPosY
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3126395318707761731, guid: 9d6350832ecbf9b47a4c547dc331ba49, type: 3}
       propertyPath: maxSizeXPos
       value: 10
       objectReference: {fileID: 0}
@@ -187037,6 +187045,10 @@ PrefabInstance:
     - target: {fileID: 2636355358204944975, guid: 9d6350832ecbf9b47a4c547dc331ba49, type: 3}
       propertyPath: m_Name
       value: MissionArea
+      objectReference: {fileID: 0}
+    - target: {fileID: 3126395318707761731, guid: 9d6350832ecbf9b47a4c547dc331ba49, type: 3}
+      propertyPath: fixPosY
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
