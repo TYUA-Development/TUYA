@@ -11,6 +11,7 @@ public class MissionAreaCamera : MonoBehaviour
 
     [Tooltip("카메라와 바닥 기준 Z 거리")]
     public float groundDistance = 28f;
+    public bool fixPosY = false;
 
     private bool isCameraControl;
 
@@ -55,7 +56,8 @@ public class MissionAreaCamera : MonoBehaviour
         float leftZoomEndX = targetPos.x - maxSizeXPos;
         float rightZoomStartX = targetPos.x + maxSizeXPos;
         // TODO:: y값 수정한거 오류있음.
-        targetPos.y = player.position.y + 15.13f;
+        if(!fixPosY)
+            targetPos.y = player.position.y + 15.13f;
 
         if (isLeftToRight)
         {

@@ -127,7 +127,7 @@ public class PlayerMoveState : PlayerState
         }
 
         // 멈추었는지 체크
-        if (Mathf.Abs(InputData.moveAxis.x) == 0 && Mathf.Abs(controller.Rigidbody2D.velocity.x) < 0.01f)
+        if (Mathf.Abs(InputData.moveAxis.x) == 0 && Mathf.Abs(controller.Rigidbody2D.velocity.x) < 0.01f && controller.Rigidbody2D.velocity.y == 0f)
         {
             Debug.Log("오류 발생");
             controller.OnIdle();
@@ -583,7 +583,7 @@ public class PlayerFallState : PlayerState
         {
             AnimatorStateInfo info = controller.animator.GetCurrentAnimatorStateInfo(0);
 
-            if (info.IsName("JumpEnd") && info.normalizedTime >= 1f)
+            if ((info.IsName("JumpEnd") && info.normalizedTime >= 1f) || info.IsName("Idle"))
             {
                 if (Mathf.Abs(InputData.moveAxis.x) > 0.01f)
                     controller.OnMove();
@@ -656,7 +656,10 @@ public class PlayerFallState : PlayerState
 
         if (hit.CompareTag("Runway"))
         {
-            hit.GetComponent<RunwayObject>().OnRunWayCollider();
+            
+            RunwayObject runway = hit.GetComponent<RunwayObject>();
+            if (runway != null)
+                runway.OnRunWayCollider();
         }
 
         isLanding = true;
