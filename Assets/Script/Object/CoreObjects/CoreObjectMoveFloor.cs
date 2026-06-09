@@ -10,35 +10,64 @@ public struct CoreObjectMoveFloorInfo
     [HideInInspector] public Vector3 prevPos;
 }
 
+[System.Serializable]
+public struct PropellerInfo
+{
+    public GameObject propeller;
+    public float rotateSpeed;
+}
+
 public class CoreObjectMoveFloor : MonoBehaviour, ICoreEvent, IArrowHit
 {
     public List<CoreObjectMoveFloorInfo> floors;
     public float moveSpeed;
 
-    private int isMoving;
-    private Vector3 targetPos;
+    [Header("Wind Objects")]
+    public List<GameObject> winds;
 
-    // Start is called before the first frame update
+    [Header("Propellers")]
+    public List<PropellerInfo> propellers;
+
+    private int isMoving;
+    private bool propellersActive = false;
+
     void Start()
     {
         isMoving = floors.Count;
     }
 
+    void Update()
+    {
+        if (!propellersActive) return;
+
+        for (int i = 0; i < propellers.Count; i++)
+        {
+            if (propellers[i].propeller != null)
+                propellers[i].propeller.transform.Rotate(0f, 0f, propellers[i].rotateSpeed * Time.deltaTime);
+        }
+    }
+
     public void OnCoreEvent()
     {
-        if (isMoving == floors.Count)
-        {
-            isMoving = 0;
-            for (int i = 0; i < floors.Count; i++)
-            {
-                CoreObjectMoveFloorInfo floorInfo = floors[i];
+        if (isMoving != floors.Count) return;
 
-                floorInfo.prevPos = floorInfo.Floor.transform.localPosition;
-                floors[i] = floorInfo;
-                StartCoroutine(MoveFloor(i));
-            }
+        isMoving = 0;
+
+        foreach (GameObject wind in winds)
+        {
+            if (wind != null)
+                wind.SetActive(!wind.activeSelf);
         }
-        
+
+        propellersActive = !propellersActive;
+
+        for (int i = 0; i < floors.Count; i++)
+        {
+            CoreObjectMoveFloorInfo floorInfo = floors[i];
+            floorInfo.prevPos = floorInfo.Floor.transform.localPosition;
+            floors[i] = floorInfo;
+            StartCoroutine(MoveFloor(i));
+        }
     }
 
     public void OnHit()
@@ -49,7 +78,6 @@ public class CoreObjectMoveFloor : MonoBehaviour, ICoreEvent, IArrowHit
     private IEnumerator MoveFloor(int index)
     {
         CoreObjectMoveFloorInfo info = floors[index];
-
         Transform floor = info.Floor.transform;
 
         while (Vector3.Distance(floor.localPosition, info.nextPos) > 0.01f)
@@ -59,7 +87,6 @@ public class CoreObjectMoveFloor : MonoBehaviour, ICoreEvent, IArrowHit
                 info.nextPos,
                 moveSpeed * Time.deltaTime
             );
-
             yield return null;
         }
 
@@ -70,7 +97,6 @@ public class CoreObjectMoveFloor : MonoBehaviour, ICoreEvent, IArrowHit
         info.prevPos = temp;
 
         floors[index] = info;
-
         isMoving += 1;
     }
 }

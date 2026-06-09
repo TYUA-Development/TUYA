@@ -246,6 +246,8 @@ public class PlayerJumpState : PlayerState
         //    return;
         //}
 
+        // 점프 
+
         controller.animator.SetBool("IsJump", true);
     }
 
@@ -461,7 +463,7 @@ public class PlayerAttackState : PlayerState
                 {
                     controller.transform.localScale = new Vector3(Math.Abs(controller.transform.localScale.x), controller.transform.localScale.y, controller.transform.localScale.z);
 
-                    if (-180 < angle && angle < -180 + minAngle)
+                    if (-180 < angle && angle < -180 - minAngle)
                         direction = new Vector2(Mathf.Cos(angle * Mathf.Deg2Rad), Mathf.Sin(angle * Mathf.Deg2Rad));
                     else
                         direction = new Vector2(Mathf.Cos((-minAngle - 180
@@ -472,7 +474,7 @@ public class PlayerAttackState : PlayerState
                 {
                     controller.transform.localScale = new Vector3(Math.Abs(controller.transform.localScale.x) * -1, controller.transform.localScale.y, controller.transform.localScale.z);
 
-                    if (0 > angle && angle > minAngle * -1)
+                    if (0 > angle && angle > minAngle)
                         direction = new Vector2(Mathf.Cos(angle * Mathf.Deg2Rad), Mathf.Sin(angle * Mathf.Deg2Rad));
                     else
                         direction = new Vector2(Mathf.Cos(minAngle * Mathf.Deg2Rad), Mathf.Sin(minAngle * Mathf.Deg2Rad));

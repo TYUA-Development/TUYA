@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 using static UnityEngine.RuleTile.TilingRuleOutput;
 
@@ -8,14 +9,15 @@ public class CameraMovement : MonoBehaviour
 {
     public UnityEngine.Transform shakeCamera;
     public GameObject Charactor;
-    public float cameraHeight;
 
-    [Tooltip("Ä«¸Þ¶ó°¡ µû¶ó°¡´Â °­µµ 0.1 ~ 0.5")]
+    [Tooltip("Ä«ï¿½Þ¶ï¿½ ï¿½ï¿½ï¿½ó°¡´ï¿½ ï¿½ï¿½ï¿½ï¿½ 0.1 ~ 0.5")]
     public float followSmoothTime = 0.2f;
 
     [HideInInspector] public bool isMovingEvent;
     private float cameraSpeedUp = 3.0f;
     private Vector3 velocity;
+    [SerializeField] private float CameraPosY;
+    private bool followPlayerY = false;
 
     public static CameraMovement Instance { get; private set; }
 
@@ -23,6 +25,16 @@ public class CameraMovement : MonoBehaviour
     {
         Instance = this;
         isMovingEvent = false;
+    }
+
+    private void Start()
+    {
+        CameraPosY = Charactor.transform.position.y + 15.13f;
+    }
+
+    public void SetFollowPlayerY(bool follow)
+    {
+        followPlayerY = follow;
     }
 
     // Update is called once per frame
@@ -33,9 +45,12 @@ public class CameraMovement : MonoBehaviour
             return;
         }
 
+        if (followPlayerY)
+            CameraPosY = Charactor.transform.position.y + 15.13f;
+
         Vector3 targetPos = new Vector3(
             Charactor.transform.position.x,
-            Charactor.transform.position.y + 15.13f,
+            CameraPosY,
             transform.position.z
         );
 
@@ -47,12 +62,10 @@ public class CameraMovement : MonoBehaviour
         );
     }
 
-
-    public void SetCameraHeight(float height)
+    public void SetCameraPosY(float y)
     {
-        cameraHeight = height;
+        CameraPosY = y + 15.13f;
     }
-
 
     public void MoveCameraFix(Vector3 targetPos)
     {
@@ -63,7 +76,7 @@ public class CameraMovement : MonoBehaviour
     }
 
     /// <summary>
-    /// Ä«¸Þ¶ó°¡ ¸ñÇ¥·Î speed ¼Óµµ·Î ÀÌµ¿ ¹× °íÁ¤
+    /// Ä«ï¿½Þ¶ï¿½ ï¿½ï¿½Ç¥ï¿½ï¿½ speed ï¿½Óµï¿½ï¿½ï¿½ ï¿½Ìµï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
     /// </summary>
     /// <param name="targetPos"></param>
     /// <param name="speed"></param>
@@ -76,7 +89,7 @@ public class CameraMovement : MonoBehaviour
     }
 
     /// <summary>
-    /// Ä«¸Þ¶ó°¡ ¸ñÇ¥·Î ¼ø°£ÀÌµ¿ ÈÄ ¸îÃÊ°£ ÇØ´ç À§Ä¡ ºñÃã.
+    /// Ä«ï¿½Þ¶ï¿½ ï¿½ï¿½Ç¥ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ìµï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½Ê°ï¿½ ï¿½Ø´ï¿½ ï¿½ï¿½Ä¡ ï¿½ï¿½ï¿½ï¿½.
     /// </summary>
     public void MoveCamera(Vector3 targetPos, float time)
     {
@@ -89,13 +102,13 @@ public class CameraMovement : MonoBehaviour
 
         Vector3 originPos = transform.position;
 
-        // ¸ñÇ¥ À§Ä¡·Î Áï½Ã ÀÌµ¿
+        // ï¿½ï¿½Ç¥ ï¿½ï¿½Ä¡ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½Ìµï¿½
         transform.position = new Vector3(
             targetPos.x,
             targetPos.y,
             transform.position.z);
 
-        // ÁöÁ¤ ½Ã°£ ´ë±â
+        // ï¿½ï¿½ï¿½ï¿½ ï¿½Ã°ï¿½ ï¿½ï¿½ï¿½
         yield return new WaitForSeconds(time);
 
         transform.position = originPos;
@@ -104,7 +117,7 @@ public class CameraMovement : MonoBehaviour
     }
 
     /// <summary>
-    /// Ä«¸Þ¶ó°¡ ¸ñÇ¥·Î speedÀÇ ¼Óµµ·Î ÀÌµ¿ ÈÄ ¸îÃÊ°£ ÇØ´ç À§Ä¡ ºñÃß°í speed ¼Óµµ·Î µ¹¾Æ¿È.
+    /// Ä«ï¿½Þ¶ï¿½ ï¿½ï¿½Ç¥ï¿½ï¿½ speedï¿½ï¿½ ï¿½Óµï¿½ï¿½ï¿½ ï¿½Ìµï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½Ê°ï¿½ ï¿½Ø´ï¿½ ï¿½ï¿½Ä¡ ï¿½ï¿½ï¿½ß°ï¿½ speed ï¿½Óµï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Æ¿ï¿½.
     /// </summary>
     public void MoveCamera(Vector3 targetPos, float time, float speed, bool acceleration = false)
     {
@@ -117,12 +130,12 @@ public class CameraMovement : MonoBehaviour
 
         Vector3 originalPos = transform.position;
 
-        // zÃà À¯Áö
+        // zï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         targetPos.z = transform.position.z;
 
         float currentSpeed = 0f;
 
-        // ¸ñÇ¥ À§Ä¡±îÁö ÀÌµ¿
+        // ï¿½ï¿½Ç¥ ï¿½ï¿½Ä¡ï¿½ï¿½ï¿½ï¿½ ï¿½Ìµï¿½
         while (Vector3.Distance(transform.position, targetPos) > 0.01f)
         {
             if (acceleration)
@@ -141,12 +154,12 @@ public class CameraMovement : MonoBehaviour
             yield return null;
         }
 
-        // ÁöÁ¤ ½Ã°£ ´ë±â
+        // ï¿½ï¿½ï¿½ï¿½ ï¿½Ã°ï¿½ ï¿½ï¿½ï¿½
         yield return new WaitForSeconds(time);
 
         currentSpeed = 0f;
 
-        // ¿ø·¡ À§Ä¡·Î º¹±Í
+        // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         while (Vector3.Distance(transform.position, originalPos) > 0.01f)
         {
             if (acceleration)
@@ -169,7 +182,7 @@ public class CameraMovement : MonoBehaviour
     }
 
     /// <summary>
-    /// Ä«¸Þ¶ó°¡ ¸ñÇ¥·Î waitTime ÃÊ ÀÌÈÄ¿¡ speedÀÇ ¼Óµµ·Î ÀÌµ¿ ÈÄ ¸îÃÊ°£ ÇØ´ç À§Ä¡ ºñÃß°í speed ¼Óµµ·Î µ¹¾Æ¿È.
+    /// Ä«ï¿½Þ¶ï¿½ ï¿½ï¿½Ç¥ï¿½ï¿½ waitTime ï¿½ï¿½ ï¿½ï¿½ï¿½Ä¿ï¿½ speedï¿½ï¿½ ï¿½Óµï¿½ï¿½ï¿½ ï¿½Ìµï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½Ê°ï¿½ ï¿½Ø´ï¿½ ï¿½ï¿½Ä¡ ï¿½ï¿½ï¿½ß°ï¿½ speed ï¿½Óµï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Æ¿ï¿½.
     /// </summary>
     public void MoveCamera(Vector3 targetPos, float time, float waitTime, float speed, bool acceleration = false)
     {
@@ -184,12 +197,12 @@ public class CameraMovement : MonoBehaviour
 
         Vector3 originalPos = transform.position;
 
-        // zÃà À¯Áö
+        // zï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         targetPos.z = transform.position.z;
 
         float currentSpeed = 0f;
 
-        // ¸ñÇ¥ À§Ä¡±îÁö ÀÌµ¿
+        // ï¿½ï¿½Ç¥ ï¿½ï¿½Ä¡ï¿½ï¿½ï¿½ï¿½ ï¿½Ìµï¿½
         while (Vector3.Distance(transform.position, targetPos) > 0.01f)
         {
             if (acceleration)
@@ -208,12 +221,12 @@ public class CameraMovement : MonoBehaviour
             yield return null;
         }
 
-        // ÁöÁ¤ ½Ã°£ ´ë±â
+        // ï¿½ï¿½ï¿½ï¿½ ï¿½Ã°ï¿½ ï¿½ï¿½ï¿½
         yield return new WaitForSeconds(time);
 
         currentSpeed = 0f;
 
-        // ¿ø·¡ À§Ä¡·Î º¹±Í
+        // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         while (Vector3.Distance(transform.position, originalPos) > 0.01f)
         {
             if (acceleration)
@@ -236,7 +249,7 @@ public class CameraMovement : MonoBehaviour
     }
 
     /// <summary>
-    /// Ä«¸Þ¶ó°¡ ³ëÀÌÁî·Î Èçµé¸°´Ù.
+    /// Ä«ï¿½Þ¶ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½é¸°ï¿½ï¿½.
     /// </summary>
     public void MoveCameraNoise(float power, float time, bool vertical = false, bool horizon = false)
     {
@@ -256,13 +269,13 @@ public class CameraMovement : MonoBehaviour
             float x = 0f;
             float y = 0f;
 
-            // °¡·Î Èçµé¸²
+            // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½é¸²
             if (horizon)
             {
                 x = UnityEngine.Random.Range(-power, power);
             }
 
-            // ¼¼·Î Èçµé¸²
+            // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½é¸²
             if (vertical)
             {
                 y = UnityEngine.Random.Range(-power, power);
@@ -274,7 +287,7 @@ public class CameraMovement : MonoBehaviour
             yield return null;
         }
 
-        // ¿ø·¡ À§Ä¡ º¹±Í
+        // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡ ï¿½ï¿½ï¿½ï¿½
         shakeCamera.localPosition = originPos;
     }
 }
