@@ -5,19 +5,19 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
-    // ÇÃ·¹ÀÌ¾îÀÇ ÀÔ·ÂÀ» ÀúÀå
+    // ï¿½Ã·ï¿½ï¿½Ì¾ï¿½ï¿½ï¿½ ï¿½Ô·ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
     public PlayerInputReader InputReader { get; private set; }
     public Rigidbody2D Rigidbody2D;
     public SpriteRenderer charactorSprite;
 
-    // ÇöÀç ÇÃ·¹ÀÌ¾î°¡ ¶¥¿¡ ´ê¾ÆÀÖ´ÂÁö
+    // ï¿½ï¿½ï¿½ï¿½ ï¿½Ã·ï¿½ï¿½Ì¾î°¡ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Ö´ï¿½ï¿½ï¿½
     public bool isGround;
     public bool isDash;
 
-    // Ç®¹ç À§¿¡ ÀÖ´ÂÁö
+    // Ç®ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ö´ï¿½ï¿½ï¿½
     public bool isOnGrass;
 
-    // ÇÃ·¹ÀÌ¾îÀÇ ±âº»ÀûÀÎ ¼öÄ¡¸¦ Inspector¿¡¼­ ¼³Á¤ÇÏ±â À§ÇØ
+    // ï¿½Ã·ï¿½ï¿½Ì¾ï¿½ï¿½ï¿½ ï¿½âº»ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡ï¿½ï¿½ Inspectorï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï±ï¿½ ï¿½ï¿½ï¿½ï¿½
     public float setSpeed;
     [HideInInspector] public float moveSpeed;
     public float jumpPower;
@@ -25,18 +25,18 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float attackCoolTime;
     public float attackTimer;
 
-    // ¹ß¼Ò¸® °ü·Ã
+    // ï¿½ß¼Ò¸ï¿½ ï¿½ï¿½ï¿½ï¿½
     public AudioSource footstepSource;
     public AudioClip[] grassFootsteps;
     public float footstepInterval = 0.35f;
     private float footstepTimer;
 
-    // È° »ç¿îµå °ü·Ã
+    // È° ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
     public BowSFXRandomizer bowSFX;
 
     private bool lockPlayerInput;
 
-    // ÇÃ·¹ÀÌ¾îÀÇ »óÅÂµé
+    // ï¿½Ã·ï¿½ï¿½Ì¾ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Âµï¿½
     public PlayerState currentState;
     public PlayerIdleState idleState;
     public PlayerMoveState moveState;
@@ -45,21 +45,21 @@ public class PlayerController : MonoBehaviour
     public PlayerFallState fallState;
     public PlayerAttackState attackState;
 
-    // ÇÃ·¹ÀÌ¾î »óÅÂµéÀ» ÀúÀåÇÑ »óÅÂ¸®½ºÆ®
+    // ï¿½Ã·ï¿½ï¿½Ì¾ï¿½ ï¿½ï¿½ï¿½Âµï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Â¸ï¿½ï¿½ï¿½Æ®
     public List<PlayerState> states = new List<PlayerState>();
 
     public Animator animator;
     public Animator upperAnimator;
     public GameObject upperBody;
 
-    [Tooltip("0~90, Á¤¸é¿¡¼­ À§·Î")]
+    [Tooltip("0~90, ï¿½ï¿½ï¿½é¿¡ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½")]
     public float upperBodyMaxAngle;
-    [Tooltip("0~90, Á¤¸é¿¡¼­ ¾Æ·¡·Î")]
+    [Tooltip("0~90, ï¿½ï¿½ï¿½é¿¡ï¿½ï¿½ ï¿½Æ·ï¿½ï¿½ï¿½")]
     public float upperBodyMinAngle;
 
     public float aimingTime;
 
-    // ÇÃ·¹ÀÌ¾î °ø°Ý È­»ì prefab
+    // ï¿½Ã·ï¿½ï¿½Ì¾ï¿½ ï¿½ï¿½ï¿½ï¿½ È­ï¿½ï¿½ prefab
     public GameObject arrowObject;
 
     [Header("Arrow Visual")]
@@ -112,7 +112,7 @@ public class PlayerController : MonoBehaviour
         CacheHeldArrowRenderers();
         HideHeldArrow();
 
-        // ÅÛÇÃ¸´ ¿ÀºêÁ§Æ®´Â °ÔÀÓ ½ÃÀÛ ½Ã ¾È º¸ÀÌ°Ô ²¨µÒ
+        // ï¿½ï¿½ï¿½Ã¸ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ®ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½Ì°ï¿½ ï¿½ï¿½ï¿½ï¿½
         if (arrowGatherFXTemplate != null)
             arrowGatherFXTemplate.SetActive(false);
 
@@ -173,7 +173,6 @@ public class PlayerController : MonoBehaviour
 
     private void ChangeState(PlayerState state)
     {
-        Debug.Log(state.ToString());
         currentState.Exit();
         currentState = state;
         currentState.Enter();
@@ -422,6 +421,7 @@ public class PlayerController : MonoBehaviour
         if (collision.collider.CompareTag("Floor") || collision.collider.CompareTag("Runway"))
         {
             isGround = true;
+            CameraMovement.Instance.SetCameraPosY(transform.position.y);
         }
 
         if (collision.collider.CompareTag("Floor"))

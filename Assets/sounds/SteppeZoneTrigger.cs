@@ -1,45 +1,29 @@
 using UnityEngine;
+using System.Collections;
 
 public class SteppeZoneTrigger : MonoBehaviour
 {
-    [Header("Audio Sources")]
     public AudioSource steppeBGM;
     public AudioSource steppeAmbience;
 
-    [Header("Target Volumes")]
     public float bgmTargetVolume = 0.25f;
     public float ambienceTargetVolume = 0.6f;
 
-    [Header("Fade Settings")]
     public float fadeInTime = 3f;
     public float fadeOutTime = 4f;
 
-    private bool playerInside = false;
-
-    // 0 = 완전 무음, 1 = 목표 볼륨 100%
+    private Coroutine fadeCoroutine;
     private float fadePercent = 0f;
 
-    void Start()
+    private void Start()
     {
         Setup(steppeBGM);
         Setup(steppeAmbience);
+        PreloadClip(steppeBGM);
+        PreloadClip(steppeAmbience);
     }
 
-    void Update()
-    {
-        if (playerInside)
-        {
-            FadePercentIn();
-        }
-        else
-        {
-            FadePercentOut();
-        }
-
-        ApplyVolume();
-    }
-
-    void Setup(AudioSource source)
+    private void Setup(AudioSource source)
     {
         if (source == null) return;
 
@@ -49,31 +33,81 @@ public class SteppeZoneTrigger : MonoBehaviour
         source.spatialBlend = 0f;
     }
 
-    void FadePercentIn()
+    private void PreloadClip(AudioSource source)
     {
-        if (steppeBGM != null && !steppeBGM.isPlaying)
-            steppeBGM.Play();
-
-        if (steppeAmbience != null && !steppeAmbience.isPlaying)
-            steppeAmbience.Play();
-
-        fadePercent += Time.deltaTime / fadeInTime;
-        fadePercent = Mathf.Clamp01(fadePercent);
+        if (source != null && source.clip != null)
+            source.clip.LoadAudioData();
     }
 
-    void FadePercentOut()
+    private void OnTriggerEnter2D(Collider2D other)
     {
-        fadePercent -= Time.deltaTime / fadeOutTime;
-        fadePercent = Mathf.Clamp01(fadePercent);
+        if (!other.CompareTag("Player")) return;
 
-        if (fadePercent <= 0.001f)
+        StartFade(1f, fadeInTime);
+    }
+
+    private void OnTriggerExit2D(Collider2D other)
+    {
+        if (!other.CompareTag("Player")) return;
+
+        StartFade(0f, fadeOutTime);
+    }
+
+    private void StartFade(float targetPercent, float duration)
+    {
+        if (fadeCoroutine != null)
+            StopCoroutine(fadeCoroutine);
+
+        fadeCoroutine = StartCoroutine(FadeRoutine(targetPercent, duration));
+    }
+
+    private IEnumerator WaitForClipLoad(AudioSource source)
+    {
+        if (source == null || source.clip == null) yield break;
+        if (source.clip.loadState == AudioDataLoadState.Unloaded)
+            source.clip.LoadAudioData();
+        while (source.clip.loadState == AudioDataLoadState.Loading)
+            yield return null;
+    }
+
+    private IEnumerator FadeRoutine(float targetPercent, float duration)
+    {
+        if (targetPercent > 0f)
+        {
+            yield return WaitForClipLoad(steppeBGM);
+            yield return WaitForClipLoad(steppeAmbience);
+            PlayIfNotPlaying(steppeBGM);
+            PlayIfNotPlaying(steppeAmbience);
+        }
+
+        float startPercent = fadePercent;
+        float time = 0f;
+
+        while (time < duration)
+        {
+            time += Time.deltaTime;
+
+            float t = time / duration;
+            fadePercent = Mathf.Lerp(startPercent, targetPercent, t);
+
+            ApplyVolume();
+
+            yield return null;
+        }
+
+        fadePercent = targetPercent;
+        ApplyVolume();
+
+        if (fadePercent <= 0f)
         {
             StopIfPlaying(steppeBGM);
             StopIfPlaying(steppeAmbience);
         }
+
+        fadeCoroutine = null;
     }
 
-    void ApplyVolume()
+    private void ApplyVolume()
     {
         if (steppeBGM != null)
             steppeBGM.volume = bgmTargetVolume * fadePercent;
@@ -82,7 +116,13 @@ public class SteppeZoneTrigger : MonoBehaviour
             steppeAmbience.volume = ambienceTargetVolume * fadePercent;
     }
 
-    void StopIfPlaying(AudioSource source)
+    private void PlayIfNotPlaying(AudioSource source)
+    {
+        if (source != null && !source.isPlaying)
+            source.Play();
+    }
+
+    private void StopIfPlaying(AudioSource source)
     {
         if (source == null) return;
 
@@ -90,17 +130,5 @@ public class SteppeZoneTrigger : MonoBehaviour
 
         if (source.isPlaying)
             source.Stop();
-    }
-
-    void OnTriggerEnter2D(Collider2D other)
-    {
-        if (other.CompareTag("Player"))
-            playerInside = true;
-    }
-
-    void OnTriggerExit2D(Collider2D other)
-    {
-        if (other.CompareTag("Player"))
-            playerInside = false;
     }
 }

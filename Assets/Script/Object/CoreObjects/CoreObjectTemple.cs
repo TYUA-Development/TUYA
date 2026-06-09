@@ -24,11 +24,18 @@ public class CoreObjectTemple : MonoBehaviour, IArrowHit, ICoreEvent
     public int includePlayerIndex = -1;
     public PlayerController controller;
 
+    public bool coreRiseUp;
+    public float risePosY;
+    public float riseSpeed;
+
     public void OnCoreEvent()
     {
         activateTemple = true;
 
         int index = 0;
+
+        if (coreRiseUp)
+            StartCoroutine(RisingCore());
 
         foreach (TemplePiece piece in pieces)
         { 
@@ -66,16 +73,37 @@ public class CoreObjectTemple : MonoBehaviour, IArrowHit, ICoreEvent
         }
     }
 
+    private IEnumerator RisingCore()
+    {
+        Vector3 targetPos = new Vector3(
+        transform.position.x,
+        risePosY,
+        transform.position.z);
+
+        while (Mathf.Abs(transform.position.y - risePosY) > 0.01f)
+        {
+            transform.position = Vector3.MoveTowards(
+                transform.position,
+                targetPos,
+                riseSpeed * Time.deltaTime);
+
+            yield return null;
+        }
+
+        // ï¿½ï¿½È®ï¿½ï¿½ ï¿½ï¿½Ä¡ ï¿½ï¿½ï¿½ï¿½
+        transform.position = targetPos;
+    }
+
     private IEnumerator RisingTemple(TemplePiece piece)
     {
         yield return new WaitForSeconds(piece.delayTime);
 
         Transform target = piece.piece.transform;
 
-        // ½ÃÀÛ À§Ä¡
+        // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡
         Vector3 startPos = target.localPosition;
 
-        // ¸ñÇ¥ À§Ä¡ (Y¸¸ º¯°æ)
+        // ï¿½ï¿½Ç¥ ï¿½ï¿½Ä¡ (Yï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½)
         Vector3 targetPos = new Vector3(
             startPos.x,
             piece.targetPosY,
@@ -87,16 +115,16 @@ public class CoreObjectTemple : MonoBehaviour, IArrowHit, ICoreEvent
         {
             elapsed += Time.deltaTime;
 
-            // ÁøÇàµµ (0 ~ 1)
+            // ï¿½ï¿½ï¿½àµµ (0 ~ 1)
             float t = Mathf.Clamp01(elapsed / piece.time);
 
-            // °¨¼Ó °­µµ °è»ê
+            // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½
             float power = Mathf.Lerp(1.5f, 8f, piece.slowPower / 100f);
 
-            // Ease-Out °î¼±
+            // Ease-Out ï¿½î¼±
             float curvedT = 1f - Mathf.Pow(1f - t, power);
 
-            // localPosition ±âÁØ ÀÌµ¿
+            // localPosition ï¿½ï¿½ï¿½ï¿½ ï¿½Ìµï¿½
             target.localPosition = Vector3.Lerp(
                 startPos,
                 targetPos + piece.noise.LerpNoise(),
@@ -105,7 +133,7 @@ public class CoreObjectTemple : MonoBehaviour, IArrowHit, ICoreEvent
             yield return null;
         }
 
-        // Á¤È®ÇÑ À§Ä¡ º¸Á¤
+        // ï¿½ï¿½È®ï¿½ï¿½ ï¿½ï¿½Ä¡ ï¿½ï¿½ï¿½ï¿½
         target.localPosition = targetPos;
     }
 
@@ -114,16 +142,18 @@ public class CoreObjectTemple : MonoBehaviour, IArrowHit, ICoreEvent
         float originGravity = controller.Rigidbody2D.gravityScale;
         controller.Rigidbody2D.gravityScale = 0;
 
+        CameraMovement.Instance.SetFollowPlayerY(true);
+
         yield return new WaitForSeconds(piece.delayTime);
 
         Transform target = piece.piece.transform;
 
-        // ½ÃÀÛ À§Ä¡
+        // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡
         Vector3 startPos = target.localPosition;
 
         Vector3 prevWorldPos = target.position;
 
-        // ¸ñÇ¥ À§Ä¡ (Y¸¸ º¯°æ)
+        // ï¿½ï¿½Ç¥ ï¿½ï¿½Ä¡ (Yï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½)
         Vector3 targetPos = new Vector3(
             startPos.x,
             piece.targetPosY,
@@ -135,38 +165,39 @@ public class CoreObjectTemple : MonoBehaviour, IArrowHit, ICoreEvent
         {
             elapsed += Time.deltaTime;
 
-            // ÁøÇàµµ (0 ~ 1)
+            // ï¿½ï¿½ï¿½àµµ (0 ~ 1)
             float t = Mathf.Clamp01(elapsed / piece.time);
 
-            // °¨¼Ó °­µµ °è»ê
+            // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½
             float power = Mathf.Lerp(1.5f, 8f, piece.slowPower / 100f);
 
-            // Ease-Out °î¼±
+            // Ease-Out ï¿½î¼±
             float curvedT = 1f - Mathf.Pow(1f - t, power);
 
-            // localPosition ±âÁØ ÀÌµ¿
+            // localPosition ï¿½ï¿½ï¿½ï¿½ ï¿½Ìµï¿½
             target.localPosition = Vector3.Lerp(
                 startPos,
                 targetPos + piece.noise.LerpNoise(),
                 curvedT);
 
-            // ÇöÀç ¿ùµå À§Ä¡
+            // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡
             Vector3 currentWorldPos = target.position;
 
-            // ÀÌµ¿·® °è»ê
+            // ï¿½Ìµï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½
             Vector3 delta = currentWorldPos - prevWorldPos;
 
-            // ÇÃ·¹ÀÌ¾î °°ÀÌ ÀÌµ¿
+            // ï¿½Ã·ï¿½ï¿½Ì¾ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ìµï¿½
             controller.transform.position += delta;
 
-            // ÇöÀç À§Ä¡ ÀúÀå
+            // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡ ï¿½ï¿½ï¿½ï¿½
             prevWorldPos = currentWorldPos;
 
             yield return null;
         }
 
-        // Á¤È®ÇÑ À§Ä¡ º¸Á¤
+        // ï¿½ï¿½È®ï¿½ï¿½ ï¿½ï¿½Ä¡ ï¿½ï¿½ï¿½ï¿½
         target.localPosition = targetPos;
         controller.Rigidbody2D.gravityScale = originGravity;
+        CameraMovement.Instance.SetFollowPlayerY(false);
     }
 }

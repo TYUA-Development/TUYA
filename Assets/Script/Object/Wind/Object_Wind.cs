@@ -2,9 +2,11 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Object_Wind : MonoBehaviour
+public class Object_Wind : MonoBehaviour, ICoreEvent
 {
     public float windPower;
+
+    public bool blockPlayer;
 
     private Vector2 direction;
     private Vector2 power;
@@ -26,6 +28,14 @@ public class Object_Wind : MonoBehaviour
         return;
     }
 
+    public void FixedUpdate()
+    {
+        foreach (var rb in colliderList.Values)
+        {
+            rb.velocity += power * Time.deltaTime;
+        }
+    }
+
     private void OnTriggerEnter2D(Collider2D collision)
     {
         if(!collision.TryGetComponent(out Rigidbody2D rb))
@@ -39,12 +49,17 @@ public class Object_Wind : MonoBehaviour
         colliderList.Remove(collision);
     }
 
-    private void OnTriggerStay2D(Collider2D collision)
+    public void OnCoreEvent()
     {
-        foreach (var rb in colliderList.Values)
-        {
-            rb.velocity += power * Time.deltaTime;
-            Debug.Log("¹Ù¶÷ ¹ßµ¿");
-        }
+        
     }
+
+    //private void OnTriggerStay2D(Collider2D collision)
+    //{
+    //    foreach (var rb in colliderList.Values)
+    //    {
+    //        rb.velocity += power * Time.deltaTime;
+    //        Debug.Log("ï¿½Ù¶ï¿½ ï¿½ßµï¿½");
+    //    }
+    //}
 }
