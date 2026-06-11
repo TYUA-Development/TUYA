@@ -354,7 +354,8 @@ public class PlayerDashState : PlayerState
 public class PlayerAttackState : PlayerState
 {
     private bool isAiming;
-    private float aimingTimer;
+    private bool isFinishingAttack;
+    private bool attackQueued;
 
     private float minAngle;
     private float maxAngle;
@@ -365,56 +366,59 @@ public class PlayerAttackState : PlayerState
         maxAngle = controller.upperBodyMaxAngle;
 
         isAiming = false;
+        isFinishingAttack = false;
+        attackQueued = false;
     }
 
     public override void Enter()
     {
 
         isAiming = true;
+        isFinishingAttack = false;
+        attackQueued = false;
 
         controller.Rigidbody2D.velocity = new Vector2(0f, controller.Rigidbody2D.velocity.y);
 
+        controller.HideUpperBody();
         controller.animator.SetBool("IsAiming", true);
-        aimingTimer = controller.aimingTime;
+        controller.animator.SetBool("IsAttack", false);
     }
 
     public override void Exit()
     {
         controller.LockPlayerInput(1.0f);
+        controller.RequireAimingReleaseBeforeAttack();
 
-        controller.upperBody.SetActive(false);
-
-        controller.upperAnimator.SetBool("IsAttack", false);
+        controller.animator.SetBool("IsAiming", false);
         controller.animator.SetBool("IsAttack", false);
     }
 
     public override void LogicUpdate()
     {
+        if (isFinishingAttack)
+        {
+            UpdateFinishingAttack();
+            return;
+        }
+
         if(isAiming)
         {
             Debug.Log("Aiming");
 
-            aimingTimer -= Time.deltaTime;
-
-            if(aimingTimer < 0)
+            if (!attackQueued)
             {
-                controller.animator.SetBool("IsAiming", false);
                 controller.animator.SetBool("IsAttack", true);
-
-                controller.upperAnimator.SetBool("IsAttack", true);
-
-
-                AnimatorStateInfo info = controller.animator.GetCurrentAnimatorStateInfo(0);
-
-                Debug.Log(info.ToString());
-
-                if (info.IsName("Attack"))
-                {
-                    controller.upperBody.SetActive(true);
-
-                    isAiming = false;
-                }
+                attackQueued = true;
             }
+
+            AnimatorStateInfo info = controller.animator.GetCurrentAnimatorStateInfo(0);
+
+            if (info.IsName("Attack"))
+            {
+                isAiming = false;
+                controller.animator.SetBool("IsAiming", false);
+            }
+
             return;
         }
 
@@ -487,34 +491,66 @@ public class PlayerAttackState : PlayerState
 
             if (controller.transform.localScale.x > 0)
             {
-                controller.upperBody.transform.localRotation = Quaternion.Euler(0, 0, (armAngle - 180f));
+                if (controller.upperBody != null)
+                    controller.upperBody.transform.localRotation = Quaternion.Euler(0, 0, (armAngle - 180f));
             }
             else
             {
-                controller.upperBody.transform.localRotation = Quaternion.Euler(0, 0, (armAngle * -1));
+                if (controller.upperBody != null)
+                    controller.upperBody.transform.localRotation = Quaternion.Euler(0, 0, (armAngle * -1));
             }
 
 
             if (InputData.attackPressed && controller.attackTimer <= 0)
             {
                 controller.ShootArrow(direction);
-                controller.animator.SetBool("IsAttack", false);
+                StartAttackEnd();
             }
 
             if (!InputData.aimingPressed)
             {
+                StartAttackEnd();
+            }
+        }
+    }
+
+    private void StartAttackEnd()
+    {
+        controller.HideHeldArrow();
+        controller.animator.SetBool("IsAiming", false);
+        controller.animator.SetBool("IsAttack", false);
+        isAiming = false;
+        isFinishingAttack = true;
+    }
+
+    private void UpdateFinishingAttack()
+    {
+        controller.animator.SetBool("IsAiming", false);
+        controller.animator.SetBool("IsAttack", false);
+
+        if (controller.animator.IsInTransition(0))
+            return;
+
+        AnimatorStateInfo info = controller.animator.GetCurrentAnimatorStateInfo(0);
+
+        if (info.IsName("AttackEnd"))
+        {
+            if (info.normalizedTime >= 1f)
                 controller.OnIdle();
-            }
 
-            {
-                AnimatorStateInfo info = controller.animator.GetCurrentAnimatorStateInfo(0);
+            return;
+        }
 
-                if (info.IsName("AttackEnd"))
-                {
-                    controller.upperBody.SetActive(false);
-                }
-            }
-            // TODO:: AttackState가 해제되는 조건 추가
+        if (info.IsName("Idle"))
+        {
+            controller.OnIdle();
+            return;
+        }
+
+        if (info.IsName("Attack") && info.normalizedTime >= 1.05f)
+        {
+            controller.HideUpperBody();
+            controller.animator.Play("AttackEnd", 0, 0f);
         }
     }
 
