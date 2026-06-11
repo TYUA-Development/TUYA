@@ -35,6 +35,7 @@ public class PlayerController : MonoBehaviour
     public BowSFXRandomizer bowSFX;
 
     private bool lockPlayerInput;
+    private bool waitForAimingRelease;
 
     // �÷��̾��� ���µ�
     public PlayerState currentState;
@@ -108,6 +109,7 @@ public class PlayerController : MonoBehaviour
 
         currentState = idleState;
         lockPlayerInput = false;
+        waitForAimingRelease = false;
 
         CacheHeldArrowRenderers();
         HideHeldArrow();
@@ -126,6 +128,12 @@ public class PlayerController : MonoBehaviour
         {
             InputReader.ReadInput();
         }
+        else
+        {
+            InputReader.ClearInput();
+        }
+
+        UpdateAimingReleaseLock();
 
         currentState.LogicUpdate();
         CoolDown();
@@ -140,35 +148,90 @@ public class PlayerController : MonoBehaviour
     public void OnIdle()
     {
         HideHeldArrow();
+        HideUpperBody();
         ChangeState(idleState);
     }
 
     public void OnMove()
     {
         HideHeldArrow();
+        HideUpperBody();
         ChangeState(moveState);
     }
 
     public void OnJump()
     {
         HideHeldArrow();
+        HideUpperBody();
         ChangeState(jumpState);
     }
 
     public void OnFall()
     {
         HideHeldArrow();
+        HideUpperBody();
         ChangeState(fallState);
     }
 
     public void OnAttack()
     {
+        if (!CanStartAttack())
+            return;
+
         HideHeldArrow();
 
         if (bowSFX != null)
             bowSFX.PlayPull();
 
         ChangeState(attackState);
+    }
+
+    public bool CanStartAttack()
+    {
+        return !waitForAimingRelease;
+    }
+
+    public void RequireAimingReleaseBeforeAttack()
+    {
+        waitForAimingRelease = true;
+    }
+
+    private void UpdateAimingReleaseLock()
+    {
+        if (waitForAimingRelease && !InputReader.IsAimingHeld())
+            waitForAimingRelease = false;
+    }
+
+    public void ShowUpperBody()
+    {
+        if (upperBody != null)
+            upperBody.SetActive(true);
+
+        if (upperAnimator != null)
+            upperAnimator.SetBool("IsAttack", true);
+    }
+
+    public void HideUpperBody()
+    {
+        if (upperAnimator != null)
+            upperAnimator.SetBool("IsAttack", false);
+
+        if (upperBody != null)
+            upperBody.SetActive(false);
+    }
+
+    public void FinishAttackAnimation()
+    {
+        HideHeldArrow();
+
+        if (animator != null)
+        {
+            animator.SetBool("IsAiming", false);
+            animator.SetBool("IsAttack", false);
+        }
+
+        if (currentState == attackState)
+            OnIdle();
     }
 
     private void ChangeState(PlayerState state)

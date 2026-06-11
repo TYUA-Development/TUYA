@@ -21,4 +21,22 @@ public class UpperBodyArrowEventRelay : MonoBehaviour
         if (player != null)
             player.HideHeldArrow();
     }
+
+    public void ShowUpperBody()
+    {
+        if (player != null)
+            player.ShowUpperBody();
+    }
+
+    public void HideUpperBody()
+    {
+        if (player != null)
+            player.HideUpperBody();
+    }
+
+    public void FinishAttackAnimation()
+    {
+        if (player != null)
+            player.FinishAttackAnimation();
+    }
 }
