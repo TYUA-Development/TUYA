@@ -68,8 +68,13 @@ public class ForestIntroController : MonoBehaviour
     public float sceneFadeOutTime = 1.2f;
 
     [Header("Timing")]
-    public float startDelay = 0.3f;
+    [Tooltip("씬 시작 후 투야가 움직이기 전 대기 시간. 페이드와 동시에 움직이려면 0")]
+    public float startDelay = 0f;
+
+    [Tooltip("도착 후 MovingEnd 애니메이션을 보여줄 시간")]
     public float movingEndWaitTime = 0.45f;
+
+    [Tooltip("검정 바가 열리기 전 잠깐 멈추는 시간")]
     public float waitBeforeOpenBars = 0.2f;
 
     private Vector2 topBarStartPos;
@@ -130,11 +135,13 @@ public class ForestIntroController : MonoBehaviour
         // Forest 씬 진입 직후 검정 화면으로 덮기
         SetSceneFadeAlpha(1f);
 
-        // 검정 화면이 걷히면서 Forest 인트로 화면 보이기
-        yield return StartCoroutine(FadeSceneFromBlack());
+        // 중요:
+        // 페이드를 기다리지 않고 동시에 실행시킴
+        StartCoroutine(FadeSceneFromBlack());
 
-        // 잠깐 정적
-        yield return new WaitForSeconds(startDelay);
+        // 페이드와 동시에 움직이고 싶으면 startDelay = 0
+        if (startDelay > 0f)
+            yield return new WaitForSeconds(startDelay);
 
         // 이동 방향에 맞춰 투야 방향 설정
         if (player != null && targetPoint != null)
