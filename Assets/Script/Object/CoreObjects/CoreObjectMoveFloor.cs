@@ -15,6 +15,15 @@ public struct PropellerInfo
 {
     public GameObject propeller;
     public float rotateSpeed;
+    [HideInInspector] public float currentSpeed;
+}
+
+[System.Serializable]
+public struct WindObjectInfo
+{
+    public Object_Wind windObject;
+    public Vector3 targetPos;
+    [HideInInspector] public Vector3 prevPos;
 }
 
 public class CoreObjectMoveFloor : MonoBehaviour, ICoreEvent, IArrowHit
@@ -23,27 +32,43 @@ public class CoreObjectMoveFloor : MonoBehaviour, ICoreEvent, IArrowHit
     public float moveSpeed;
 
     [Header("Wind Objects")]
-    public List<GameObject> winds;
+    public List<WindObjectInfo> winds;
 
     [Header("Propellers")]
     public List<PropellerInfo> propellers;
+    [Tooltip("0에서 최대 속도까지 가속/감속에 걸리는 시간(초)")]
+    public float propellerRampTime = 1.0f;
 
     private int isMoving;
-    private bool propellersActive = false;
+    private bool propellersSpinning = false;
+    private Coroutine propellerRampCoroutine;
 
     void Start()
     {
         isMoving = floors.Count;
+
+        for (int i = 0; i < winds.Count; i++)
+        {
+            WindObjectInfo info = winds[i];
+            if (info.windObject != null)
+                info.prevPos = info.windObject.transform.localPosition;
+            winds[i] = info;
+        }
+
+        for (int i = 0; i < propellers.Count; i++)
+        {
+            PropellerInfo info = propellers[i];
+            info.currentSpeed = 0f;
+            propellers[i] = info;
+        }
     }
 
     void Update()
     {
-        if (!propellersActive) return;
-
         for (int i = 0; i < propellers.Count; i++)
         {
-            if (propellers[i].propeller != null)
-                propellers[i].propeller.transform.Rotate(0f, 0f, propellers[i].rotateSpeed * Time.deltaTime);
+            if (propellers[i].propeller != null && propellers[i].currentSpeed != 0f)
+                propellers[i].propeller.transform.Rotate(0f, 0f, propellers[i].currentSpeed * Time.deltaTime);
         }
     }
 
@@ -53,13 +78,15 @@ public class CoreObjectMoveFloor : MonoBehaviour, ICoreEvent, IArrowHit
 
         isMoving = 0;
 
-        foreach (GameObject wind in winds)
-        {
-            if (wind != null)
-                wind.SetActive(!wind.activeSelf);
-        }
+        for (int i = 0; i < winds.Count; i++)
+            StartCoroutine(MoveWind(i));
 
-        propellersActive = !propellersActive;
+        propellersSpinning = !propellersSpinning;
+
+        if (propellerRampCoroutine != null)
+            StopCoroutine(propellerRampCoroutine);
+
+        propellerRampCoroutine = StartCoroutine(RampPropellers(propellersSpinning));
 
         for (int i = 0; i < floors.Count; i++)
         {
@@ -98,5 +125,65 @@ public class CoreObjectMoveFloor : MonoBehaviour, ICoreEvent, IArrowHit
 
         floors[index] = info;
         isMoving += 1;
+    }
+
+    private IEnumerator MoveWind(int index)
+    {
+        WindObjectInfo info = winds[index];
+        if (info.windObject == null) yield break;
+
+        Transform windTransform = info.windObject.transform;
+
+        while (Vector3.Distance(windTransform.localPosition, info.targetPos) > 0.01f)
+        {
+            windTransform.localPosition = Vector3.MoveTowards(
+                windTransform.localPosition,
+                info.targetPos,
+                moveSpeed * Time.deltaTime
+            );
+            yield return null;
+        }
+
+        windTransform.localPosition = info.targetPos;
+
+        Vector3 temp = info.targetPos;
+        info.targetPos = info.prevPos;
+        info.prevPos = temp;
+
+        winds[index] = info;
+    }
+
+    private IEnumerator RampPropellers(bool spinUp)
+    {
+        float elapsed = 0f;
+
+        float[] startSpeeds = new float[propellers.Count];
+        for (int i = 0; i < propellers.Count; i++)
+            startSpeeds[i] = propellers[i].currentSpeed;
+
+        while (elapsed < propellerRampTime)
+        {
+            elapsed += Time.deltaTime;
+            float t = Mathf.Clamp01(elapsed / propellerRampTime);
+
+            for (int i = 0; i < propellers.Count; i++)
+            {
+                PropellerInfo info = propellers[i];
+                float targetSpeed = spinUp ? info.rotateSpeed : 0f;
+                info.currentSpeed = Mathf.Lerp(startSpeeds[i], targetSpeed, t);
+                propellers[i] = info;
+            }
+
+            yield return null;
+        }
+
+        for (int i = 0; i < propellers.Count; i++)
+        {
+            PropellerInfo info = propellers[i];
+            info.currentSpeed = spinUp ? info.rotateSpeed : 0f;
+            propellers[i] = info;
+        }
+
+        propellerRampCoroutine = null;
     }
 }

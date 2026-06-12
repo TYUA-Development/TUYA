@@ -30,7 +30,7 @@ public class SkyZoomScaler : MonoBehaviour
         float currentHeight =
             Mathf.Tan(targetCamera.fieldOfView * 0.5f * Mathf.Deg2Rad);
 
-        float scaleRatio = originHeight / currentHeight;
+        float scaleRatio = currentHeight / originHeight;
 
         skyImage.localScale = originScale * scaleRatio;
     }
