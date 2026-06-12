@@ -41,12 +41,10 @@ public class PlayerIdleState : PlayerState
 
     public override void Enter()
     {
-        controller.Rigidbody2D.gravityScale = 0f;
     }
 
     public override void Exit()
     {
-        controller.Rigidbody2D.gravityScale = 5.0f;
     }
 
     public override void LogicUpdate()
@@ -81,7 +79,7 @@ public class PlayerIdleState : PlayerState
 
     public override void PhysicsUpdate()
     {
-        controller.Rigidbody2D.velocity = Vector3.zero;
+        //controller.Rigidbody2D.velocity = Vector3.zero;
     }
 }
 

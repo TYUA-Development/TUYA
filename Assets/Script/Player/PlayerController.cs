@@ -13,6 +13,7 @@ public class PlayerController : MonoBehaviour
     // ���� �÷��̾ ���� ����ִ���
     public bool isGround;
     public bool isDash;
+    public bool isOnRunway;
 
     // Ǯ�� ���� �ִ���
     public bool isOnGrass;
@@ -143,6 +144,17 @@ public class PlayerController : MonoBehaviour
     private void FixedUpdate()
     {
         currentState.PhysicsUpdate();
+        PreventRunwaySlide();
+    }
+
+    private void PreventRunwaySlide()
+    {
+        if (!isOnRunway) return;
+        if (InputReader.InputData.moveAxis.x != 0) return;
+
+        Vector2 v = Rigidbody2D.velocity;
+        v.x = 0f;
+        Rigidbody2D.velocity = v;
     }
 
     public void OnIdle()
@@ -488,22 +500,22 @@ public class PlayerController : MonoBehaviour
         }
 
         if (collision.collider.CompareTag("Floor"))
-        {
             isOnGrass = true;
-        }
+
+        if (collision.collider.CompareTag("Runway"))
+            isOnRunway = true;
     }
 
     private void OnCollisionExit2D(Collision2D collision)
     {
         if (collision.collider.CompareTag("Floor") || collision.collider.CompareTag("Runway"))
-        {
             isGround = false;
-        }
 
         if (collision.collider.CompareTag("Floor"))
-        {
             isOnGrass = false;
-        }
+
+        if (collision.collider.CompareTag("Runway"))
+            isOnRunway = false;
     }
 
     public IEnumerator SlowDownSpeed(float speed, float time, int divide = 0)
