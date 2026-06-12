@@ -7,23 +7,29 @@ public class SettingsMenuButtonAlpha : MonoBehaviour, IPointerEnterHandler
     [Header("Text Target")]
     public TextMeshProUGUI targetText;
 
+    [Header("Group Target")]
+    public CanvasGroup targetGroup;
+
     [Header("Alpha Percent")]
     [Range(0, 100)] public int normalAlpha = 10;
     [Range(0, 100)] public int selectedAlpha = 100;
 
-    private SettingsMenuButtonAlpha[] buttonsInSamePanel;
+    private SettingsMenuButtonAlpha[] itemsInSamePanel;
 
     void Awake()
     {
         if (targetText == null)
             targetText = GetComponentInChildren<TextMeshProUGUI>();
 
-        buttonsInSamePanel = transform.parent.GetComponentsInChildren<SettingsMenuButtonAlpha>(true);
+        if (targetGroup == null)
+            targetGroup = GetComponent<CanvasGroup>();
+
+        itemsInSamePanel = transform.parent.GetComponentsInChildren<SettingsMenuButtonAlpha>(true);
     }
 
     void OnEnable()
     {
-        if (transform.GetSiblingIndex() == GetFirstButtonIndex())
+        if (transform.GetSiblingIndex() == GetFirstItemIndex())
         {
             SelectThis();
         }
@@ -36,37 +42,45 @@ public class SettingsMenuButtonAlpha : MonoBehaviour, IPointerEnterHandler
 
     public void SelectThis()
     {
-        foreach (var button in buttonsInSamePanel)
+        foreach (var item in itemsInSamePanel)
         {
-            if (button == null)
+            if (item == null)
                 continue;
 
-            button.SetAlpha(button == this ? selectedAlpha : normalAlpha);
+            item.SetAlpha(item == this ? selectedAlpha : normalAlpha);
         }
     }
 
     void SetAlpha(int alphaPercent)
     {
-        if (targetText == null)
-            return;
+        float alpha = alphaPercent / 100f;
 
-        Color color = targetText.color;
-        color.a = alphaPercent / 100f;
-        targetText.color = color;
+        if (targetGroup != null)
+        {
+            targetGroup.alpha = alpha;
+        }
+
+        if (targetText != null)
+        {
+            Color color = targetText.color;
+            color.a = alpha;
+            targetText.color = color;
+        }
     }
 
-    int GetFirstButtonIndex()
+    int GetFirstItemIndex()
     {
         int firstIndex = 9999;
 
-        foreach (var button in buttonsInSamePanel)
+        foreach (var item in itemsInSamePanel)
         {
-            if (button != null)
-            {
-                int index = button.transform.GetSiblingIndex();
-                if (index < firstIndex)
-                    firstIndex = index;
-            }
+            if (item == null)
+                continue;
+
+            int index = item.transform.GetSiblingIndex();
+
+            if (index < firstIndex)
+                firstIndex = index;
         }
 
         return firstIndex;
