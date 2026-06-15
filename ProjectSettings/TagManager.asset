@@ -7,6 +7,7 @@ TagManager:
   - Floor
   - Runway
   - grass
+  - Arrow
   layers:
   - Default
   - TransparentFX

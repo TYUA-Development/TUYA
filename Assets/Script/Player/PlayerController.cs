@@ -1,24 +1,24 @@
 using System;
-using System.Collections.Generic;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
-    // �÷��̾��� �Է��� ����
     public PlayerInputReader InputReader { get; private set; }
     public Rigidbody2D Rigidbody2D;
     public SpriteRenderer charactorSprite;
 
-    // ���� �÷��̾ ���� ����ִ���
     public bool isGround;
     public bool isDash;
     public bool isOnRunway;
 
-    // Ǯ�� ���� �ִ���
+    // 풀 위인지
     public bool isOnGrass;
 
-    // �÷��̾��� �⺻���� ��ġ�� Inspector���� �����ϱ� ����
+    // 돌 / 신전바닥 / Runway 위인지
+    public bool isOnStone;
+
     public float setSpeed;
     [HideInInspector] public float moveSpeed;
     public float jumpPower;
@@ -26,20 +26,34 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float attackCoolTime;
     public float attackTimer;
 
-    // �߼Ҹ� ����
+    [Header("Footstep SFX")]
     public AudioSource footstepSource;
+
+    [Tooltip("풀밭 발소리")]
     public AudioClip[] grassFootsteps;
+
+    [Tooltip("돌 / 신전바닥 / Runway 발소리")]
+    public AudioClip[] stoneFootsteps;
+
+    [Tooltip("풀밭 발소리 볼륨")]
+    [Range(0f, 1f)]
+    public float grassFootstepVolume = 0.3f;
+
+    [Tooltip("돌 / 신전바닥 / Runway 발소리 볼륨")]
+    [Range(0f, 1f)]
+    public float stoneFootstepVolume = 0.4f;
+
+    [Tooltip("발소리 간격")]
     public float footstepInterval = 0.35f;
+
     private float footstepTimer;
 
-    // Ȱ ���� ����
     public BowSFXRandomizer bowSFX;
 
     private float defaultGravityScale;
     private bool lockPlayerInput;
     private bool waitForAimingRelease;
 
-    // �÷��̾��� ���µ�
     public PlayerState currentState;
     public PlayerIdleState idleState;
     public PlayerMoveState moveState;
@@ -48,21 +62,20 @@ public class PlayerController : MonoBehaviour
     public PlayerFallState fallState;
     public PlayerAttackState attackState;
 
-    // �÷��̾� ���µ��� ������ ���¸���Ʈ
     public List<PlayerState> states = new List<PlayerState>();
 
     public Animator animator;
     public Animator upperAnimator;
     public GameObject upperBody;
 
-    [Tooltip("0~90, ���鿡�� ����")]
+    [Tooltip("0~90, 위쪽 조준 각도")]
     public float upperBodyMaxAngle;
-    [Tooltip("0~90, ���鿡�� �Ʒ���")]
+
+    [Tooltip("0~90, 아래쪽 조준 각도")]
     public float upperBodyMinAngle;
 
     public float aimingTime;
 
-    // �÷��̾� ���� ȭ�� prefab
     public GameObject arrowObject;
 
     [Header("Arrow Visual")]
@@ -118,7 +131,6 @@ public class PlayerController : MonoBehaviour
         CacheHeldArrowRenderers();
         HideHeldArrow();
 
-        // ���ø� ������Ʈ�� ���� ���� �� �� ���̰� ����
         if (arrowGatherFXTemplate != null)
             arrowGatherFXTemplate.SetActive(false);
 
@@ -475,31 +487,45 @@ public class PlayerController : MonoBehaviour
         if (footstepSource == null)
             return;
 
-        if (grassFootsteps == null || grassFootsteps.Length == 0)
-            return;
-
         bool isMoving = Mathf.Abs(Rigidbody2D.velocity.x) > 0.05f;
 
-        if (isGround && isOnGrass && isMoving)
-        {
-            footstepTimer += Time.deltaTime;
-
-            if (footstepTimer >= footstepInterval)
-            {
-                int randomIndex = UnityEngine.Random.Range(0, grassFootsteps.Length);
-                AudioClip clipToPlay = grassFootsteps[randomIndex];
-
-                if (clipToPlay != null)
-                {
-                    footstepSource.PlayOneShot(clipToPlay);
-                }
-
-                footstepTimer = 0f;
-            }
-        }
-        else
+        if (!isGround || !isMoving)
         {
             footstepTimer = footstepInterval;
+            return;
+        }
+
+        AudioClip[] currentFootsteps = null;
+        float currentVolume = 1f;
+
+        // 돌 / 신전바닥 / Runway가 우선
+        if (isOnStone)
+        {
+            currentFootsteps = stoneFootsteps;
+            currentVolume = stoneFootstepVolume;
+        }
+        else if (isOnGrass)
+        {
+            currentFootsteps = grassFootsteps;
+            currentVolume = grassFootstepVolume;
+        }
+
+        if (currentFootsteps == null || currentFootsteps.Length == 0)
+            return;
+
+        footstepTimer += Time.deltaTime;
+
+        if (footstepTimer >= footstepInterval)
+        {
+            int randomIndex = UnityEngine.Random.Range(0, currentFootsteps.Length);
+            AudioClip clipToPlay = currentFootsteps[randomIndex];
+
+            if (clipToPlay != null)
+            {
+                footstepSource.PlayOneShot(clipToPlay, currentVolume);
+            }
+
+            footstepTimer = 0f;
         }
     }
 
@@ -508,14 +534,23 @@ public class PlayerController : MonoBehaviour
         if (collision.collider.CompareTag("Floor") || collision.collider.CompareTag("Runway"))
         {
             isGround = true;
-            CameraMovement.Instance.SetCameraPosY(transform.position.y);
+
+            if (CameraMovement.Instance != null)
+                CameraMovement.Instance.SetCameraPosY(transform.position.y);
         }
 
+        // 풀밭
         if (collision.collider.CompareTag("Floor"))
+        {
             isOnGrass = true;
+        }
 
+        // 돌 / 신전바닥 / Runway
         if (collision.collider.CompareTag("Runway"))
+        {
             isOnRunway = true;
+            isOnStone = true;
+        }
     }
 
     private void OnCollisionExit2D(Collision2D collision)
@@ -527,7 +562,10 @@ public class PlayerController : MonoBehaviour
             isOnGrass = false;
 
         if (collision.collider.CompareTag("Runway"))
+        {
             isOnRunway = false;
+            isOnStone = false;
+        }
     }
 
     public IEnumerator SlowDownSpeed(float speed, float time, int divide = 0)
