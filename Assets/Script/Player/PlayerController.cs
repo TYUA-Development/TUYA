@@ -35,6 +35,7 @@ public class PlayerController : MonoBehaviour
     // Ȱ ���� ����
     public BowSFXRandomizer bowSFX;
 
+    private float defaultGravityScale;
     private bool lockPlayerInput;
     private bool waitForAimingRelease;
 
@@ -86,6 +87,8 @@ public class PlayerController : MonoBehaviour
 
         if (Rigidbody2D == null)
             Rigidbody2D = GetComponent<Rigidbody2D>();
+
+        defaultGravityScale = Rigidbody2D.gravityScale;
 
         if (footstepSource == null)
             footstepSource = GetComponent<AudioSource>();
@@ -149,12 +152,21 @@ public class PlayerController : MonoBehaviour
 
     private void PreventRunwaySlide()
     {
-        if (!isOnRunway) return;
-        if (InputReader.InputData.moveAxis.x != 0) return;
+        bool shouldFreeze = isOnRunway &&
+                            InputReader.InputData.moveAxis.x == 0 &&
+                            currentState != jumpState &&
+                            currentState != fallState &&
+                            currentState != dashState;
 
-        Vector2 v = Rigidbody2D.velocity;
-        v.x = 0f;
-        Rigidbody2D.velocity = v;
+        if (shouldFreeze)
+        {
+            Rigidbody2D.gravityScale = 0f;
+            Rigidbody2D.velocity = Vector2.zero;
+        }
+        else
+        {
+            Rigidbody2D.gravityScale = defaultGravityScale;
+        }
     }
 
     public void OnIdle()
