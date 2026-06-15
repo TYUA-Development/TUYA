@@ -79,14 +79,18 @@ public class PlayerIdleState : PlayerState
 
     public override void PhysicsUpdate()
     {
-        //controller.Rigidbody2D.velocity = Vector3.zero;
+        if (!controller.isGround) return;
+
+        Vector2 v = controller.Rigidbody2D.velocity;
+        v.x = 0f;
+        controller.Rigidbody2D.velocity = v;
     }
 }
 
 public class PlayerMoveState : PlayerState
 {
     private float moveSpeed;
-    private Collider2D col;
+    private CapsuleCollider2D col;
     private LayerMask groundLayer;
 
     private float sensorX;
@@ -94,7 +98,7 @@ public class PlayerMoveState : PlayerState
     public PlayerMoveState(PlayerController controller) : base(controller)
     {
         moveSpeed = controller.moveSpeed;
-        col = controller.GetComponent<BoxCollider2D>();
+        col = controller.GetComponent<CapsuleCollider2D>();
         groundLayer = LayerMask.GetMask("Floor");
         sensorDistance = 1.0f;
         sensorX = 3.0f;
@@ -125,9 +129,8 @@ public class PlayerMoveState : PlayerState
         }
 
         // 멈추었는지 체크
-        if (Mathf.Abs(InputData.moveAxis.x) == 0 && Mathf.Abs(controller.Rigidbody2D.velocity.x) < 0.01f && controller.Rigidbody2D.velocity.y == 0f)
+        if (Mathf.Abs(InputData.moveAxis.x) == 0 && controller.isGround)
         {
-            Debug.Log("오류 발생");
             controller.OnIdle();
         }
 
@@ -563,11 +566,11 @@ public class PlayerFallState : PlayerState
     private LayerMask groundLayer;
     private bool isLanding;
     private bool isFalling;
-    private Collider2D col;
+    private CapsuleCollider2D col;
 
     public PlayerFallState(PlayerController controller) : base(controller)
     {
-        col = controller.GetComponent<BoxCollider2D>();
+        col = controller.GetComponent<CapsuleCollider2D>();
         groundLayer = LayerMask.GetMask("Floor");
         isLanding = false;
         isFalling = true;
