@@ -28,11 +28,17 @@ public struct WindObjectInfo
 
 public class CoreObjectMoveFloor : MonoBehaviour, ICoreEvent, IArrowHit
 {
+    [Header("Core Objects")]
+    [Tooltip("어떤 코어를 맞춰도 동일하게 동작합니다.")]
+    public List<CoreActivationController> coreObjects;
+
     public List<CoreObjectMoveFloorInfo> floors;
     public float moveSpeed;
 
     [Header("Wind Objects")]
     public List<WindObjectInfo> winds;
+    [Tooltip("Wind가 targetPos까지 이동하는 데 걸리는 시간(초)")]
+    public float windObjectSpeed = 1.0f;
 
     [Header("Propellers")]
     public List<PropellerInfo> propellers;
@@ -47,6 +53,12 @@ public class CoreObjectMoveFloor : MonoBehaviour, ICoreEvent, IArrowHit
     {
         isMoving = floors.Count;
 
+        foreach (var core in coreObjects)
+        {
+            if (core != null)
+                core.onActivated += OnCoreEvent;
+        }
+
         for (int i = 0; i < winds.Count; i++)
         {
             WindObjectInfo info = winds[i];
@@ -60,6 +72,15 @@ public class CoreObjectMoveFloor : MonoBehaviour, ICoreEvent, IArrowHit
             PropellerInfo info = propellers[i];
             info.currentSpeed = 0f;
             propellers[i] = info;
+        }
+    }
+
+    void OnDestroy()
+    {
+        foreach (var core in coreObjects)
+        {
+            if (core != null)
+                core.onActivated -= OnCoreEvent;
         }
     }
 
@@ -133,14 +154,14 @@ public class CoreObjectMoveFloor : MonoBehaviour, ICoreEvent, IArrowHit
         if (info.windObject == null) yield break;
 
         Transform windTransform = info.windObject.transform;
+        Vector3 startPos = windTransform.localPosition;
+        float elapsed = 0f;
+        float duration = windObjectSpeed > 0f ? windObjectSpeed : 0.001f;
 
-        while (Vector3.Distance(windTransform.localPosition, info.targetPos) > 0.01f)
+        while (elapsed < duration)
         {
-            windTransform.localPosition = Vector3.MoveTowards(
-                windTransform.localPosition,
-                info.targetPos,
-                moveSpeed * Time.deltaTime
-            );
+            elapsed += Time.deltaTime;
+            windTransform.localPosition = Vector3.Lerp(startPos, info.targetPos, Mathf.Clamp01(elapsed / duration));
             yield return null;
         }
 
