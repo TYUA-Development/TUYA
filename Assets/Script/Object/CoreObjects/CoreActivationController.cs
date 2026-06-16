@@ -1,137 +1,137 @@
 using System.Collections;
 using UnityEngine;
 
-public class CoreActivationController : MonoBehaviour
+public class CoreActivationController : MonoBehaviour, IArrowHit, ICoreEvent
 {
     [Header("Hit Detection")]
-    [Tooltip("È­»ì ÅÂ±× ÀÌ¸§. È­»ì ¿ÀºêÁ§Æ®¿¡ Arrow ÅÂ±×¸¦ ´Þ¸é °¡Àå ¾ÈÁ¤ÀûÀÔ´Ï´Ù.")]
+    [Tooltip("È­ï¿½ï¿½ ï¿½Â±ï¿½ ï¿½Ì¸ï¿½. È­ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ®ï¿½ï¿½ Arrow ï¿½Â±×¸ï¿½ ï¿½Þ¸ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô´Ï´ï¿½.")]
     public string arrowTag = "Arrow";
 
-    [Tooltip("ÇÑ ¹ø È°¼ºÈ­µÇ¸é ´Ù½Ã ÀÛµ¿ÇÏÁö ¾Ê°Ô ÇÏ±â")]
+    [Tooltip("ï¿½ï¿½ ï¿½ï¿½ È°ï¿½ï¿½È­ï¿½Ç¸ï¿½ ï¿½Ù½ï¿½ ï¿½Ûµï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ê°ï¿½ ï¿½Ï±ï¿½")]
     public bool activateOnlyOnce = true;
 
-    [Tooltip("¸ÂÀº È­»ìÀ» Á¦°ÅÇÒÁö")]
+    [Tooltip("ï¿½ï¿½ï¿½ï¿½ È­ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½")]
     public bool destroyArrowOnHit = false;
 
     [Header("Player Lock")]
-    [Tooltip("¿¬Ãâ Áß ÇÃ·¹ÀÌ¾î¸¦ ¿ÏÀüÈ÷ °íÁ¤ÇÏ´Â ½ºÅ©¸³Æ®")]
+    [Tooltip("ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½Ã·ï¿½ï¿½Ì¾î¸¦ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½ ï¿½ï¿½Å©ï¿½ï¿½Æ®")]
     public PlayerCutsceneLocker2D playerCutsceneLocker;
 
-    [Tooltip("±âÁ¸ PlayerController ÀÔ·Â Àá±Ý¿ë. CutsceneLocker°¡ ¾øÀ» ¶§¸¸ »ç¿ëµË´Ï´Ù.")]
+    [Tooltip("ï¿½ï¿½ï¿½ï¿½ PlayerController ï¿½Ô·ï¿½ ï¿½ï¿½Ý¿ï¿½. CutsceneLockerï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ë´Ï´ï¿½.")]
     public PlayerController playerController;
 
-    [Tooltip("¿¬Ãâ Áß ÇÃ·¹ÀÌ¾î ÀÌµ¿ Á¦ÇÑ")]
+    [Tooltip("ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½Ã·ï¿½ï¿½Ì¾ï¿½ ï¿½Ìµï¿½ ï¿½ï¿½ï¿½ï¿½")]
     public bool lockPlayerDuringEvent = true;
 
-    [Tooltip("CutsceneLocker°¡ ¾øÀ» ¶§ »ç¿ëÇÒ ¿¹ºñ ÀÔ·Â Àá±Ý ½Ã°£")]
+    [Tooltip("CutsceneLockerï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ô·ï¿½ ï¿½ï¿½ï¿½ ï¿½Ã°ï¿½")]
     public float playerLockTime = 10f;
 
     [Header("Letterbox")]
-    [Tooltip("ÀÌ ÄÚ¾î ¿¬Ãâ¿¡¼­ À§¾Æ·¡ °ËÁ¤¹Ù¸¦ »ç¿ëÇÒÁö")]
+    [Tooltip("ï¿½ï¿½ ï¿½Ú¾ï¿½ ï¿½ï¿½ï¿½â¿¡ï¿½ï¿½ ï¿½ï¿½ï¿½Æ·ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ù¸ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½")]
     public bool useLetterbox = false;
 
-    [Tooltip("°ËÁ¤¹Ù UI ½ºÅ©¸³Æ®")]
+    [Tooltip("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ UI ï¿½ï¿½Å©ï¿½ï¿½Æ®")]
     public CutsceneLetterboxUI letterboxUI;
 
-    [Tooltip("°ËÁ¤¹Ù°¡ ³ª¿À´Â ½Ã°£")]
+    [Tooltip("ï¿½ï¿½ï¿½ï¿½ï¿½Ù°ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ã°ï¿½")]
     public float letterboxInTime = 0.45f;
 
-    [Tooltip("°ËÁ¤¹Ù°¡ »ç¶óÁö´Â ½Ã°£")]
+    [Tooltip("ï¿½ï¿½ï¿½ï¿½ï¿½Ù°ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ã°ï¿½")]
     public float letterboxOutTime = 0.45f;
 
-    [Tooltip("ºñÃâ µ¹ÀÌ³ª Ä«¸Þ¶ó Æ÷Ä¿½º°¡ ¾øÀ» ¶§, °ËÁ¤¹Ù¸¦ À¯ÁöÇÒ ½Ã°£")]
+    [Tooltip("ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ì³ï¿½ Ä«ï¿½Þ¶ï¿½ ï¿½ï¿½Ä¿ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½Ù¸ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ã°ï¿½")]
     public float letterboxHoldTimeWithoutCamera = 1.5f;
 
     [Header("Visual - Core Circle")]
-    [Tooltip("È÷Æ® ¼ø°£ Âª°Ô ¹øÂ½ÀÌ´Â ¿ø")]
+    [Tooltip("ï¿½ï¿½Æ® ï¿½ï¿½ï¿½ï¿½ Âªï¿½ï¿½ ï¿½ï¿½Â½ï¿½Ì´ï¿½ ï¿½ï¿½")]
     public SpriteRenderer hitFlashRenderer;
 
-    [Tooltip("È°¼ºÈ­µÉ ¶§ ºûÀÌ Â÷¿À¸£´Â ¿ø")]
+    [Tooltip("È°ï¿½ï¿½È­ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½")]
     public SpriteRenderer activateGlowRenderer;
 
-    [Tooltip("È°¼ºÈ­ ÈÄ °è¼Ó ³²¾ÆÀÖ´Â ÀºÀºÇÑ ºû")]
+    [Tooltip("È°ï¿½ï¿½È­ ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ö´ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½")]
     public SpriteRenderer stableGlowRenderer;
 
-    [Tooltip("ºûÀÌ µµ´Â ¿øÇü ¿ÀºêÁ§Æ®")]
+    [Tooltip("ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ®")]
     public Transform rotatingLightRing;
 
     [Header("Visual Values")]
-    [Tooltip("È÷Æ® ¼¶±¤ ÃÖ´ë ¾ËÆÄ")]
+    [Tooltip("ï¿½ï¿½Æ® ï¿½ï¿½ï¿½ï¿½ ï¿½Ö´ï¿½ ï¿½ï¿½ï¿½ï¿½")]
     [Range(0f, 1f)]
     public float hitFlashAlpha = 1f;
 
-    [Tooltip("È°¼ºÈ­ ºû ÃÖ´ë ¾ËÆÄ")]
+    [Tooltip("È°ï¿½ï¿½È­ ï¿½ï¿½ ï¿½Ö´ï¿½ ï¿½ï¿½ï¿½ï¿½")]
     [Range(0f, 1f)]
     public float activateGlowAlpha = 0.85f;
 
-    [Tooltip("¿Ï·á ÈÄ À¯ÁöµÇ´Â ºû ¾ËÆÄ")]
+    [Tooltip("ï¿½Ï·ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ç´ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½")]
     [Range(0f, 1f)]
     public float stableGlowAlpha = 0.45f;
 
-    [Tooltip("È°¼ºÈ­ ÈÄ ¿øÇü ºû È¸Àü ¼Óµµ")]
+    [Tooltip("È°ï¿½ï¿½È­ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ È¸ï¿½ï¿½ ï¿½Óµï¿½")]
     public float ringRotateSpeed = 60f;
 
     [Header("Particles - Core")]
-    [Tooltip("È­»ìÀÌ ¸Â´Â ¼ø°£ ÂªÀº ÆÄÆí / °¡·ç")]
+    [Tooltip("È­ï¿½ï¿½ï¿½ï¿½ ï¿½Â´ï¿½ ï¿½ï¿½ï¿½ï¿½ Âªï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ / ï¿½ï¿½ï¿½ï¿½")]
     public ParticleSystem hitParticle;
 
-    [Tooltip("ÄÚ¾î°¡ ÄÑÁú ¶§ ³ª¿À´Â ÀÔÀÚ")]
+    [Tooltip("ï¿½Ú¾î°¡ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½")]
     public ParticleSystem activateParticle;
 
-    [Tooltip("ÄÚ¾î ¿Ï·á ÀÔÀÚ")]
+    [Tooltip("ï¿½Ú¾ï¿½ ï¿½Ï·ï¿½ ï¿½ï¿½ï¿½ï¿½")]
     public ParticleSystem completeParticle;
 
     [Header("Audio - Core")]
-    [Tooltip("È­»ìÀÌ ÄÚ¾î¿¡ ¸Â´Â ¼ø°£")]
+    [Tooltip("È­ï¿½ï¿½ï¿½ï¿½ ï¿½Ú¾î¿¡ ï¿½Â´ï¿½ ï¿½ï¿½ï¿½ï¿½")]
     public AudioSource hitAudio;
 
-    [Tooltip("ÄÚ¾î°¡ ÄÑÁö´Â ¼Ò¸®")]
+    [Tooltip("ï¿½Ú¾î°¡ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ò¸ï¿½")]
     public AudioSource activateAudio;
 
-    [Tooltip("¿Ï·á °ø¸íÀ½")]
+    [Tooltip("ï¿½Ï·ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½")]
     public AudioSource completeAudio;
 
     [Header("Core Self Rise")]
-    [Tooltip("ÄÚ¾î ÀÚÃ¼µµ À§·Î »ó½ÂÇÑ´Ù¸é ³Ö±â. ¾Æ´Ï¸é ºñ¿öµÎ±â")]
+    [Tooltip("ï¿½Ú¾ï¿½ ï¿½ï¿½Ã¼ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Ñ´Ù¸ï¿½ ï¿½Ö±ï¿½. ï¿½Æ´Ï¸ï¿½ ï¿½ï¿½ï¿½ï¿½Î±ï¿½")]
     public RisingObjectController coreRiseObject;
 
-    [Tooltip("ÄÚ¾î ÀÚÃ¼ »ó½ÂÀ» »ç¿ëÇÒÁö")]
+    [Tooltip("ï¿½Ú¾ï¿½ ï¿½ï¿½Ã¼ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½")]
     public bool useCoreSelfRise = false;
 
     [Header("Connected Object")]
-    [Tooltip("½ÇÁ¦·Î ¿Ã¶ó¿Ã µ¹ / ±æ / ½ÅÀü ¹Ù´Ú. ¹ÝÀÀ¸¸ ÇÏ´Â ÄÚ¾î¶ó¸é ºñ¿öµÎ¼¼¿ä.")]
+    [Tooltip("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ã¶ï¿½ï¿½ ï¿½ï¿½ / ï¿½ï¿½ / ï¿½ï¿½ï¿½ï¿½ ï¿½Ù´ï¿½. ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ï´ï¿½ ï¿½Ú¾ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Î¼ï¿½ï¿½ï¿½.")]
     public RisingObjectController connectedRisingObject;
 
-    [Tooltip("¿Ã¶ó¿Ã ¿ÀºêÁ§Æ®¸¦ ¸ÕÀú Ä«¸Þ¶ó·Î º¸¿©ÁÙÁö")]
+    [Tooltip("ï¿½Ã¶ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ®ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ Ä«ï¿½Þ¶ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½")]
     public bool useCameraFocus = true;
 
-    [Tooltip("Ä«¸Þ¶ó Æ÷Ä¿½º ½ºÅ©¸³Æ®")]
+    [Tooltip("Ä«ï¿½Þ¶ï¿½ ï¿½ï¿½Ä¿ï¿½ï¿½ ï¿½ï¿½Å©ï¿½ï¿½Æ®")]
     public CoreCameraFocus2D cameraFocus;
 
     [Header("Camera Focus Timing")]
-    [Tooltip("Ä«¸Þ¶ó°¡ ¿Ã¶ó¿Ã ¿ÀºêÁ§Æ® ÂÊ¿¡ ¸Ó¹«´Â ½Ã°£")]
+    [Tooltip("Ä«ï¿½Þ¶ï¿½ ï¿½Ã¶ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ® ï¿½Ê¿ï¿½ ï¿½Ó¹ï¿½ï¿½ï¿½ ï¿½Ã°ï¿½")]
     public float cameraHoldTime = 6f;
 
-    [Tooltip("Ã¼Å©ÇÏ¸é Ä«¸Þ¶ó°¡ ÇÃ·¹ÀÌ¾î¿¡°Ô µ¹¾Æ¿Ã ¶§±îÁö ±â´Ù¸° µÚ ÇÃ·¹ÀÌ¾î¸¦ Ç®¾îÁÝ´Ï´Ù.")]
+    [Tooltip("Ã¼Å©ï¿½Ï¸ï¿½ Ä«ï¿½Þ¶ï¿½ ï¿½Ã·ï¿½ï¿½Ì¾î¿¡ï¿½ï¿½ ï¿½ï¿½ï¿½Æ¿ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ù¸ï¿½ ï¿½ï¿½ ï¿½Ã·ï¿½ï¿½Ì¾î¸¦ Ç®ï¿½ï¿½ï¿½Ý´Ï´ï¿½.")]
     public bool waitUntilCameraFocusEnds = true;
 
     [Header("Timing")]
-    [Tooltip("È÷Æ® ¼¶±¤ ½Ã°£")]
+    [Tooltip("ï¿½ï¿½Æ® ï¿½ï¿½ï¿½ï¿½ ï¿½Ã°ï¿½")]
     public float hitFlashTime = 0.25f;
 
-    [Tooltip("È÷Æ® ÈÄ È°¼ºÈ­±îÁö ±â´Ù¸®´Â ½Ã°£")]
+    [Tooltip("ï¿½ï¿½Æ® ï¿½ï¿½ È°ï¿½ï¿½È­ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ù¸ï¿½ï¿½ï¿½ ï¿½Ã°ï¿½")]
     public float delayBeforeActivate = 0.25f;
 
-    [Tooltip("È°¼ºÈ­ ºûÀÌ Â÷¿À¸£´Â ½Ã°£")]
+    [Tooltip("È°ï¿½ï¿½È­ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ã°ï¿½")]
     public float activateGlowTime = 1f;
 
-    [Tooltip("È°¼ºÈ­ ÈÄ Ä«¸Þ¶ó°¡ ¿òÁ÷ÀÌ±â Àü ´ë±â")]
+    [Tooltip("È°ï¿½ï¿½È­ ï¿½ï¿½ Ä«ï¿½Þ¶ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ì±ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½")]
     public float delayBeforeCameraFocus = 0.35f;
 
-    [Tooltip("Ä«¸Þ¶ó°¡ ¸ÕÀú ¿Ã¶ó¿Ã ¿ÀºêÁ§Æ®¸¦ Àâ¾ÆÁÖ´Â ½Ã°£")]
+    [Tooltip("Ä«ï¿½Þ¶ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ã¶ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ®ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Ö´ï¿½ ï¿½Ã°ï¿½")]
     public float delayBeforeRise = 2.1f;
 
-    [Tooltip("»ó½Â ¿Ï·á ÈÄ ¿Ï·á »ç¿îµå±îÁö ´ë±â")]
+    [Tooltip("ï¿½ï¿½ï¿½ ï¿½Ï·ï¿½ ï¿½ï¿½ ï¿½Ï·ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½")]
     public float delayBeforeComplete = 0.6f;
 
     [Header("State")]
@@ -223,7 +223,7 @@ public class CoreActivationController : MonoBehaviour
         if (useLetterbox && letterboxUI != null)
             letterboxUI.ShowBars(letterboxInTime);
 
-        // A. È÷Æ® È®ÀÎ
+        // A. ï¿½ï¿½Æ® È®ï¿½ï¿½
         PlayAudio(hitAudio);
         PlayParticle(hitParticle);
 
@@ -232,7 +232,7 @@ public class CoreActivationController : MonoBehaviour
         if (delayBeforeActivate > 0f)
             yield return new WaitForSeconds(delayBeforeActivate);
 
-        // B. È°¼ºÈ­ ÀÎ½Ä
+        // B. È°ï¿½ï¿½È­ ï¿½Î½ï¿½
         PlayAudio(activateAudio);
         PlayParticle(activateParticle);
 
@@ -245,7 +245,7 @@ public class CoreActivationController : MonoBehaviour
         if (delayBeforeCameraFocus > 0f)
             yield return new WaitForSeconds(delayBeforeCameraFocus);
 
-        // Ä«¸Þ¶ó°¡ ¿Ã¶ó¿Ã ¿ÀºêÁ§Æ®¸¦ ÀÚ¿¬½º·´°Ô ºñÃã
+        // Ä«ï¿½Þ¶ï¿½ ï¿½Ã¶ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ®ï¿½ï¿½ ï¿½Ú¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         if (useCameraFocus && cameraFocus != null && connectedRisingObject != null)
         {
             Transform focusTarget = connectedRisingObject.objectToRise;
@@ -260,7 +260,7 @@ public class CoreActivationController : MonoBehaviour
         if (delayBeforeRise > 0f)
             yield return new WaitForSeconds(delayBeforeRise);
 
-        // D. ¿¬°áµÈ ¿ÀºêÁ§Æ® »ó½Â
+        // D. ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ® ï¿½ï¿½ï¿½
         if (connectedRisingObject != null)
             connectedRisingObject.StartRise();
 
@@ -269,7 +269,7 @@ public class CoreActivationController : MonoBehaviour
         else
             yield return new WaitForSeconds(delayBeforeComplete);
 
-        // E. ¿Ï·á Ç¥½Ã
+        // E. ï¿½Ï·ï¿½ Ç¥ï¿½ï¿½
         PlayAudio(completeAudio);
         PlayParticle(completeParticle);
 
@@ -281,8 +281,8 @@ public class CoreActivationController : MonoBehaviour
             }
         }
 
-        // ºñÃâ µ¹ÀÌ ¾ø¾î¼­ Ä«¸Þ¶ó Æ÷Ä¿½º°¡ ½ÃÀÛµÇÁö ¾ÊÀº °æ¿ì,
-        // °ËÁ¤¹Ù°¡ ¹Ù·Î »ç¶óÁöÁö ¾Êµµ·Ï µû·Î À¯Áö ½Ã°£ Àû¿ë
+        // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½î¼­ Ä«ï¿½Þ¶ï¿½ ï¿½ï¿½Ä¿ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ûµï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½,
+        // ï¿½ï¿½ï¿½ï¿½ï¿½Ù°ï¿½ ï¿½Ù·ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Êµï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ã°ï¿½ ï¿½ï¿½ï¿½ï¿½
         if (!startedCameraFocus && useLetterbox && letterboxHoldTimeWithoutCamera > 0f)
         {
             yield return new WaitForSeconds(letterboxHoldTimeWithoutCamera);
@@ -396,5 +396,15 @@ public class CoreActivationController : MonoBehaviour
 
         audioSource.Stop();
         audioSource.Play();
+    }
+
+    public void OnHit()
+    {
+        OnCoreEvent();
+    }
+
+    public void OnCoreEvent()
+    {
+        StartActivation();
     }
 }

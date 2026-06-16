@@ -158,14 +158,23 @@ public class PlayerController : MonoBehaviour
 
     private void FixedUpdate()
     {
+        bool wasOnRunway = isOnRunway;
+        bool wasGround   = isGround;
+
+        isGround   = false;
+        isOnRunway = false;
+        isOnGrass  = false;
+        isOnStone  = false;
+
         currentState.PhysicsUpdate();
-        PreventRunwaySlide();
+        PreventSlide(wasOnRunway, wasGround);
     }
 
-    private void PreventRunwaySlide()
+    private void PreventSlide(bool onRunway, bool onGround)
     {
-        bool shouldFreeze = isOnRunway &&
+        bool shouldFreeze = onGround &&
                             InputReader.InputData.moveAxis.x == 0 &&
+                            InputReader.InputData.moveAxis.y >= 0 &&
                             currentState != jumpState &&
                             currentState != fallState &&
                             currentState != dashState;
@@ -529,9 +538,9 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    private void OnCollisionStay2D(Collision2D collision)
+    private void HandleGroundCollision(Collider2D col)
     {
-        if (collision.collider.CompareTag("Floor") || collision.collider.CompareTag("Runway"))
+        if (col.CompareTag("Floor") || col.CompareTag("Runway"))
         {
             isGround = true;
 
@@ -539,33 +548,28 @@ public class PlayerController : MonoBehaviour
                 CameraMovement.Instance.SetCameraPosY(transform.position.y);
         }
 
-        // 풀밭
-        if (collision.collider.CompareTag("Floor"))
-        {
+        if (col.CompareTag("Floor"))
             isOnGrass = true;
-        }
 
-        // 돌 / 신전바닥 / Runway
-        if (collision.collider.CompareTag("Runway"))
+        if (col.CompareTag("Runway"))
         {
             isOnRunway = true;
-            isOnStone = true;
+            isOnStone  = true;
         }
+    }
+
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        HandleGroundCollision(collision.collider);
+    }
+
+    private void OnCollisionStay2D(Collision2D collision)
+    {
+        HandleGroundCollision(collision.collider);
     }
 
     private void OnCollisionExit2D(Collision2D collision)
     {
-        if (collision.collider.CompareTag("Floor") || collision.collider.CompareTag("Runway"))
-            isGround = false;
-
-        if (collision.collider.CompareTag("Floor"))
-            isOnGrass = false;
-
-        if (collision.collider.CompareTag("Runway"))
-        {
-            isOnRunway = false;
-            isOnStone = false;
-        }
     }
 
     public IEnumerator SlowDownSpeed(float speed, float time, int divide = 0)
