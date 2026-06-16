@@ -34,6 +34,12 @@ public class BreakableFragmentPlatformEvent : MonoBehaviour
     [Tooltip("파편 구간 낙하 속도를 연출용으로 조절합니다.")]
     public bool useCinematicFallSpeed = true;
 
+    [Tooltip("파편 낙하에서 사용할 원래 중력값. Player Rigidbody2D의 기본 Gravity Scale 값을 직접 넣으세요.")]
+    public float normalFallGravityScale = 1f;
+
+    [Tooltip("처음 떨어질 때 툭 떨어지는 느낌을 주는 시작 속도")]
+    public float initialNormalFallVelocity = -2.2f;
+
     [Tooltip("낙하가 끝나는 바닥 위치를 알려주는 빈 오브젝트. 최종 도착 바닥 근처에 두세요.")]
     public Transform fallEndPoint;
 
@@ -42,7 +48,7 @@ public class BreakableFragmentPlatformEvent : MonoBehaviour
 
     [Tooltip("처음 이 비율만큼은 원래 속도로 떨어집니다.")]
     [Range(0f, 0.45f)]
-    public float topNormalPercent = 0.18f;
+    public float topNormalPercent = 0.2f;
 
     [Tooltip("마지막 이 비율만큼은 원래 속도로 떨어집니다.")]
     [Range(0f, 0.45f)]
@@ -379,9 +385,19 @@ public class BreakableFragmentPlatformEvent : MonoBehaviour
 
         if (!hasOriginalGravityScale)
         {
-            originalGravityScale = playerRigidbody.gravityScale;
+            originalGravityScale = normalFallGravityScale;
             hasOriginalGravityScale = true;
         }
+
+        playerRigidbody.gravityScale = originalGravityScale;
+
+        Vector2 startVelocity = playerRigidbody.velocity;
+
+        if (startVelocity.y > initialNormalFallVelocity)
+            startVelocity.y = initialNormalFallVelocity;
+
+        playerRigidbody.velocity = startVelocity;
+        playerRigidbody.WakeUp();
 
         fallStartY = playerRigidbody.transform.position.y;
         resolvedFallEndY = fallEndPoint != null ? fallEndPoint.position.y : fallEndY;
