@@ -99,7 +99,7 @@ public class PlayerMoveState : PlayerState
     {
         moveSpeed = controller.moveSpeed;
         col = controller.GetComponent<CapsuleCollider2D>();
-        groundLayer = LayerMask.GetMask("Floor");
+        groundLayer = LayerMask.GetMask("Floor") | LayerMask.GetMask("Default");
         sensorDistance = 1.0f;
         sensorX = 3.0f;
     }
