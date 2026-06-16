@@ -8610,7 +8610,7 @@ BoxCollider2D:
   m_IsTrigger: 0
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: 0, y: 0}
+  m_Offset: {x: -0.001100257, y: 0}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
@@ -8621,7 +8621,7 @@ BoxCollider2D:
     adaptiveTiling: 0
   m_AutoTiling: 0
   serializedVersion: 2
-  m_Size: {x: 1, y: 1}
+  m_Size: {x: 0.9977995, y: 1}
   m_EdgeRadius: 0
 --- !u!50 &70094850
 Rigidbody2D:
@@ -172689,7 +172689,7 @@ BoxCollider2D:
   m_IsTrigger: 0
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: 0, y: 0}
+  m_Offset: {x: 0.0011593997, y: 0}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
@@ -172700,7 +172700,7 @@ BoxCollider2D:
     adaptiveTiling: 0
   m_AutoTiling: 0
   serializedVersion: 2
-  m_Size: {x: 1, y: 1}
+  m_Size: {x: 0.9976812, y: 1}
   m_EdgeRadius: 0
 --- !u!50 &1134559238
 Rigidbody2D:
@@ -258283,10 +258283,10 @@ MonoBehaviour:
     prevPos: {x: 0, y: 0, z: 0}
   moveSpeed: 2
   winds:
-  - windObject: {fileID: 1094137321}
+  - windObject: {fileID: 1382618353}
     targetPos: {x: -16.86, y: 9, z: 0}
     prevPos: {x: 0, y: 0, z: 0}
-  - windObject: {fileID: 1382618353}
+  - windObject: {fileID: 1094137321}
     targetPos: {x: -13.05993, y: 13, z: 0}
     prevPos: {x: 0, y: 0, z: 0}
   - windObject: {fileID: 1296610695}
@@ -258295,7 +258295,7 @@ MonoBehaviour:
   - windObject: {fileID: 166186932}
     targetPos: {x: 20.13, y: -1, z: 0}
     prevPos: {x: 0, y: 0, z: 0}
-  windObjectSpeed: 3
+  windObjectSpeed: 4
   propellers:
   - propeller: {fileID: 1007989001}
     rotateSpeed: 100
