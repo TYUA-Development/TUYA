@@ -61,7 +61,7 @@ public class PlayerIdleState : PlayerState
         {
             controller.OnMove();
         }
-        else if(InputData.jumpPressed && controller.isGround)
+        else if (InputData.jumpPressed && controller.isGround)
         {
             controller.OnJump();
         }
@@ -69,7 +69,7 @@ public class PlayerIdleState : PlayerState
         //{
         //    controller.OnDash();
         //}
-        else if(InputData.aimingPressed)
+        else if (InputData.aimingPressed)
         {
             controller.OnAttack();
         }
@@ -163,7 +163,7 @@ public class PlayerMoveState : PlayerState
             controller.Rigidbody2D.velocity = velocity;
             return;
         }
-        
+
         velocity.x = moveDirect * moveSpeed;
         controller.Rigidbody2D.velocity = velocity;
 
@@ -180,7 +180,7 @@ public class PlayerMoveState : PlayerState
     {
         Vector2 origin = new Vector2(col.bounds.center.x, col.bounds.min.y);
 
-        RaycastHit2D hit = Physics2D.Raycast( origin, Vector2.down, 0.2f, groundLayer);
+        RaycastHit2D hit = Physics2D.Raycast(origin, Vector2.down, 0.2f, groundLayer);
 
         return hit.collider == null;
     }
@@ -225,7 +225,7 @@ public class PlayerJumpState : PlayerState
     {
         moveSpeed = controller.moveSpeed;
         jumpPower = controller.jumpPower;
-        
+
     }
 
     public override void Enter()
@@ -261,7 +261,7 @@ public class PlayerJumpState : PlayerState
     public override void LogicUpdate()
     {
         // 땅에 닿았을 때 상태 변환
-        
+
 
         Debug.Log("OnJump");
     }
@@ -339,7 +339,7 @@ public class PlayerDashState : PlayerState
     {
         if (Mathf.Abs(controller.Rigidbody2D.velocity.x) <= 0.01f)
         {
-            if(InputData.moveAxis.x != 0)
+            if (InputData.moveAxis.x != 0)
                 controller.OnMove();
             else
                 controller.OnIdle();
@@ -348,7 +348,7 @@ public class PlayerDashState : PlayerState
 
     public override void PhysicsUpdate()
     {
-        
+
     }
 }
 
@@ -402,7 +402,7 @@ public class PlayerAttackState : PlayerState
             return;
         }
 
-        if(isAiming)
+        if (isAiming)
         {
             Debug.Log("Aiming");
 
@@ -557,7 +557,7 @@ public class PlayerAttackState : PlayerState
 
     public override void PhysicsUpdate()
     {
-        
+
     }
 }
 
@@ -578,8 +578,13 @@ public class PlayerFallState : PlayerState
 
     public override void Enter()
     {
+        controller.animator.ResetTrigger("DetectFloor");
+
+        controller.animator.SetBool("IsJump", false);
+        controller.animator.SetBool("IsMove", false);
         controller.animator.SetBool("IsFall", true);
-        controller.animator.Play("JumpDown");
+
+        controller.animator.Play("JumpDown", 0, 0f);
 
         isLanding = false;
         isFalling = true;
@@ -695,7 +700,7 @@ public class PlayerFallState : PlayerState
 
         if (hit.CompareTag("Runway"))
         {
-            
+
             RunwayObject runway = hit.GetComponent<RunwayObject>();
             if (runway != null)
                 runway.OnRunWayCollider();

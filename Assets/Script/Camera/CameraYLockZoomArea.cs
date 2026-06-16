@@ -1,102 +1,57 @@
 using UnityEngine;
 
-[DefaultExecutionOrder(50000)]
+[DefaultExecutionOrder(10000)]
 public class CameraYLockZoomArea : MonoBehaviour
 {
-    public enum ExitYMode
-    {
-        KeepCurrentY,
-        FixedY,
-        OffsetFromCurrentY
-    }
-
     [Header("Target")]
     public Camera targetCamera;
     public Transform cameraRig;
     public string playerTag = "Player";
 
-    [Header("Normal Camera Control")]
-    [Tooltip("체크하면 이 구역 안/나간 직후에도 일반 카메라 이동을 막지 않습니다. X축은 기존 CameraMovement가 계속 담당합니다.")]
+    [Header("Normal Camera Movement")]
+    [Tooltip("체크하면 이 구역 안에서도 일반 CameraMovement가 계속 X를 따라갑니다.")]
     public bool forceNormalCameraMovement = true;
 
-    [Header("Inside Area - Y Lock")]
-    [Tooltip("5번 Area 안에 있을 때 고정할 CameraRig의 Y값")]
+    [Header("Y Lock")]
+    [Tooltip("이 구역 안에서 고정할 CameraRig의 Y값")]
     public float fixedCameraY = 0f;
 
-    [Tooltip("Area에 들어왔을 때 현재 Y에서 Fixed Camera Y까지 이동하는 시간")]
+    [Tooltip("현재 카메라 Y에서 Fixed Camera Y까지 자연스럽게 이동하는 시간")]
     public float yBlendTime = 1.2f;
 
-    [Header("Inside Area - Zoom")]
-    [Tooltip("5번 Area 안에서 도착할 줌 값")]
+    [Header("Zoom")]
+    [Tooltip("이 구역 안에서 도착할 카메라 Field Of View")]
     public float targetFieldOfView = 55f;
 
-    [Tooltip("Area에 들어왔을 때 줌 변화 시간")]
+    [Tooltip("현재 줌에서 Target Field Of View까지 자연스럽게 이동하는 시간")]
     public float zoomBlendTime = 1.2f;
 
     public AnimationCurve blendCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
 
-    [Header("Legacy Restore On Exit")]
-    [Tooltip("Exit Camera를 쓰지 않을 때, 나가면서 줌을 입장 전 값으로 되돌릴지")]
+    [Header("Exit")]
+    [Tooltip("구역을 나갈 때 줌을 입장 전 값으로 되돌릴지")]
     public bool restoreZoomOnExit = false;
 
-    [Tooltip("Exit Camera를 쓰지 않을 때, 나가면서 Y를 입장 전 값으로 되돌릴지")]
+    [Tooltip("구역을 나갈 때 Y를 입장 전 값으로 되돌릴지")]
     public bool restoreYOnExit = false;
 
+    [Tooltip("나갈 때 되돌리는 시간")]
     public float exitBlendTime = 1f;
-
-    [Header("Exit Camera After Leaving Area")]
-    [Tooltip("5번 Area에서 나갈 때 추가로 확대/Y 이동을 실행합니다.")]
-    public bool enableExitCameraOnLeave = true;
-
-    [Tooltip("5번 Area에서 나간 뒤 도착할 줌 값")]
-    public float exitTargetFieldOfView = 50f;
-
-    [Tooltip("나간 뒤 줌 변화 시간")]
-    public float exitZoomTime = 2.5f;
-
-    [Tooltip("나간 뒤 Y를 어떻게 바꿀지")]
-    public ExitYMode exitYMode = ExitYMode.OffsetFromCurrentY;
-
-    [Tooltip("Exit Y Mode가 FixedY일 때 도착할 CameraRig Y값")]
-    public float exitTargetCameraY = -3f;
-
-    [Tooltip("Exit Y Mode가 OffsetFromCurrentY일 때 현재 Y에서 더할 값. 아래로 내리고 싶으면 음수")]
-    public float exitTargetYOffset = -3f;
-
-    [Tooltip("나간 뒤 Y 변화 시간. 0이면 Exit Zoom Time과 동일")]
-    public float exitYTime = 0f;
-
-    [Tooltip("Exit 연출이 끝난 뒤에도 Y값을 유지합니다.")]
-    public bool keepExitYAfterComplete = true;
-
-    [Tooltip("Exit 연출이 끝난 뒤에도 줌 값을 유지합니다.")]
-    public bool keepExitZoomAfterComplete = true;
-
-    public AnimationCurve exitCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
 
     [Header("Debug")]
     public bool showDebugLog = false;
 
     private bool playerInside;
-    private bool exitCameraRunning;
-    private bool legacyRestoreRunning;
-    private bool holdingExitY;
-    private bool holdingExitZoom;
+    private bool restoringOnExit;
 
     private float insideTimer;
+    private float exitTimer;
 
     private float enterCameraY;
     private float enterFieldOfView;
 
-    private float exitTimer;
     private float exitStartCameraY;
-    private float exitEndCameraY;
     private float exitStartFieldOfView;
-    private float exitEndFieldOfView;
-
-    private float legacyRestoreTimer;
-    private float legacyRestoreStartY;
-    private float legacyRestoreStartFOV;
 
     private void Awake()
     {
@@ -110,37 +65,24 @@ public class CameraYLockZoomArea : MonoBehaviour
         if (targetCamera == null || cameraRig == null)
             return;
 
-        if (forceNormalCameraMovement && CameraMovement.Instance != null)
-        {
-            CameraMovement.Instance.isMovingEvent = false;
-        }
-
+        // 중요:
+        // 플레이어가 이 Area 안에 있을 때만 CameraMovement 상태를 건드립니다.
+        // Area 밖에서는 절대 isMovingEvent를 false로 덮어쓰지 않습니다.
         if (playerInside)
         {
-            UpdateInsideAreaCamera();
+            if (forceNormalCameraMovement && CameraMovement.Instance != null)
+            {
+                CameraMovement.Instance.isMovingEvent = false;
+            }
+
+            UpdateInsideArea();
             return;
         }
 
-        if (exitCameraRunning)
+        if (restoringOnExit)
         {
-            UpdateExitCamera();
+            UpdateExitRestore();
             return;
-        }
-
-        if (legacyRestoreRunning)
-        {
-            UpdateLegacyRestore();
-            return;
-        }
-
-        if (holdingExitY)
-        {
-            ApplyCameraY(exitEndCameraY);
-        }
-
-        if (holdingExitZoom)
-        {
-            ApplyFieldOfView(exitEndFieldOfView);
         }
     }
 
@@ -172,10 +114,7 @@ public class CameraYLockZoomArea : MonoBehaviour
             return;
 
         playerInside = true;
-        exitCameraRunning = false;
-        legacyRestoreRunning = false;
-        holdingExitY = false;
-        holdingExitZoom = false;
+        restoringOnExit = false;
 
         insideTimer = 0f;
 
@@ -198,20 +137,27 @@ public class CameraYLockZoomArea : MonoBehaviour
 
         playerInside = false;
 
-        if (enableExitCameraOnLeave)
+        if (restoreZoomOnExit || restoreYOnExit)
         {
-            StartExitCamera();
+            restoringOnExit = true;
+            exitTimer = 0f;
+
+            if (cameraRig != null)
+                exitStartCameraY = cameraRig.position.y;
+
+            if (targetCamera != null)
+                exitStartFieldOfView = targetCamera.fieldOfView;
         }
         else
         {
-            StartLegacyRestoreIfNeeded();
+            restoringOnExit = false;
         }
 
         if (showDebugLog)
             Debug.Log($"{gameObject.name} : CameraYLockZoomArea Exit");
     }
 
-    private void UpdateInsideAreaCamera()
+    private void UpdateInsideArea()
     {
         insideTimer += Time.deltaTime;
 
@@ -228,122 +174,28 @@ public class CameraYLockZoomArea : MonoBehaviour
         ApplyFieldOfView(nextFOV);
     }
 
-    private void StartExitCamera()
-    {
-        RefreshReferences();
-
-        if (targetCamera == null || cameraRig == null)
-            return;
-
-        exitCameraRunning = true;
-        legacyRestoreRunning = false;
-        holdingExitY = false;
-        holdingExitZoom = false;
-
-        exitTimer = 0f;
-
-        exitStartCameraY = cameraRig.position.y;
-        exitStartFieldOfView = targetCamera.fieldOfView;
-
-        exitEndFieldOfView = exitTargetFieldOfView;
-
-        if (exitYMode == ExitYMode.KeepCurrentY)
-        {
-            exitEndCameraY = exitStartCameraY;
-        }
-        else if (exitYMode == ExitYMode.FixedY)
-        {
-            exitEndCameraY = exitTargetCameraY;
-        }
-        else
-        {
-            exitEndCameraY = exitStartCameraY + exitTargetYOffset;
-        }
-
-        if (showDebugLog)
-        {
-            Debug.Log($"{gameObject.name} : Exit Camera Start / StartY {exitStartCameraY} / EndY {exitEndCameraY}");
-        }
-    }
-
-    private void UpdateExitCamera()
+    private void UpdateExitRestore()
     {
         exitTimer += Time.deltaTime;
 
-        float realExitYTime = exitYTime <= 0f ? exitZoomTime : exitYTime;
-
-        float zoomT = exitZoomTime <= 0f ? 1f : Mathf.Clamp01(exitTimer / exitZoomTime);
-        float yT = realExitYTime <= 0f ? 1f : Mathf.Clamp01(exitTimer / realExitYTime);
-
-        float curvedZoomT = exitCurve.Evaluate(zoomT);
-        float curvedYT = exitCurve.Evaluate(yT);
-
-        float nextFOV = Mathf.Lerp(exitStartFieldOfView, exitEndFieldOfView, curvedZoomT);
-        float nextY = Mathf.Lerp(exitStartCameraY, exitEndCameraY, curvedYT);
-
-        ApplyFieldOfView(nextFOV);
-        ApplyCameraY(nextY);
-
-        bool zoomDone = zoomT >= 1f;
-        bool yDone = yT >= 1f;
-
-        if (zoomDone && yDone)
-        {
-            exitCameraRunning = false;
-
-            holdingExitY = keepExitYAfterComplete;
-            holdingExitZoom = keepExitZoomAfterComplete;
-
-            if (keepExitYAfterComplete)
-                ApplyCameraY(exitEndCameraY);
-
-            if (keepExitZoomAfterComplete)
-                ApplyFieldOfView(exitEndFieldOfView);
-
-            if (showDebugLog)
-                Debug.Log($"{gameObject.name} : Exit Camera Complete");
-        }
-    }
-
-    private void StartLegacyRestoreIfNeeded()
-    {
-        if (!restoreZoomOnExit && !restoreYOnExit)
-            return;
-
-        RefreshReferences();
-
-        if (targetCamera == null || cameraRig == null)
-            return;
-
-        legacyRestoreRunning = true;
-        legacyRestoreTimer = 0f;
-
-        legacyRestoreStartY = cameraRig.position.y;
-        legacyRestoreStartFOV = targetCamera.fieldOfView;
-    }
-
-    private void UpdateLegacyRestore()
-    {
-        legacyRestoreTimer += Time.deltaTime;
-
-        float t = exitBlendTime <= 0f ? 1f : Mathf.Clamp01(legacyRestoreTimer / exitBlendTime);
+        float t = exitBlendTime <= 0f ? 1f : Mathf.Clamp01(exitTimer / exitBlendTime);
         float curvedT = blendCurve.Evaluate(t);
 
         if (restoreYOnExit)
         {
-            float y = Mathf.Lerp(legacyRestoreStartY, enterCameraY, curvedT);
-            ApplyCameraY(y);
+            float nextY = Mathf.Lerp(exitStartCameraY, enterCameraY, curvedT);
+            ApplyCameraY(nextY);
         }
 
         if (restoreZoomOnExit)
         {
-            float fov = Mathf.Lerp(legacyRestoreStartFOV, enterFieldOfView, curvedT);
-            ApplyFieldOfView(fov);
+            float nextFOV = Mathf.Lerp(exitStartFieldOfView, enterFieldOfView, curvedT);
+            ApplyFieldOfView(nextFOV);
         }
 
         if (t >= 1f)
         {
-            legacyRestoreRunning = false;
+            restoringOnExit = false;
         }
     }
 
@@ -367,9 +219,7 @@ public class CameraYLockZoomArea : MonoBehaviour
 
     public void StopExitCameraHold()
     {
-        exitCameraRunning = false;
-        legacyRestoreRunning = false;
-        holdingExitY = false;
-        holdingExitZoom = false;
+        playerInside = false;
+        restoringOnExit = false;
     }
 }
