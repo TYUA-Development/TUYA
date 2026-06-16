@@ -137,6 +137,8 @@ public class CoreActivationController : MonoBehaviour, IArrowHit, ICoreEvent
     [Header("State")]
     public bool isActivated;
 
+    public event System.Action onActivated;
+
     private bool isRunning;
     private Coroutine activationCoroutine;
 
@@ -207,6 +209,8 @@ public class CoreActivationController : MonoBehaviour, IArrowHit, ICoreEvent
 
         isActivated = true;
         isRunning = true;
+
+        onActivated?.Invoke();
 
         if (activationCoroutine != null)
             StopCoroutine(activationCoroutine);
