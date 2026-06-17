@@ -26,61 +26,68 @@ public class PassThroughExitCameraZoom : MonoBehaviour
     [Header("Pass Through Condition")]
     public PassDirection passDirection = PassDirection.Both;
 
-    [Tooltip("ÇÃ·¹ÀÌ¾î°¡ ±¸¿ªÀÇ ¹Ý´ëÆíÀ¸·Î ¿ÏÀüÈ÷ ³ª°¬À» ¶§¸¸ ÁÜÀ» ½ÃÀÛÇÕ´Ï´Ù.")]
+    [Tooltip("ï¿½Ã·ï¿½ï¿½Ì¾î°¡ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ý´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Õ´Ï´ï¿½.")]
     public bool requireOppositeExit = true;
 
     [Header("Zoom")]
-    [Tooltip("µµÂøÇÒ Ä«¸Þ¶ó Field Of View. °ªÀÌ ÀÛÀ»¼ö·Ï È®´ëµË´Ï´Ù.")]
+    [Tooltip("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Ä«ï¿½Þ¶ï¿½ Field Of View. ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ È®ï¿½ï¿½Ë´Ï´ï¿½.")]
     public float targetFieldOfView = 55f;
 
-    [Tooltip("È®´ëµÇ´Â µ¥ °É¸®´Â ½Ã°£")]
+    [Tooltip("È®ï¿½ï¿½Ç´ï¿½ ï¿½ï¿½ ï¿½É¸ï¿½ï¿½ï¿½ ï¿½Ã°ï¿½")]
     public float zoomTime = 3f;
 
-    [Tooltip("ÁÜ ½ÃÀÛ Àü ´ë±â ½Ã°£")]
+    [Tooltip("ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½Ã°ï¿½")]
     public float startDelay = 0f;
 
     public AnimationCurve zoomCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
 
     [Header("Safe Y Move")]
-    [Tooltip("PassThrough ½ÇÇà Áß CameraRigÀÇ Y¸¦ ¾ÈÀüÇÏ°Ô ÀÌµ¿ÇÕ´Ï´Ù.")]
+    [Tooltip("PassThrough ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ CameraRigï¿½ï¿½ Yï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï°ï¿½ ï¿½Ìµï¿½ï¿½Õ´Ï´ï¿½.")]
     public bool useSafeRigYMove = true;
 
-    [Tooltip("À½¼ö¸é Ä«¸Þ¶ó°¡ ¾Æ·¡·Î ³»·Á°©´Ï´Ù. ¿¹: -3, -4, -5")]
+    [Tooltip("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Ä«ï¿½Þ¶ï¿½ ï¿½Æ·ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½. ï¿½ï¿½: -3, -4, -5")]
     public float targetYOffset = -4f;
 
-    [Tooltip("Y ÀÌµ¿ ½Ã°£. 0ÀÌ¸é zoomTime°ú µ¿ÀÏÇÏ°Ô »ç¿ëÇÕ´Ï´Ù.")]
+    [Tooltip("Y ï¿½Ìµï¿½ ï¿½Ã°ï¿½. 0ï¿½Ì¸ï¿½ zoomTimeï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï°ï¿½ ï¿½ï¿½ï¿½ï¿½Õ´Ï´ï¿½.")]
     public float yMoveTime = 0f;
 
     public AnimationCurve yMoveCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
 
     [Header("X Follow During PassThrough")]
-    [Tooltip("PassThrough ½ÇÇà Áß¿¡µµ ÇÃ·¹ÀÌ¾î X¸¦ µû¶ó°©´Ï´Ù. ²¨µÎ¸é ÀüÈ¯ Áß X°¡ Àá±ñ ¸ØÃâ ¼ö ÀÖ½À´Ï´Ù.")]
+    [Tooltip("PassThrough ï¿½ï¿½ï¿½ï¿½ ï¿½ß¿ï¿½ï¿½ï¿½ ï¿½Ã·ï¿½ï¿½Ì¾ï¿½ Xï¿½ï¿½ ï¿½ï¿½ï¿½ó°©´Ï´ï¿½. ï¿½ï¿½ï¿½Î¸ï¿½ ï¿½ï¿½È¯ ï¿½ï¿½ Xï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½Ö½ï¿½ï¿½Ï´ï¿½.")]
     public bool followPlayerXWhileRunning = true;
 
-    [Tooltip("ÇÃ·¹ÀÌ¾î X¸¦ µû¶ó°¥ ¶§ ÁøÀÔ ¼ø°£ÀÇ Ä«¸Þ¶ó-ÇÃ·¹ÀÌ¾î X °Å¸®Â÷¸¦ À¯ÁöÇÕ´Ï´Ù.")]
+    [Tooltip("ï¿½Ã·ï¿½ï¿½Ì¾ï¿½ Xï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Ä«ï¿½Þ¶ï¿½-ï¿½Ã·ï¿½ï¿½Ì¾ï¿½ X ï¿½Å¸ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Õ´Ï´ï¿½.")]
     public bool keepCurrentXOffsetFromPlayer = true;
 
-    [Tooltip("keepCurrentXOffsetFromPlayer°¡ ²¨Á® ÀÖÀ» ¶§ »ç¿ëÇÒ X ¿ÀÇÁ¼Â")]
+    [Tooltip("keepCurrentXOffsetFromPlayerï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ X ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½")]
     public float playerXOffset = 0f;
 
-    [Tooltip("X ÃßÀû ºÎµå·¯¿ò")]
+    [Tooltip("X ï¿½ï¿½ï¿½ï¿½ ï¿½Îµå·¯ï¿½ï¿½")]
     public float followXSmoothTime = 0.08f;
 
-    [Tooltip("X ÃßÀû ÃÖ´ë ¼Óµµ")]
+    [Tooltip("X ï¿½ï¿½ï¿½ï¿½ ï¿½Ö´ï¿½ ï¿½Óµï¿½")]
     public float followXMaxSpeed = 200f;
 
     [Header("Camera Ownership")]
-    [Tooltip("PassThrough ½ÇÇà Áß CameraMovementÀÇ ÀÏ¹Ý ÃßÀûÀ» Àá±ñ ¸ØÃç Ãæµ¹À» ¸·½À´Ï´Ù.")]
+    [Tooltip("PassThrough ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ CameraMovementï¿½ï¿½ ï¿½Ï¹ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½æµ¹ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½.")]
     public bool takeCameraOwnershipWhileRunning = true;
 
-    [Tooltip("ÀüÈ¯ÀÌ ³¡³ª¸é CameraMovement¿¡°Ô ´Ù½Ã Á¦¾î±ÇÀ» µ¹·ÁÁÝ´Ï´Ù.")]
+    [Tooltip("ï¿½ï¿½È¯ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ CameraMovementï¿½ï¿½ï¿½ï¿½ ï¿½Ù½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ý´Ï´ï¿½.")]
     public bool returnControlAfterComplete = true;
 
-    [Tooltip("ÀüÈ¯ ¿Ï·á ÈÄ ÁÜ °ªÀ» À¯ÁöÇÕ´Ï´Ù.")]
+    [Tooltip("ï¿½ï¿½È¯ ï¿½Ï·ï¿½ ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Õ´Ï´ï¿½.")]
     public bool keepZoomAfterComplete = true;
 
-    [Tooltip("ÀüÈ¯ ¿Ï·á ÈÄ Y À§Ä¡¸¦ À¯ÁöÇÕ´Ï´Ù. returnControlAfterComplete°¡ ÄÑÁ® ÀÖÀ¸¸é CameraMovement°¡ ´Ù½Ã µ¤À» ¼ö ÀÖ½À´Ï´Ù.")]
+    [Tooltip("ï¿½ï¿½È¯ ï¿½Ï·ï¿½ ï¿½ï¿½ Y ï¿½ï¿½Ä¡ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Õ´Ï´ï¿½. returnControlAfterCompleteï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ CameraMovementï¿½ï¿½ ï¿½Ù½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½Ö½ï¿½ï¿½Ï´ï¿½.")]
     public bool keepYAfterComplete = false;
+
+    [Header("FOV Restore After Complete")]
+    [Tooltip("ì• ë‹ˆë©”ì´ì…˜ ì™„ë£Œ í›„ ì§„ìž… ì‹œì ì˜ ì›ë³¸ FOVë¡œ ë³µì›í•©ë‹ˆë‹¤.")]
+    public bool restoreFieldOfViewAfterComplete = false;
+    [Tooltip("ì›ë³¸ FOVë¡œ ë˜ëŒì•„ê°€ëŠ” ë° ê±¸ë¦¬ëŠ” ì‹œê°„(ì´ˆ)")]
+    public float fovRestoreTime = 1f;
+    public AnimationCurve fovRestoreCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
 
     [Header("Repeat")]
     public bool activateOnlyOnce = false;
@@ -97,6 +104,9 @@ public class PassThroughExitCameraZoom : MonoBehaviour
 
     private Coroutine zoomCoroutine;
     private Coroutine clearYOffsetCoroutine;
+    private Coroutine fovRestoreCoroutine;
+
+    private float enterFieldOfView;
 
     private Transform playerTransform;
 
@@ -143,6 +153,10 @@ public class PassThroughExitCameraZoom : MonoBehaviour
         playerTransform = collision.transform;
         enterSide = GetPlayerSide(collision.transform.position);
 
+        // SH_MissionAreaCameraê°€ FOVë¥¼ ë°”ê¾¸ê¸° ì „ ì›ë³¸ ê°’ ìº¡ì²˜ (entryBlendTimeì´ ìžˆì–´ ì¦‰ì‹œ ë³€í•˜ì§€ ì•ŠìŒ)
+        if (targetCamera != null)
+            enterFieldOfView = targetCamera.fieldOfView;
+
         if (showDebugLog)
             Debug.Log($"{gameObject.name} Enter Side : {enterSide}");
     }
@@ -176,7 +190,7 @@ public class PassThroughExitCameraZoom : MonoBehaviour
 
         if (targetCamera == null || cameraRig == null)
         {
-            Debug.LogWarning($"{gameObject.name} : Target Camera ¶Ç´Â Camera Rig°¡ ¾ø½À´Ï´Ù.");
+            Debug.LogWarning($"{gameObject.name} : Target Camera ï¿½Ç´ï¿½ Camera Rigï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½.");
             return;
         }
 
@@ -248,7 +262,10 @@ public class PassThroughExitCameraZoom : MonoBehaviour
         startFieldOfView = targetCamera.fieldOfView;
 
         startCameraY = cameraRig.position.y;
-        targetCameraY = startCameraY + targetYOffset;
+        // í”Œë ˆì´ì–´ ì‹¤ì œ Y ê¸°ì¤€ìœ¼ë¡œ ëª©í‘œ Y ê³„ì‚° (ì´ì „ ì¹´ë©”ë¼ ì‹œìŠ¤í…œì´ Yë¥¼ ê³ ì •í–ˆë”ë¼ë„ í”Œë ˆì´ì–´ ìœ„ì¹˜ë¡œ í™•ëŒ€)
+        targetCameraY = playerTransform != null
+            ? playerTransform.position.y + targetYOffset
+            : startCameraY + targetYOffset;
 
         targetRigPosition = startRigPosition;
         targetRigPosition.y = targetCameraY;
@@ -343,12 +360,35 @@ public class PassThroughExitCameraZoom : MonoBehaviour
         }
 
         if (returnControlAfterComplete && CameraMovement.Instance != null)
-        {
             CameraMovement.Instance.isMovingEvent = false;
+
+        if (restoreFieldOfViewAfterComplete && targetCamera != null)
+        {
+            if (fovRestoreCoroutine != null)
+                StopCoroutine(fovRestoreCoroutine);
+            fovRestoreCoroutine = StartCoroutine(FovRestoreRoutine());
         }
 
         if (showDebugLog)
             Debug.Log($"{gameObject.name} Complete");
+    }
+
+    private IEnumerator FovRestoreRoutine()
+    {
+        float startFov = targetCamera.fieldOfView;
+        float timer = 0f;
+        float duration = fovRestoreTime > 0f ? fovRestoreTime : 0.001f;
+
+        while (timer < duration)
+        {
+            timer += Time.deltaTime;
+            float t = fovRestoreCurve.Evaluate(Mathf.Clamp01(timer / duration));
+            targetCamera.fieldOfView = Mathf.Lerp(startFov, enterFieldOfView, t);
+            yield return null;
+        }
+
+        targetCamera.fieldOfView = enterFieldOfView;
+        fovRestoreCoroutine = null;
     }
 
     public void StopZoom()

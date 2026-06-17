@@ -31,19 +31,19 @@ public class Arrow : MonoBehaviour
         rb.gravityScale = 0.0f;
     }
 
-    // ¿ÜºÎ(ÇÃ·¹ÀÌ¾î)¿¡¼­ ¹æÇâÀ» ³Ñ°Ü¼­ ½î´Â ÇÔ¼ö
+    // ï¿½Üºï¿½(ï¿½Ã·ï¿½ï¿½Ì¾ï¿½)ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ñ°Ü¼ï¿½ ï¿½ï¿½ï¿½ ï¿½Ô¼ï¿½
     public void Launch(Vector2 dir, Transform shooter)
     {
         this.shooter = shooter;
 
         dir = dir.normalized;
 
-        rb.velocity = dir * speed;        // ÃÊ±â ¼Óµµ
-        transform.right = dir;            // È­»ì ¾ÕºÎºÐÀÌ ¹æÇâ º¸°Ô È¸Àü
+        rb.velocity = dir * speed;        // ï¿½Ê±ï¿½ ï¿½Óµï¿½
+        transform.right = dir;            // È­ï¿½ï¿½ ï¿½ÕºÎºï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ È¸ï¿½ï¿½
 
         StartFlightFX();
 
-        Destroy(gameObject, lifeTime);    // ÀÏÁ¤ ½Ã°£ µÚ ÀÚµ¿ »èÁ¦
+        Destroy(gameObject, lifeTime);    // ï¿½ï¿½ï¿½ï¿½ ï¿½Ã°ï¿½ ï¿½ï¿½ ï¿½Úµï¿½ ï¿½ï¿½ï¿½ï¿½
     }
 
     private void Update()
@@ -62,7 +62,7 @@ public class Arrow : MonoBehaviour
         if (hasHit)
             return;
 
-        // ¼Óµµ ¹æÇâÀ¸·Î °è¼Ó È¸Àü(Æ÷¹°¼± ²ªÀÏ ¶§ È­»ìµµ °°ÀÌ ¼÷¿©Áü)
+        // ï¿½Óµï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ È¸ï¿½ï¿½(ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ È­ï¿½ìµµ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½)
         if (rb.velocity.sqrMagnitude > 0.01f)
             transform.right = rb.velocity;
     }
@@ -79,29 +79,29 @@ public class Arrow : MonoBehaviour
         {
             hasHit = true;
 
-            // ¸ÂÀº ÁöÁ¡ °è»ê
+            // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½
             Vector2 hitPoint = other.ClosestPoint(transform.position);
 
-            // ³¯¾Æ°¡´Â Áß µÚ¿¡¼­ ³ª¿À´ø ÆÄÆ¼Å¬/ÀÜ»ó Á¤Áö
+            // ï¿½ï¿½ï¿½Æ°ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½Ú¿ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Æ¼Å¬/ï¿½Ü»ï¿½ ï¿½ï¿½ï¿½ï¿½
             StopFlightFX();
 
-            // ¸ÂÀ» ¶§ »ç¿îµå Àç»ý
+            // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½
             BowSFXRandomizer bowSFX = FindObjectOfType<BowSFXRandomizer>();
 
             if (bowSFX != null)
-                bowSFX.PlayHit();
+                bowSFX.PlayHit(transform.position);
 
-            // ¸ÂÀ» ¶§ ÀÌÆåÆ® »ý¼º
+            // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Æ® ï¿½ï¿½ï¿½ï¿½
             SpawnHitFX(hitPoint);
 
-            // ±âÁ¸ ÆÛÁñ/ÀåÄ¡ ¹ÝÀÀ À¯Áö
+            // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½/ï¿½ï¿½Ä¡ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
             target.OnHit();
 
-            // È­»ì ¹ÚÈ÷±â
+            // È­ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
             Stick(other.transform, hitPoint);
         }
 
-        // IArrowHitÀÌ ¾ø´Â ¿ÀºêÁ§Æ®¿¡ ´ê¾ÒÀ» ¶§´Â ¹ÝÀÀÇÏÁö ¾ÊÀ½
+        // IArrowHitï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ®ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
     }
 
     void StartFlightFX()
