@@ -327,6 +327,10 @@ public class PassThroughExitCameraZoom : MonoBehaviour
                     targetCameraY,
                     curvedYT
                 );
+
+                // CameraMovement 내부 타깃 Y도 동기화 (LateUpdate 덮어쓰기 방지)
+                if (CameraMovement.Instance != null)
+                    CameraMovement.Instance.SetCameraRigY(nextRigPos.y);
             }
 
             cameraRig.position = nextRigPos;
