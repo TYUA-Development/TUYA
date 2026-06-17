@@ -769,6 +769,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 798356208}
+  stairs: 0
 --- !u!1 &9599201
 GameObject:
   m_ObjectHideFlags: 0
@@ -7702,6 +7703,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9a5dac98b789cdf4a98d92827f3aa8f3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  coreObjects: []
   floors:
   - Floor: {fileID: 1845584703}
     nextPos: {x: 5, y: -6.6, z: 0}
@@ -7711,7 +7713,9 @@ MonoBehaviour:
     prevPos: {x: 0, y: 0, z: 0}
   moveSpeed: 10
   winds: []
+  windObjectSpeed: 1
   propellers: []
+  propellerRampTime: 1
 --- !u!212 &52812243
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -8323,6 +8327,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 1727767178}
+  stairs: 0
 --- !u!1 &59042993
 GameObject:
   m_ObjectHideFlags: 0
@@ -8669,6 +8674,171 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!43 &70454532
+Mesh:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: 
+  serializedVersion: 11
+  m_SubMeshes:
+  - serializedVersion: 2
+    firstByte: 0
+    indexCount: 126
+    topology: 0
+    baseVertex: 0
+    firstVertex: 0
+    vertexCount: 44
+    localAABB:
+      m_Center: {x: -0.36054587, y: -0.20331025, z: 0}
+      m_Extent: {x: 3.1272857, y: 4.587634, z: 0}
+  m_Shapes:
+    vertices: []
+    shapes: []
+    channels: []
+    fullWeights: []
+  m_BindPose: []
+  m_BoneNameHashes: 
+  m_RootBoneNameHash: 0
+  m_BonesAABB: []
+  m_VariableBoneCountWeights:
+    m_Data: 
+  m_MeshCompression: 0
+  m_IsReadable: 1
+  m_KeepVertices: 1
+  m_KeepIndices: 1
+  m_IndexFormat: 0
+  m_IndexBuffer: 0000010002000000030001000400030000000400050003000500040006000700080009000a00080007000b0008000a000b000c0008000d000c000b000d000e000c000d000f000e0010000f000d00100011000f0012001100100013001100120000001100130002001100000014001100020011001400150000001600040013001700000001001800020003001900010002001a00140005001b00030004001c00060006001d00050009001e00070007001f000a000800200009000c00210008000a0022000b000b0023000d000e0024000c000d00250010000f0026000e00110027000f0010002800120015002900110012002a00130014002b001500
+  m_VertexData:
+    serializedVersion: 3
+    m_VertexCount: 44
+    m_Channels:
+    - stream: 0
+      offset: 0
+      format: 0
+      dimension: 3
+    - stream: 0
+      offset: 0
+      format: 0
+      dimension: 0
+    - stream: 0
+      offset: 12
+      format: 0
+      dimension: 4
+    - stream: 0
+      offset: 28
+      format: 0
+      dimension: 4
+    - stream: 0
+      offset: 0
+      format: 0
+      dimension: 0
+    - stream: 0
+      offset: 0
+      format: 0
+      dimension: 0
+    - stream: 0
+      offset: 0
+      format: 0
+      dimension: 0
+    - stream: 0
+      offset: 0
+      format: 0
+      dimension: 0
+    - stream: 0
+      offset: 0
+      format: 0
+      dimension: 0
+    - stream: 0
+      offset: 0
+      format: 0
+      dimension: 0
+    - stream: 0
+      offset: 0
+      format: 0
+      dimension: 0
+    - stream: 0
+      offset: 0
+      format: 0
+      dimension: 0
+    - stream: 0
+      offset: 0
+      format: 0
+      dimension: 0
+    - stream: 0
+      offset: 0
+      format: 0
+      dimension: 0
+    m_DataSize: 1936
+    _typelessdata: bc7a0bc0c1213ec00000000030c77fbf90842abd0000000000000080bc7a0bc0c1213ec0bc7a0bc0c1213ec09bb514c0d411154000000000e9977ebf0665d63d00000080000000800b5319c05d74d23f2b1810c079e940402b1810c079e9404000000000e8977ebf0865d63d00000080000000802b1810c079e940402b1810c079e940400b5319c05d74d23f00000000c1f578bf277e6e3e00000080000000800b5319c05d74d23f0b5319c05d74d23faf5935c09e613cc0000000007f182bbdcdc67fbf0000000000000080bc7a0bc0c1213ec0a2385fc07ca13ac0d6453cc09bce22bf00000000c1f578bf2e7e6e3e0000008000000080a2385fc07ca13ac00b5319c05d74d23fa2385fc07ca13ac0000000001d182bbdcdc67fbf0000000000000080a2385fc07ca13ac0a2385fc07ca13ac0f4c5b23f3a365bc000000000d1bb343ff84d35bf0000008000000080441231409fcd03c0dbd7d93c6b4f99c0664b983f6ee395be00000000f1fb3e3f18792a3f0000008000000080ee36c6be87a9bc3f441231409fcd03c0441231409fcd03c000000000f1fb3e3f18792a3f0000008000000080441231409fcd03c0441231409fcd03c0dbd7d93c6b4f99c000000000d1bb343ff74d35bf0000008000000080dbd7d93c6b4f99c0dbd7d93c6b4f99c04fe9b5be056b85c0000000007d205abf9e0006bf0000000000000080dbd7d93c6b4f99c00eb83cbf3e0d63c0ee36c6be87a9bc3f000000005637773f01f8843e0000008000000080ee36c6be87a9bc3fee36c6be87a9bc3f0eb83cbf3e0d63c0000000007d205abf9e0006bf00000000000000800eb83cbf3e0d63c00eb83cbf3e0d63c0fe4a47bfc4763b40000000005637773f00f8843e000000800000008042bd95bf624c8c40ee36c6be87a9bc3f42bd95bf624c8c4000000000bbd248be55077b3f000000800000008042bd95bf624c8c4042bd95bf624c8c40520bb6bf5efc83c00000000015e6243f38d143bf00000080000000800eb83cbf3e0d63c04edd06c01c7296c0ccf6dabf4ed688400000000084d248be58077b3f00000080000000802b1810c03b60854042bd95bf624c8c404edd06c01c7296c00000000011e6243f3cd143bf00000080000000804edd06c01c7296c04edd06c01c7296c0052c09c0fc8275c00000000030c77fbf8d842abd00000000000000804edd06c01c7296c0bc7a0bc0c1213ec02b1810c0f8d4654000000000000080bf0000008000000080000000802b1810c079e940402b1810c03b6085402b1810c03b60854000000000000080bf0000008000000080000000802b1810c03b6085402b1810c03b608540bc7a0bc0c1213ec0000000007f182bbdcdc67fbf0000000000000080bc7a0bc0c1213ec0bc7a0bc0c1213ec0052c09c0fc8275c00000000030c77fbf90842abd00000000000000804edd06c01c7296c0bc7a0bc0c1213ec09bb514c0d411154000000000e8977ebf0865d63d00000080000000800b5319c05d74d23f2b1810c079e940400b5319c05d74d23f00000000e9977ebf0665d63d00000080000000800b5319c05d74d23f0b5319c05d74d23f2b1810c079e9404000000000000080bf0000008000000080000000802b1810c079e940402b1810c079e94040d6453cc09bce22bf00000000c1f578bf277e6e3e0000008000000080a2385fc07ca13ac00b5319c05d74d23faf5935c09e613cc0000000001d182bbdcdc67fbf0000000000000080bc7a0bc0c1213ec0a2385fc07ca13ac0a2385fc07ca13ac000000000c1f578bf2e7e6e3e0000008000000080a2385fc07ca13ac0a2385fc07ca13ac0441231409fcd03c000000000d1bb343ff84d35bf0000008000000080441231409fcd03c0441231409fcd03c0f4c5b23f3a365bc000000000d1bb343ff74d35bf0000008000000080441231409fcd03c0dbd7d93c6b4f99c0664b983f6ee395be00000000f1fb3e3f18792a3f0000008000000080ee36c6be87a9bc3f441231409fcd03c0ee36c6be87a9bc3f00000000f1fb3e3f18792a3f0000008000000080ee36c6be87a9bc3fee36c6be87a9bc3fdbd7d93c6b4f99c0000000007d205abf9e0006bf0000000000000080dbd7d93c6b4f99c0dbd7d93c6b4f99c04fe9b5be056b85c0000000007d205abf9e0006bf0000000000000080dbd7d93c6b4f99c00eb83cbf3e0d63c0fe4a47bfc4763b40000000005637773f01f8843e000000800000008042bd95bf624c8c40ee36c6be87a9bc3f0eb83cbf3e0d63c00000000015e6243f38d143bf00000080000000800eb83cbf3e0d63c00eb83cbf3e0d63c042bd95bf624c8c40000000005637773f00f8843e000000800000008042bd95bf624c8c4042bd95bf624c8c40ccf6dabf4ed6884000000000bbd248be55077b3f00000080000000802b1810c03b60854042bd95bf624c8c40520bb6bf5efc83c00000000011e6243f3cd143bf00000080000000800eb83cbf3e0d63c04edd06c01c7296c02b1810c03b6085400000000084d248be58077b3f00000080000000802b1810c03b6085402b1810c03b6085404edd06c01c7296c00000000030c77fbf8d842abd00000000000000804edd06c01c7296c04edd06c01c7296c02b1810c0f8d4654000000000000080bf0000008000000080000000802b1810c079e940402b1810c03b608540
+  m_CompressedMesh:
+    m_Vertices:
+      m_NumItems: 0
+      m_Range: 0
+      m_Start: 0
+      m_Data: 
+      m_BitSize: 0
+    m_UV:
+      m_NumItems: 0
+      m_Range: 0
+      m_Start: 0
+      m_Data: 
+      m_BitSize: 0
+    m_Normals:
+      m_NumItems: 0
+      m_Range: 0
+      m_Start: 0
+      m_Data: 
+      m_BitSize: 0
+    m_Tangents:
+      m_NumItems: 0
+      m_Range: 0
+      m_Start: 0
+      m_Data: 
+      m_BitSize: 0
+    m_Weights:
+      m_NumItems: 0
+      m_Data: 
+      m_BitSize: 0
+    m_NormalSigns:
+      m_NumItems: 0
+      m_Data: 
+      m_BitSize: 0
+    m_TangentSigns:
+      m_NumItems: 0
+      m_Data: 
+      m_BitSize: 0
+    m_FloatColors:
+      m_NumItems: 0
+      m_Range: 0
+      m_Start: 0
+      m_Data: 
+      m_BitSize: 0
+    m_BoneIndices:
+      m_NumItems: 0
+      m_Data: 
+      m_BitSize: 0
+    m_Triangles:
+      m_NumItems: 0
+      m_Data: 
+      m_BitSize: 0
+    m_UVInfo: 0
+  m_LocalAABB:
+    m_Center: {x: -0.36054587, y: -0.20331025, z: 0}
+    m_Extent: {x: 3.1272857, y: 4.587634, z: 0}
+  m_MeshUsageFlags: 0
+  m_CookingOptions: 30
+  m_BakedConvexCollisionMesh: 
+  m_BakedTriangleCollisionMesh: 
+  m_MeshMetrics[0]: 1
+  m_MeshMetrics[1]: 1
+  m_MeshOptimizationFlags: 1
+  m_StreamData:
+    serializedVersion: 2
+    offset: 0
+    size: 0
+    path: 
 --- !u!1 &75257081
 GameObject:
   m_ObjectHideFlags: 0
@@ -9671,6 +9841,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 75257085}
+  stairs: 0
 --- !u!68 &83809308
 EdgeCollider2D:
   m_ObjectHideFlags: 0
@@ -10412,6 +10583,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 1162439799}
+  stairs: 0
 --- !u!1001 &95273518
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -11259,6 +11431,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 397919733}
+  stairs: 0
 --- !u!1 &114876910
 GameObject:
   m_ObjectHideFlags: 0
@@ -11686,6 +11859,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 1633646736}
+  stairs: 0
 --- !u!1 &122395235
 GameObject:
   m_ObjectHideFlags: 0
@@ -11898,11 +12072,44 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b415ac5866e47c14ba809ae741ef94ba, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  cameraMode: 0
   targetPos: {x: 808.1, y: 226.3, z: 0}
   maxSizeXPos: 60
   finalZoomSize: 108.4
   groundDistance: 28
   fixPosY: 1
+  playerYOffset: 15.13
+  useSmoothYFollow: 0
+  yFollowSmoothTime: 0.35
+  yMaxFollowSpeed: 50
+  fixedPanMoveTime: 1.8
+  fixedPanZoomTime: 1.8
+  fixedPanCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  smoothReturnOnExit: 0
+  returnMoveTime: 1
 --- !u!4 &123483697
 Transform:
   m_ObjectHideFlags: 0
@@ -14356,6 +14563,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 1773930506}
+  stairs: 0
 --- !u!1 &189631233
 GameObject:
   m_ObjectHideFlags: 0
@@ -16087,7 +16295,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &227665054
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -16141,7 +16349,7 @@ Transform:
   m_GameObject: {fileID: 227665053}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 4.1, y: -6.5, z: 0}
+  m_LocalPosition: {x: 375.09998, y: -6.5, z: 0}
   m_LocalScale: {x: 522.6276, y: 151.0855, z: 404.2004}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -22865,6 +23073,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 257554521}
+  stairs: 0
 --- !u!4 &264655652 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1418298874407937115, guid: cd3d3e2740f1f3f468f772a3535df0c2, type: 3}
@@ -24564,6 +24773,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 341380149}
+  stairs: 0
 --- !u!4 &294569328 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 9068324753222058722, guid: 9c99664d032acf6448a9a2925d91625f, type: 3}
@@ -25152,7 +25362,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 309602866}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 172515602e62fb746b5d573b38a5fe58, type: 3}
   m_Name: 
@@ -26376,6 +26586,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 2107864239}
+  stairs: 0
 --- !u!1 &328405855
 GameObject:
   m_ObjectHideFlags: 0
@@ -34721,6 +34932,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 1073691042}
+  stairs: 0
 --- !u!4 &408415668 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1228199638853227366, guid: 63ef4d545afe63044a1a60d655c1c5b1, type: 3}
@@ -34985,6 +35197,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 22109036}
+  stairs: 0
 --- !u!1 &413309654
 GameObject:
   m_ObjectHideFlags: 0
@@ -35785,6 +35998,12 @@ MonoBehaviour:
     noise: {fileID: 0}
     delayTime: 0.5
   activateTemple: 0
+  templeStartDelay: 1
+  templeRiseStartAudio: {fileID: 0}
+  templeRiseLoopAudio: {fileID: 0}
+  templeDebrisAudio: {fileID: 0}
+  templeCompleteAudio: {fileID: 0}
+  useTempleRiseAudio: 1
   includePlayerIndex: 6
   controller: {fileID: 1465010072}
   coreRiseUp: 0
@@ -36789,6 +37008,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 573817144}
+  stairs: 0
 --- !u!4 &442727063 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1418298874407937115, guid: cd3d3e2740f1f3f468f772a3535df0c2, type: 3}
@@ -37244,6 +37464,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 578526401}
+  stairs: 0
 --- !u!1 &447508756
 GameObject:
   m_ObjectHideFlags: 0
@@ -37335,6 +37556,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 1932057781}
+  stairs: 0
 --- !u!1 &447938119
 GameObject:
   m_ObjectHideFlags: 0
@@ -38116,6 +38338,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 98142212}
+  stairs: 0
 --- !u!4 &473404900 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1418298874407937115, guid: cd3d3e2740f1f3f468f772a3535df0c2, type: 3}
@@ -40692,6 +40915,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 793068084}
+  stairs: 0
 --- !u!1 &525438766
 GameObject:
   m_ObjectHideFlags: 0
@@ -41143,6 +41367,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 379714817}
+  stairs: 0
 --- !u!1001 &532542430
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -41871,6 +42096,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 1473920686}
+  stairs: 0
 --- !u!1 &554607247
 GameObject:
   m_ObjectHideFlags: 0
@@ -43778,6 +44004,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 2100302166}
+  stairs: 0
 --- !u!1 &585880945
 GameObject:
   m_ObjectHideFlags: 0
@@ -44312,6 +44539,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 1871563428}
+  stairs: 0
 --- !u!1 &594782291
 GameObject:
   m_ObjectHideFlags: 0
@@ -45339,6 +45567,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 984081340}
+  stairs: 0
 --- !u!1 &613005703
 GameObject:
   m_ObjectHideFlags: 0
@@ -45756,6 +45985,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 579096203}
+  stairs: 0
 --- !u!4 &632880902 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 7564788135725765336, guid: 96d6f2a000247614690efdca942e6392, type: 3}
@@ -45857,6 +46087,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 2024763391}
+  stairs: 0
 --- !u!1 &640761041
 GameObject:
   m_ObjectHideFlags: 0
@@ -50946,6 +51177,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 449416928}
+  stairs: 0
 --- !u!1 &642761556
 GameObject:
   m_ObjectHideFlags: 0
@@ -51295,6 +51527,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 904331666}
+  stairs: 0
 --- !u!1 &647811436
 GameObject:
   m_ObjectHideFlags: 0
@@ -51386,6 +51619,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 1625873960}
+  stairs: 0
 --- !u!1001 &649337637
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -51668,6 +51902,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 2068821074}
+  stairs: 0
 --- !u!4 &657288057 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 270822332593942400, guid: fd5ea3f7329a0a94c99d138ba67676a5, type: 3}
@@ -52472,6 +52707,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 1076985880}
+  stairs: 0
 --- !u!1001 &674719048
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -52843,6 +53079,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 77342578}
+  stairs: 0
 --- !u!1 &680556313
 GameObject:
   m_ObjectHideFlags: 0
@@ -54687,6 +54924,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 1536934135}
+  stairs: 0
 --- !u!4 &726251218 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 5155580491441304633, guid: b00e4e96905974241a0d332b4ab475ea, type: 3}
@@ -56640,6 +56878,12 @@ MonoBehaviour:
     noise: {fileID: 0}
     delayTime: 0
   activateTemple: 0
+  templeStartDelay: 1
+  templeRiseStartAudio: {fileID: 0}
+  templeRiseLoopAudio: {fileID: 0}
+  templeDebrisAudio: {fileID: 0}
+  templeCompleteAudio: {fileID: 0}
+  useTempleRiseAudio: 1
   includePlayerIndex: -1
   controller: {fileID: 0}
   coreRiseUp: 0
@@ -57041,7 +57285,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &771398543
 Transform:
   m_ObjectHideFlags: 0
@@ -57051,7 +57295,7 @@ Transform:
   m_GameObject: {fileID: 771398542}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -47, y: 3, z: 0}
+  m_LocalPosition: {x: 324, y: 3, z: 0}
   m_LocalScale: {x: 522.6276, y: 151.0855, z: 404.2004}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -58122,6 +58366,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 1314893878}
+  stairs: 0
 --- !u!1001 &791204019
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -58672,171 +58917,6 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 3e1f9bdb6e12fed41a5d8c1a77f5d240, type: 3}
---- !u!43 &803067726
-Mesh:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: 
-  serializedVersion: 11
-  m_SubMeshes:
-  - serializedVersion: 2
-    firstByte: 0
-    indexCount: 126
-    topology: 0
-    baseVertex: 0
-    firstVertex: 0
-    vertexCount: 44
-    localAABB:
-      m_Center: {x: -0.36054587, y: -0.20331025, z: 0}
-      m_Extent: {x: 3.1272857, y: 4.587634, z: 0}
-  m_Shapes:
-    vertices: []
-    shapes: []
-    channels: []
-    fullWeights: []
-  m_BindPose: []
-  m_BoneNameHashes: 
-  m_RootBoneNameHash: 0
-  m_BonesAABB: []
-  m_VariableBoneCountWeights:
-    m_Data: 
-  m_MeshCompression: 0
-  m_IsReadable: 1
-  m_KeepVertices: 1
-  m_KeepIndices: 1
-  m_IndexFormat: 0
-  m_IndexBuffer: 0000010002000000030001000400030000000400050003000500040006000700080009000a00080007000b0008000a000b000c0008000d000c000b000d000e000c000d000f000e0010000f000d00100011000f0012001100100013001100120000001100130002001100000014001100020011001400150000001600040013001700000001001800020003001900010002001a00140005001b00030004001c00060006001d00050009001e00070007001f000a000800200009000c00210008000a0022000b000b0023000d000e0024000c000d00250010000f0026000e00110027000f0010002800120015002900110012002a00130014002b001500
-  m_VertexData:
-    serializedVersion: 3
-    m_VertexCount: 44
-    m_Channels:
-    - stream: 0
-      offset: 0
-      format: 0
-      dimension: 3
-    - stream: 0
-      offset: 0
-      format: 0
-      dimension: 0
-    - stream: 0
-      offset: 12
-      format: 0
-      dimension: 4
-    - stream: 0
-      offset: 28
-      format: 0
-      dimension: 4
-    - stream: 0
-      offset: 0
-      format: 0
-      dimension: 0
-    - stream: 0
-      offset: 0
-      format: 0
-      dimension: 0
-    - stream: 0
-      offset: 0
-      format: 0
-      dimension: 0
-    - stream: 0
-      offset: 0
-      format: 0
-      dimension: 0
-    - stream: 0
-      offset: 0
-      format: 0
-      dimension: 0
-    - stream: 0
-      offset: 0
-      format: 0
-      dimension: 0
-    - stream: 0
-      offset: 0
-      format: 0
-      dimension: 0
-    - stream: 0
-      offset: 0
-      format: 0
-      dimension: 0
-    - stream: 0
-      offset: 0
-      format: 0
-      dimension: 0
-    - stream: 0
-      offset: 0
-      format: 0
-      dimension: 0
-    m_DataSize: 1936
-    _typelessdata: bc7a0bc0c1213ec00000000030c77fbf90842abd0000000000000080bc7a0bc0c1213ec0bc7a0bc0c1213ec09bb514c0d411154000000000e9977ebf0665d63d00000080000000800b5319c05d74d23f2b1810c079e940402b1810c079e9404000000000e8977ebf0865d63d00000080000000802b1810c079e940402b1810c079e940400b5319c05d74d23f00000000c1f578bf277e6e3e00000080000000800b5319c05d74d23f0b5319c05d74d23faf5935c09e613cc0000000007f182bbdcdc67fbf0000000000000080bc7a0bc0c1213ec0a2385fc07ca13ac0d6453cc09bce22bf00000000c1f578bf2e7e6e3e0000008000000080a2385fc07ca13ac00b5319c05d74d23fa2385fc07ca13ac0000000001d182bbdcdc67fbf0000000000000080a2385fc07ca13ac0a2385fc07ca13ac0f4c5b23f3a365bc000000000d1bb343ff84d35bf0000008000000080441231409fcd03c0dbd7d93c6b4f99c0664b983f6ee395be00000000f1fb3e3f18792a3f0000008000000080ee36c6be87a9bc3f441231409fcd03c0441231409fcd03c000000000f1fb3e3f18792a3f0000008000000080441231409fcd03c0441231409fcd03c0dbd7d93c6b4f99c000000000d1bb343ff74d35bf0000008000000080dbd7d93c6b4f99c0dbd7d93c6b4f99c04fe9b5be056b85c0000000007d205abf9e0006bf0000000000000080dbd7d93c6b4f99c00eb83cbf3e0d63c0ee36c6be87a9bc3f000000005637773f01f8843e0000008000000080ee36c6be87a9bc3fee36c6be87a9bc3f0eb83cbf3e0d63c0000000007d205abf9e0006bf00000000000000800eb83cbf3e0d63c00eb83cbf3e0d63c0fe4a47bfc4763b40000000005637773f00f8843e000000800000008042bd95bf624c8c40ee36c6be87a9bc3f42bd95bf624c8c4000000000bbd248be55077b3f000000800000008042bd95bf624c8c4042bd95bf624c8c40520bb6bf5efc83c00000000015e6243f38d143bf00000080000000800eb83cbf3e0d63c04edd06c01c7296c0ccf6dabf4ed688400000000084d248be58077b3f00000080000000802b1810c03b60854042bd95bf624c8c404edd06c01c7296c00000000011e6243f3cd143bf00000080000000804edd06c01c7296c04edd06c01c7296c0052c09c0fc8275c00000000030c77fbf8d842abd00000000000000804edd06c01c7296c0bc7a0bc0c1213ec02b1810c0f8d4654000000000000080bf0000008000000080000000802b1810c079e940402b1810c03b6085402b1810c03b60854000000000000080bf0000008000000080000000802b1810c03b6085402b1810c03b608540bc7a0bc0c1213ec0000000007f182bbdcdc67fbf0000000000000080bc7a0bc0c1213ec0bc7a0bc0c1213ec0052c09c0fc8275c00000000030c77fbf90842abd00000000000000804edd06c01c7296c0bc7a0bc0c1213ec09bb514c0d411154000000000e8977ebf0865d63d00000080000000800b5319c05d74d23f2b1810c079e940400b5319c05d74d23f00000000e9977ebf0665d63d00000080000000800b5319c05d74d23f0b5319c05d74d23f2b1810c079e9404000000000000080bf0000008000000080000000802b1810c079e940402b1810c079e94040d6453cc09bce22bf00000000c1f578bf277e6e3e0000008000000080a2385fc07ca13ac00b5319c05d74d23faf5935c09e613cc0000000001d182bbdcdc67fbf0000000000000080bc7a0bc0c1213ec0a2385fc07ca13ac0a2385fc07ca13ac000000000c1f578bf2e7e6e3e0000008000000080a2385fc07ca13ac0a2385fc07ca13ac0441231409fcd03c000000000d1bb343ff84d35bf0000008000000080441231409fcd03c0441231409fcd03c0f4c5b23f3a365bc000000000d1bb343ff74d35bf0000008000000080441231409fcd03c0dbd7d93c6b4f99c0664b983f6ee395be00000000f1fb3e3f18792a3f0000008000000080ee36c6be87a9bc3f441231409fcd03c0ee36c6be87a9bc3f00000000f1fb3e3f18792a3f0000008000000080ee36c6be87a9bc3fee36c6be87a9bc3fdbd7d93c6b4f99c0000000007d205abf9e0006bf0000000000000080dbd7d93c6b4f99c0dbd7d93c6b4f99c04fe9b5be056b85c0000000007d205abf9e0006bf0000000000000080dbd7d93c6b4f99c00eb83cbf3e0d63c0fe4a47bfc4763b40000000005637773f01f8843e000000800000008042bd95bf624c8c40ee36c6be87a9bc3f0eb83cbf3e0d63c00000000015e6243f38d143bf00000080000000800eb83cbf3e0d63c00eb83cbf3e0d63c042bd95bf624c8c40000000005637773f00f8843e000000800000008042bd95bf624c8c4042bd95bf624c8c40ccf6dabf4ed6884000000000bbd248be55077b3f00000080000000802b1810c03b60854042bd95bf624c8c40520bb6bf5efc83c00000000011e6243f3cd143bf00000080000000800eb83cbf3e0d63c04edd06c01c7296c02b1810c03b6085400000000084d248be58077b3f00000080000000802b1810c03b6085402b1810c03b6085404edd06c01c7296c00000000030c77fbf8d842abd00000000000000804edd06c01c7296c04edd06c01c7296c02b1810c0f8d4654000000000000080bf0000008000000080000000802b1810c079e940402b1810c03b608540
-  m_CompressedMesh:
-    m_Vertices:
-      m_NumItems: 0
-      m_Range: 0
-      m_Start: 0
-      m_Data: 
-      m_BitSize: 0
-    m_UV:
-      m_NumItems: 0
-      m_Range: 0
-      m_Start: 0
-      m_Data: 
-      m_BitSize: 0
-    m_Normals:
-      m_NumItems: 0
-      m_Range: 0
-      m_Start: 0
-      m_Data: 
-      m_BitSize: 0
-    m_Tangents:
-      m_NumItems: 0
-      m_Range: 0
-      m_Start: 0
-      m_Data: 
-      m_BitSize: 0
-    m_Weights:
-      m_NumItems: 0
-      m_Data: 
-      m_BitSize: 0
-    m_NormalSigns:
-      m_NumItems: 0
-      m_Data: 
-      m_BitSize: 0
-    m_TangentSigns:
-      m_NumItems: 0
-      m_Data: 
-      m_BitSize: 0
-    m_FloatColors:
-      m_NumItems: 0
-      m_Range: 0
-      m_Start: 0
-      m_Data: 
-      m_BitSize: 0
-    m_BoneIndices:
-      m_NumItems: 0
-      m_Data: 
-      m_BitSize: 0
-    m_Triangles:
-      m_NumItems: 0
-      m_Data: 
-      m_BitSize: 0
-    m_UVInfo: 0
-  m_LocalAABB:
-    m_Center: {x: -0.36054587, y: -0.20331025, z: 0}
-    m_Extent: {x: 3.1272857, y: 4.587634, z: 0}
-  m_MeshUsageFlags: 0
-  m_CookingOptions: 30
-  m_BakedConvexCollisionMesh: 
-  m_BakedTriangleCollisionMesh: 
-  m_MeshMetrics[0]: 1
-  m_MeshMetrics[1]: 1
-  m_MeshOptimizationFlags: 1
-  m_StreamData:
-    serializedVersion: 2
-    offset: 0
-    size: 0
-    path: 
 --- !u!1 &804121727
 GameObject:
   m_ObjectHideFlags: 0
@@ -64474,7 +64554,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &820819224
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -65053,6 +65133,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 98142212}
+  stairs: 0
 --- !u!1 &828640788
 GameObject:
   m_ObjectHideFlags: 0
@@ -65144,6 +65225,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 282310819}
+  stairs: 0
 --- !u!1 &832694779
 GameObject:
   m_ObjectHideFlags: 0
@@ -72657,6 +72739,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 1933271543}
+  stairs: 0
 --- !u!1001 &869222447
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -78475,6 +78558,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 823375199}
+  stairs: 0
 --- !u!1001 &881939738
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -78748,6 +78832,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 773726938}
+  stairs: 0
 --- !u!1 &883547778
 GameObject:
   m_ObjectHideFlags: 0
@@ -80097,6 +80182,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 1559663466}
+  stairs: 0
 --- !u!1 &906719750
 GameObject:
   m_ObjectHideFlags: 0
@@ -80543,6 +80629,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 57090473}
+  stairs: 0
 --- !u!1 &918651137
 GameObject:
   m_ObjectHideFlags: 0
@@ -80999,6 +81086,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 832694781}
+  stairs: 0
 --- !u!1001 &924116112
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -82324,6 +82412,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9a5dac98b789cdf4a98d92827f3aa8f3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  coreObjects: []
   floors:
   - Floor: {fileID: 91343208}
     nextPos: {x: 27, y: 1.45, z: 0}
@@ -82333,7 +82422,9 @@ MonoBehaviour:
     prevPos: {x: 0, y: 0, z: 0}
   moveSpeed: 2
   winds: []
+  windObjectSpeed: 1
   propellers: []
+  propellerRampTime: 1
 --- !u!4 &962160445 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1228199638853227366, guid: 63ef4d545afe63044a1a60d655c1c5b1, type: 3}
@@ -82884,6 +82975,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 155176068}
+  stairs: 0
 --- !u!1001 &979054056
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -86788,7 +86880,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &1040325359
 Transform:
   m_ObjectHideFlags: 0
@@ -86798,7 +86890,7 @@ Transform:
   m_GameObject: {fileID: 1040325358}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 6, y: 17.3, z: 0}
+  m_LocalPosition: {x: 377, y: 17.3, z: 0}
   m_LocalScale: {x: 522.6276, y: 151.0855, z: 404.2004}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -87614,6 +87706,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 705712226}
+  stairs: 0
 --- !u!1001 &1059753415
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -88889,6 +88982,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 1746010837}
+  stairs: 0
 --- !u!1 &1088515728
 GameObject:
   m_ObjectHideFlags: 0
@@ -95483,6 +95577,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 989168754}
+  stairs: 0
 --- !u!1 &1110394031
 GameObject:
   m_ObjectHideFlags: 0
@@ -99476,6 +99571,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9a5dac98b789cdf4a98d92827f3aa8f3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  coreObjects: []
   floors:
   - Floor: {fileID: 91343208}
     nextPos: {x: 27, y: 1.45, z: 0}
@@ -99485,7 +99581,9 @@ MonoBehaviour:
     prevPos: {x: 0, y: 0, z: 0}
   moveSpeed: 2
   winds: []
+  windObjectSpeed: 1
   propellers: []
+  propellerRampTime: 1
 --- !u!1 &1195049868
 GameObject:
   m_ObjectHideFlags: 0
@@ -99577,6 +99675,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 573817144}
+  stairs: 0
 --- !u!1 &1200423204
 GameObject:
   m_ObjectHideFlags: 0
@@ -100292,6 +100391,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 1590263235}
+  stairs: 0
 --- !u!4 &1211076388 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1418298874407937115, guid: cd3d3e2740f1f3f468f772a3535df0c2, type: 3}
@@ -107024,6 +107124,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 1495019468}
+  stairs: 0
 --- !u!1 &1234879212
 GameObject:
   m_ObjectHideFlags: 0
@@ -107367,6 +107468,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 312675863}
+  stairs: 0
 --- !u!1 &1245769641
 GameObject:
   m_ObjectHideFlags: 0
@@ -107542,6 +107644,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 1095290964}
+  stairs: 0
 --- !u!4 &1249366194 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4795806326880679123, guid: 649fed045f30d2e489bfe2f82a75c883, type: 3}
@@ -114471,6 +114574,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 1289847917}
+  stairs: 0
 --- !u!4 &1306803670 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4795806326880679123, guid: 649fed045f30d2e489bfe2f82a75c883, type: 3}
@@ -115765,6 +115869,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 1800484735}
+  stairs: 0
 --- !u!4 &1320503588 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 7564788135725765336, guid: 96d6f2a000247614690efdca942e6392, type: 3}
@@ -116086,6 +116191,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 1902466110}
+  stairs: 0
 --- !u!1 &1337252641
 GameObject:
   m_ObjectHideFlags: 0
@@ -120525,6 +120631,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 1924220224}
+  stairs: 0
 --- !u!1 &1418686531
 GameObject:
   m_ObjectHideFlags: 0
@@ -123339,7 +123446,9 @@ MonoBehaviour:
   charactorSprite: {fileID: 2078483175}
   isGround: 0
   isDash: 0
+  isOnRunway: 0
   isOnGrass: 0
+  isOnStone: 0
   setSpeed: 10
   moveSpeed: 9
   jumpPower: 30
@@ -123353,6 +123462,9 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 54a1fab1d338e08459e2af43e0035534, type: 3}
   - {fileID: 8300000, guid: d306789751699f243af15c47e7c40364, type: 3}
   - {fileID: 8300000, guid: 75a294c5d0584bd4eb7d25050cc40f3d, type: 3}
+  stoneFootsteps: []
+  grassFootstepVolume: 0.3
+  stoneFootstepVolume: 0.4
   footstepInterval: 0.45
   bowSFX: {fileID: 0}
   animator: {fileID: 2078483172}
@@ -125237,7 +125349,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &1484827702
 Transform:
   m_ObjectHideFlags: 0
@@ -125247,7 +125359,7 @@ Transform:
   m_GameObject: {fileID: 1484827701}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 6, y: 3, z: 0}
+  m_LocalPosition: {x: 377, y: 3, z: 0}
   m_LocalScale: {x: 522.6276, y: 151.0855, z: 404.2004}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -125527,6 +125639,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 1725080725}
+  stairs: 0
 --- !u!1 &1488616798
 GameObject:
   m_ObjectHideFlags: 0
@@ -126230,6 +126343,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 574836755}
+  stairs: 0
 --- !u!1 &1512961555
 GameObject:
   m_ObjectHideFlags: 0
@@ -133475,6 +133589,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 1887810072}
+  stairs: 0
 --- !u!1 &1559663464
 GameObject:
   m_ObjectHideFlags: 0
@@ -134089,6 +134204,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 1585904688}
+  stairs: 0
 --- !u!1 &1566681843
 GameObject:
   m_ObjectHideFlags: 0
@@ -134445,6 +134561,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 1536999841}
+  stairs: 0
 --- !u!1001 &1569360716
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -146618,6 +146735,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 1652581264}
+  stairs: 0
 --- !u!1 &1716585314
 GameObject:
   m_ObjectHideFlags: 0
@@ -147600,6 +147718,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 1329742512}
+  stairs: 0
 --- !u!1 &1727767176
 GameObject:
   m_ObjectHideFlags: 0
@@ -149204,6 +149323,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 2110831720}
+  stairs: 0
 --- !u!4 &1766211774 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 3055896244823233269, guid: 752a0e6ac74f60843bcc4fbf75aa9a0d, type: 3}
@@ -149664,6 +149784,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 874825126}
+  stairs: 0
 --- !u!1 &1778718011
 GameObject:
   m_ObjectHideFlags: 0
@@ -151845,6 +151966,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 1673204734}
+  stairs: 0
 --- !u!1001 &1831276379
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -153790,6 +153912,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 1439316525}
+  stairs: 0
 --- !u!1 &1864494924
 GameObject:
   m_ObjectHideFlags: 0
@@ -154882,6 +155005,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 169980963}
+  stairs: 0
 --- !u!1 &1878939722
 GameObject:
   m_ObjectHideFlags: 0
@@ -160683,6 +160807,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 1293207029}
+  stairs: 0
 --- !u!1001 &1896910874
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -162983,6 +163108,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 1212851632}
+  stairs: 0
 --- !u!4 &1936126554 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 7564788135725765336, guid: 96d6f2a000247614690efdca942e6392, type: 3}
@@ -164510,6 +164636,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 1163551858}
+  stairs: 0
 --- !u!1 &1982195822
 GameObject:
   m_ObjectHideFlags: 0
@@ -164829,6 +164956,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 1796152387}
+  stairs: 0
 --- !u!1001 &1989195569
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -165920,6 +166048,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 1129216280}
+  stairs: 0
 --- !u!1 &2021705394
 GameObject:
   m_ObjectHideFlags: 0
@@ -166646,6 +166775,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 607817174}
+  stairs: 0
 --- !u!4 &2036917726 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 3313428387597941229, guid: 2cbc4647b162c1c4db2bcd457500b767, type: 3}
@@ -166840,6 +166970,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 1869347451}
+  stairs: 0
 --- !u!1 &2041393092
 GameObject:
   m_ObjectHideFlags: 0
@@ -173442,8 +173573,8 @@ MonoBehaviour:
   - {x: -2.1072574, y: -4.7014294, z: 0}
   - {x: -2.179366, y: -2.9708102, z: 0}
   m_ShapePathHash: -1366313693
-  m_Mesh: {fileID: 803067726}
-  m_InstanceId: 59428
+  m_Mesh: {fileID: 70454532}
+  m_InstanceId: 538208
   m_LocalBounds:
     m_Center: {x: -0.36054587, y: -0.20331049, z: 0}
     m_Extent: {x: 3.1272857, y: 4.587634, z: 0}
@@ -174943,6 +175074,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 1107658956}
+  stairs: 0
 --- !u!1 &2095022689
 GameObject:
   m_ObjectHideFlags: 0
@@ -175901,6 +176033,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 874589379}
+  stairs: 0
 --- !u!1 &2107864237
 GameObject:
   m_ObjectHideFlags: 0
