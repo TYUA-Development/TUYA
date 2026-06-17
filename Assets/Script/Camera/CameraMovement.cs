@@ -67,6 +67,12 @@ public class CameraMovement : MonoBehaviour
         CameraPosY = y + 15.13f;
     }
 
+    // CameraRig의 실제 Y 좌표를 직접 설정 (오프셋 없음)
+    public void SetCameraRigY(float rigY)
+    {
+        CameraPosY = rigY;
+    }
+
     public void MoveCameraFix(Vector3 targetPos)
     {
         transform.position = new Vector3(
