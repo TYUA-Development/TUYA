@@ -36,12 +36,13 @@ public class SettingsUI : MonoBehaviour
 
     private void Awake()
     {
-        SettingsManager.Instance.settingsUIInstance = gameObject;
         gameObject.SetActive(false);
     }
 
     private void Start()
     {
+        if (SettingsManager.Instance != null)
+            SettingsManager.Instance.settingsUIInstance = gameObject;
         SetupListeners();
     }
 
