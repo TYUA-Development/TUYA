@@ -20,6 +20,11 @@ public class CircleHitObject : MonoBehaviour, IArrowHit
         this.triggerId = triggerId;
     }
 
+    public void Reset()
+    {
+        activated = false;
+    }
+
     public void OnHit()
     {
         if (activateOnlyOnce && activated)
@@ -27,14 +32,14 @@ public class CircleHitObject : MonoBehaviour, IArrowHit
 
         activated = true;
 
-        // »õ ±â°è ¿¬Ãâ ¸Å´ÏÀú°¡ ¿¬°áµÇ¾î ÀÖÀ¸¸é ±×°É ¿ì¼± ½ÇÇà
+        // ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Å´ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Ç¾ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½×°ï¿½ ï¿½ì¼± ï¿½ï¿½ï¿½ï¿½
         if (activationController != null)
         {
             activationController.Activate();
             return;
         }
 
-        // ¿¬°á ¾È µÇ¾î ÀÖÀ¸¸é ±âÁ¸ ¹æ½Ä À¯Áö
+        // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½Ç¾ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         if (manager != null)
         {
             manager.RotateCircles(triggerId);

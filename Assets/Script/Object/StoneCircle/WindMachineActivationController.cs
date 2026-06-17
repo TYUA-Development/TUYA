@@ -40,6 +40,10 @@ public class WindMachineActivationController : MonoBehaviour
     public ParticleSystem[] startParticles;
     public ParticleSystem[] windParticles;
 
+    [Header("Stop")]
+    [Tooltip("StopGradual í˜¸ì¶œ ì‹œ ë£¨í”„ ì˜¤ë””ì˜¤ í˜ì´ë“œ ì•„ì›ƒ ì‹œê°„(ì´ˆ)")]
+    public float stopFadeOutTime = 1.5f;
+
     [Header("Option")]
     public bool activateOnlyOnce = true;
 
@@ -54,26 +58,104 @@ public class WindMachineActivationController : MonoBehaviour
         StartCoroutine(ActivationSequence());
     }
 
+    public void Stop()
+    {
+        StopAllCoroutines();
+        activated = false;
+
+        if (centerPropeller != null)
+            centerPropeller.StopSpin();
+
+        if (backgroundPropellers != null)
+            foreach (var p in backgroundPropellers)
+                if (p != null) p.StopSpin();
+
+        if (rotatingPassage != null)
+            rotatingPassage.StopLoop();
+
+        if (loopAudioSource != null)
+            loopAudioSource.Stop();
+
+        StopParticleArray(startParticles);
+        StopParticleArray(windParticles);
+    }
+
+    public void StopGradual()
+    {
+        StopAllCoroutines();
+        activated = false;
+
+        // í”„ë¡œí ëŸ¬: acceleration ê¸°ë°˜ ê°ì†ìœ¼ë¡œ ìì—°ìŠ¤ëŸ½ê²Œ ë©ˆì¶¤
+        if (centerPropeller != null)
+            centerPropeller.StopSpin();
+
+        if (backgroundPropellers != null)
+            foreach (var p in backgroundPropellers)
+                if (p != null) p.StopSpin();
+
+        // í†µë¡œ: ë£¨í”„ë§Œ ì¤‘ë‹¨ (í˜„ì¬ ì½”ë£¨í‹´ ìì—° ì¢…ë£Œ)
+        if (rotatingPassage != null)
+            rotatingPassage.StopLoop();
+
+        // ì˜¤ë””ì˜¤: í˜ì´ë“œ ì•„ì›ƒ
+        if (loopAudioSource != null && loopAudioSource.isPlaying)
+            StartCoroutine(FadeOutAudio(loopAudioSource, stopFadeOutTime));
+
+        // íŒŒí‹°í´: ì‹ ê·œ ë°©ì¶œ ì¤‘ë‹¨, ê¸°ì¡´ íŒŒí‹°í´ì€ ìì—° ì†Œë©¸
+        StopParticleArrayGradual(startParticles);
+        StopParticleArrayGradual(windParticles);
+    }
+
+    private IEnumerator FadeOutAudio(AudioSource source, float duration)
+    {
+        float startVolume = source.volume;
+        float timer = 0f;
+
+        while (timer < duration)
+        {
+            timer += Time.deltaTime;
+            source.volume = Mathf.Lerp(startVolume, 0f, Mathf.Clamp01(timer / duration));
+            yield return null;
+        }
+
+        source.Stop();
+        source.volume = startVolume;
+    }
+
+    private void StopParticleArray(ParticleSystem[] particles)
+    {
+        if (particles == null) return;
+        foreach (var p in particles)
+            if (p != null) p.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+    }
+
+    private void StopParticleArrayGradual(ParticleSystem[] particles)
+    {
+        if (particles == null) return;
+        foreach (var p in particles)
+            if (p != null) p.Stop(true, ParticleSystemStopBehavior.StopEmitting);
+    }
+
     private IEnumerator ActivationSequence()
     {
-        // 1. È­»ì ¸íÁßÀ½
+        // 1. È­ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         PlayOneShot(arrowHitClip);
 
         yield return new WaitForSeconds(lockDelay);
 
-        // 2. Ã¶ÄÀ, Àá±İ ÇØÁ¦
+        // 2. Ã¶ï¿½ï¿½, ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         PlayOneShot(lockClickClip);
         PlayParticles(startParticles);
 
         yield return new WaitForSeconds(centerStartDelay);
 
-        // 3. ±â°è °¡µ¿À½
+        // 3. ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         PlayOneShot(machineStartClip);
 
-        // 4. ·çÇÁ ±â°èÀ½ ½ÃÀÛ
+        // 4. ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         StartMachineLoop();
 
-        // 5. Áß¾Ó ÀÛÀº ÇÁ·ÎÆç·¯ È¸Àü ½ÃÀÛ
+        // 5. ï¿½ß¾ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ç·¯ È¸ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         if (centerPropeller != null)
         {
             centerPropeller.SetTargetSpeed(centerPropellerSpeed);
@@ -81,7 +163,7 @@ public class WindMachineActivationController : MonoBehaviour
 
         yield return new WaitForSeconds(backgroundStartDelay);
 
-        // 6. ¹è°æ ÇÁ·ÎÆç·¯ ¼øÂ÷ °¡µ¿
+        // 6. ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ç·¯ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         PlayOneShot(backgroundStartClip);
 
         if (backgroundPropellers != null)
@@ -101,7 +183,7 @@ public class WindMachineActivationController : MonoBehaviour
 
         yield return new WaitForSeconds(passageStartDelay);
 
-        // 7. Å« ¿øÇü Åë·Î ¹İº¹ È¸Àü ½ÃÀÛ
+        // 7. Å« ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½İºï¿½ È¸ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         PlayOneShot(passageStartClip);
 
         if (rotatingPassage != null)

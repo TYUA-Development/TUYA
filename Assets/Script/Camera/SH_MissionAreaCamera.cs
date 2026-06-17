@@ -15,71 +15,77 @@ public class SH_MissionAreaCamera : MonoBehaviour
     [Header("Target")]
     public Vector3 targetPos;
 
-    [Tooltip("targetPos.x ±âÁØ ÁÂ¿ì °Å¸®. HorizontalByPlayerX ¸ğµå¿¡¼­ »ç¿ë")]
+    [Tooltip("targetPos.x ï¿½ï¿½ï¿½ï¿½ ï¿½Â¿ï¿½ ï¿½Å¸ï¿½. HorizontalByPlayerX ï¿½ï¿½å¿¡ï¿½ï¿½ ï¿½ï¿½ï¿½")]
     public float maxSizeXPos = 5f;
 
     [Header("Zoom")]
     public float finalZoomSize;
 
-    [Tooltip("Ä«¸Ş¶ó¿Í ¹Ù´Ú ±âÁØ Z °Å¸®")]
+    [Tooltip("Ä«ï¿½Ş¶ï¿½ï¿½ ï¿½Ù´ï¿½ ï¿½ï¿½ï¿½ï¿½ Z ï¿½Å¸ï¿½")]
     public float groundDistance = 28f;
 
     [Header("Smooth Entry Blend")]
-    [Tooltip("±¸¿ª ÁøÀÔ ½Ã ÇöÀç Ä«¸Ş¶ó¿¡¼­ ¸ñÇ¥ Ä«¸Ş¶ó·Î ºÎµå·´°Ô ÀüÈ¯ÇÕ´Ï´Ù.")]
+    [Tooltip("ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ Ä«ï¿½Ş¶ó¿¡¼ï¿½ ï¿½ï¿½Ç¥ Ä«ï¿½Ş¶ï¿½ï¿½ ï¿½Îµå·´ï¿½ï¿½ ï¿½ï¿½È¯ï¿½Õ´Ï´ï¿½.")]
     public bool useSmoothEntryBlend = true;
 
-    [Tooltip("±¸¿ª ÁøÀÔ ÈÄ ¸ñÇ¥ Ä«¸Ş¶ó »óÅÂ·Î ³Ñ¾î°¡´Â ½Ã°£")]
+    [Tooltip("ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½Ç¥ Ä«ï¿½Ş¶ï¿½ ï¿½ï¿½ï¿½Â·ï¿½ ï¿½Ñ¾î°¡ï¿½ï¿½ ï¿½Ã°ï¿½")]
     public float entryBlendTime = 1.0f;
 
-    [Tooltip("±¸¿ª ÁøÀÔ ÀüÈ¯ °î¼±")]
+    [Tooltip("ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½È¯ ï¿½î¼±")]
     public AnimationCurve entryBlendCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
 
     [Header("Y Follow - Horizontal Mode")]
     public bool fixPosY = false;
 
-    [Tooltip("±âÁ¸ ÁÂ¿ì ÁøÇà ¸ğµå¿¡¼­ ÇÃ·¹ÀÌ¾îº¸´Ù Ä«¸Ş¶ó°¡ ¾ó¸¶³ª À§¸¦ º¼Áö")]
+    [Tooltip("ï¿½ï¿½ï¿½ï¿½ ï¿½Â¿ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½å¿¡ï¿½ï¿½ ï¿½Ã·ï¿½ï¿½Ì¾îº¸ï¿½ï¿½ Ä«ï¿½Ş¶ï¿½ ï¿½ó¸¶³ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½")]
     public float playerYOffset = 15.13f;
 
-    [Tooltip("Ã¼Å©ÇÑ ±¸¿ª¿¡¼­¸¸ ÇÃ·¹ÀÌ¾î Y°ªÀ» ºÎµå·´°Ô µû¶ó°©´Ï´Ù.")]
+    [Tooltip("Ã¼Å©ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ã·ï¿½ï¿½Ì¾ï¿½ Yï¿½ï¿½ï¿½ï¿½ ï¿½Îµå·´ï¿½ï¿½ ï¿½ï¿½ï¿½ó°©´Ï´ï¿½.")]
     public bool useSmoothYFollow = false;
 
     public float yFollowSmoothTime = 0.35f;
     public float yMaxFollowSpeed = 50f;
 
     [Header("Fixed Area Pan Mode")]
-    [Tooltip("FixedAreaPan ¸ğµå¿¡¼­ targetPos·Î ÀÌµ¿ÇÏ´Â ½Ã°£")]
+    [Tooltip("FixedAreaPan ï¿½ï¿½å¿¡ï¿½ï¿½ targetPosï¿½ï¿½ ï¿½Ìµï¿½ï¿½Ï´ï¿½ ï¿½Ã°ï¿½")]
     public float fixedPanMoveTime = 1.8f;
 
-    [Tooltip("FixedAreaPan ¸ğµå¿¡¼­ ÁÜÀÌ º¯ÇÏ´Â ½Ã°£")]
+    [Tooltip("FixedAreaPan ï¿½ï¿½å¿¡ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ï´ï¿½ ï¿½Ã°ï¿½")]
     public float fixedPanZoomTime = 1.8f;
 
-    [Tooltip("FixedAreaPan ¸ğµå¿¡¼­ Ä«¸Ş¶ó ÀÌµ¿ °î¼±")]
+    [Tooltip("FixedAreaPan ï¿½ï¿½å¿¡ï¿½ï¿½ Ä«ï¿½Ş¶ï¿½ ï¿½Ìµï¿½ ï¿½î¼±")]
     public AnimationCurve fixedPanCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
 
-    [Tooltip("±¸¿ªÀ» ³ª°¥ ¶§ Ä«¸Ş¶ó¸¦ ÁøÀÔ Àü À§Ä¡·Î ºÎµå·´°Ô µÇµ¹¸±Áö")]
+    [Tooltip("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ Ä«ï¿½Ş¶ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½Ä¡ï¿½ï¿½ ï¿½Îµå·´ï¿½ï¿½ ï¿½Çµï¿½ï¿½ï¿½ï¿½ï¿½")]
     public bool smoothReturnOnExit = false;
 
-    [Tooltip("±¸¿ªÀ» ³ª°¥ ¶§ µÇµ¹¾Æ°¡´Â ½Ã°£")]
+    [Tooltip("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½Çµï¿½ï¿½Æ°ï¿½ï¿½ï¿½ ï¿½Ã°ï¿½")]
     public float returnMoveTime = 1f;
 
     [Header("Follow Player X + Fixed Y Mode")]
-    [Tooltip("ÄÑ¸é ÁøÀÔ ¼ø°£ÀÇ Ä«¸Ş¶ó-ÇÃ·¹ÀÌ¾î X °Å¸®Â÷¸¦ À¯ÁöÇÕ´Ï´Ù.")]
+    [Tooltip("ï¿½Ñ¸ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Ä«ï¿½Ş¶ï¿½-ï¿½Ã·ï¿½ï¿½Ì¾ï¿½ X ï¿½Å¸ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Õ´Ï´ï¿½.")]
     public bool useEnterXOffset = false;
 
-    [Tooltip("useEnterXOffsetÀ» ²ô¸é ÀÌ °ªÀ» ÇÃ·¹ÀÌ¾î X ¿ÀÇÁ¼ÂÀ¸·Î »ç¿ëÇÕ´Ï´Ù. 0ÀÌ¸é ÇÃ·¹ÀÌ¾î Áß½É.")]
+    [Tooltip("useEnterXOffsetï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ã·ï¿½ï¿½Ì¾ï¿½ X ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Õ´Ï´ï¿½. 0ï¿½Ì¸ï¿½ ï¿½Ã·ï¿½ï¿½Ì¾ï¿½ ï¿½ß½ï¿½.")]
     public float playerXOffset = 0f;
 
-    [Tooltip("XÃàÀÌ ÇÃ·¹ÀÌ¾î¸¦ µû¶ó°¡´Â ºÎµå·¯¿ò")]
+    [Tooltip("Xï¿½ï¿½ï¿½ï¿½ ï¿½Ã·ï¿½ï¿½Ì¾î¸¦ ï¿½ï¿½ï¿½ó°¡´ï¿½ ï¿½Îµå·¯ï¿½ï¿½")]
     public float followXSmoothTime = 0.08f;
 
-    [Tooltip("XÃà ÃßÀû ÃÖ´ë ¼Óµµ")]
+    [Tooltip("Xï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ö´ï¿½ ï¿½Óµï¿½")]
     public float followXMaxSpeed = 200f;
 
-    [Tooltip("YÃàÀÌ targetPos.y·Î °íÁ¤µÇ±â±îÁö °É¸®´Â ½Ã°£")]
+    [Tooltip("Yï¿½ï¿½ï¿½ï¿½ targetPos.yï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ç±ï¿½ï¿½ï¿½ï¿½ ï¿½É¸ï¿½ï¿½ï¿½ ï¿½Ã°ï¿½")]
     public float fixedYMoveTime = 1.2f;
 
-    [Tooltip("FollowPlayerXFixedY ¸ğµå¿¡¼­ ÁÜÀÌ º¯ÇÏ´Â ½Ã°£")]
+    [Tooltip("FollowPlayerXFixedY ï¿½ï¿½å¿¡ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ï´ï¿½ ï¿½Ã°ï¿½")]
     public float fixedYZoomTime = 1.2f;
+
+    [Header("On Exit - Stop Wind Machine")]
+    [Tooltip("ì˜ì—­ í‡´ì¥ ì‹œ ë©ˆì¶œ WindMachineActivationController")]
+    public WindMachineActivationController windMachineToStop;
+    [Tooltip("ì˜ì—­ í‡´ì¥ ì‹œ ë¦¬ì…‹í•  CircleHitObject (í”„ë¡œí ëŸ¬ ì¬íƒ€ê²© ê°€ëŠ¥í•˜ê²Œ)")]
+    public CircleHitObject circleHitObjectToReset;
 
     private static SH_MissionAreaCamera activeArea;
 
@@ -502,6 +508,12 @@ public class SH_MissionAreaCamera : MonoBehaviour
 
         isCameraControl = false;
         player = null;
+
+        if (windMachineToStop != null)
+            windMachineToStop.StopGradual();
+
+        if (circleHitObjectToReset != null)
+            circleHitObjectToReset.Reset();
 
         if (activeArea != this)
             return;
