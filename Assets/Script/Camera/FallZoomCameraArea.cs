@@ -24,69 +24,69 @@ public class FallZoomCameraArea : MonoBehaviour
     public string playerTag = "Player";
 
     [Header("Camera Movement Rule")]
-    [Tooltip("Ã¼Å©ÇÏ¸é ÀÌ ½ºÅ©¸³Æ®´Â X¸¦ Àı´ë °Çµå¸®Áö ¾Ê½À´Ï´Ù. X´Â ±âÁ¸ CameraMovement°¡ ´ã´çÇÕ´Ï´Ù.")]
+    [Tooltip("Ã¼Å©ï¿½Ï¸ï¿½ ï¿½ï¿½ ï¿½ï¿½Å©ï¿½ï¿½Æ®ï¿½ï¿½ Xï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Çµå¸®ï¿½ï¿½ ï¿½Ê½ï¿½ï¿½Ï´ï¿½. Xï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ CameraMovementï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Õ´Ï´ï¿½.")]
     public bool neverControlX = true;
 
-    [Tooltip("Area ¾È¿¡ ÀÖ´Â µ¿¾È ÀÏ¹İ CameraMovement°¡ °è¼Ó ÀÛµ¿ÇÏµµ·Ï ÇÕ´Ï´Ù.")]
+    [Tooltip("Area ï¿½È¿ï¿½ ï¿½Ö´ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ï¹ï¿½ CameraMovementï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½Ûµï¿½ï¿½Ïµï¿½ï¿½ï¿½ ï¿½Õ´Ï´ï¿½.")]
     public bool keepNormalCameraMovementActive = true;
 
     [Header("X Position Progress")]
-    [Tooltip("½Ã°£ÀÌ ¾Æ´Ï¶ó Area ¾È¿¡¼­ÀÇ X À§Ä¡ ±âÁØÀ¸·Î ÁÜ/Y º¯È­°¡ µË´Ï´Ù.")]
+    [Tooltip("ï¿½Ã°ï¿½ï¿½ï¿½ ï¿½Æ´Ï¶ï¿½ Area ï¿½È¿ï¿½ï¿½ï¿½ï¿½ï¿½ X ï¿½ï¿½Ä¡ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½/Y ï¿½ï¿½È­ï¿½ï¿½ ï¿½Ë´Ï´ï¿½.")]
     public bool useXPositionProgress = true;
 
-    [Tooltip("Area¿¡ ÁøÀÔÇÑ ÂÊ ³¡¿¡¼­ºÎÅÍ ¸î % ÁöÁ¡¿¡ µµÂøÇßÀ» ¶§ ÃÖÁ¾°ªÀÌ µÉÁö. 0.5 = AreaÀÇ 50% ÁöÁ¡¿¡¼­ ÃÖÁ¾°ª.")]
+    [Tooltip("Areaï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ % ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½. 0.5 = Areaï¿½ï¿½ 50% ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½.")]
     [Range(0.05f, 1f)]
     public float fullEffectAtWidthPercent = 0.5f;
 
-    [Tooltip("ÃÖÁ¾°ª µµ´Ş ÈÄ Area ¾È¿¡ ÀÖ´Â µ¿¾È °è¼Ó ÃÖÁ¾°ªÀ» À¯ÁöÇÕ´Ï´Ù.")]
+    [Tooltip("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ Area ï¿½È¿ï¿½ ï¿½Ö´ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Õ´Ï´ï¿½.")]
     public bool holdFullEffectAfterReached = true;
 
-    [Tooltip("X À§Ä¡¿¡ µû¸¥ º¯È­ °î¼±")]
+    [Tooltip("X ï¿½ï¿½Ä¡ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½È­ ï¿½î¼±")]
     public AnimationCurve progressCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
 
     [Header("Zoom")]
-    [Tooltip("ÃÖÁ¾ È®´ë ÁÜ °ª")]
+    [Tooltip("ï¿½ï¿½ï¿½ï¿½ È®ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½")]
     public float zoomedFieldOfView = 55f;
 
     [Header("Y Framing")]
-    [Tooltip("ÁøÇàµµ¿¡ µû¶ó Ä«¸Ş¶ó Y¸¦ Åõ¾ß ±âÁØÀ¸·Î ¸ÂÃä´Ï´Ù.")]
+    [Tooltip("ï¿½ï¿½ï¿½àµµï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ Ä«ï¿½Ş¶ï¿½ Yï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Ï´ï¿½.")]
     public bool controlYByProgress = true;
 
-    [Tooltip("³«ÇÏ Àü Åõ¾ß ±âÁØ Ä«¸Ş¶ó Y ¿ÀÇÁ¼Â. ¾ç¼ö¸é Ä«¸Ş¶ó°¡ Åõ¾ßº¸´Ù À§¸¦ º¾´Ï´Ù.")]
+    [Tooltip("ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ Ä«ï¿½Ş¶ï¿½ Y ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½. ï¿½ï¿½ï¿½ï¿½ï¿½ Ä«ï¿½Ş¶ï¿½ ï¿½ï¿½ï¿½ßºï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ï´ï¿½.")]
     public float playerFrameYOffset = 1.8f;
 
     [Header("Fall Follow Y")]
-    [Tooltip("Y Follow¸¦ ¾ğÁ¦ ÄÓÁö")]
+    [Tooltip("Y Followï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½")]
     public FollowYStartMode followYStartMode = FollowYStartMode.WhenPlayerBelowY;
 
-    [Tooltip("ÇÃ·¹ÀÌ¾î°¡ ÀÌ Y°ª ¾Æ·¡·Î ³»·Á°¡¸é ³«ÇÏ ÃßÀûÀÌ ÄÑÁı´Ï´Ù.")]
+    [Tooltip("ï¿½Ã·ï¿½ï¿½Ì¾î°¡ ï¿½ï¿½ Yï¿½ï¿½ ï¿½Æ·ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½.")]
     public float followStartWorldY = 0f;
 
-    [Tooltip("³«ÇÏ Áß Åõ¾ß ±âÁØ Ä«¸Ş¶ó Y ¿ÀÇÁ¼Â. ¾ç¼ö¸é Åõ¾ßº¸´Ù À§¸¦ º¾´Ï´Ù.")]
+    [Tooltip("ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ Ä«ï¿½Ş¶ï¿½ Y ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½. ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ßºï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ï´ï¿½.")]
     public float fallCameraYOffset = 1.8f;
 
-    [Tooltip("³«ÇÏ°¡ ½ÃÀÛµÇ¸é X ÁøÇàµµ¿Í »ó°ü¾øÀÌ ÃÖÁ¾ ÁÜ/Y¸¦ À¯ÁöÇÕ´Ï´Ù.")]
+    [Tooltip("ï¿½ï¿½ï¿½Ï°ï¿½ ï¿½ï¿½ï¿½ÛµÇ¸ï¿½ X ï¿½ï¿½ï¿½àµµï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½/Yï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Õ´Ï´ï¿½.")]
     public bool keepFullEffectAfterFallStarts = true;
 
     [Header("Zoom Out On Exit")]
     public bool zoomOutOnExit = true;
 
-    [Tooltip("µé¾î¿À±â Àü ÁÜ °ªÀ¸·Î º¹±¸ÇÒÁö")]
+    [Tooltip("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½")]
     public bool restoreToEnterFieldOfView = true;
 
-    [Tooltip("Restore To Enter Field Of View°¡ ²¨Á® ÀÖÀ» ¶§ »ç¿ëÇÒ ÁÜ º¹±¸°ª")]
+    [Tooltip("Restore To Enter Field Of Viewï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½")]
     public float zoomOutFieldOfView = 60f;
 
-    [Tooltip("Ãà¼Ò ½Ã°£")]
+    [Tooltip("ï¿½ï¿½ï¿½ ï¿½Ã°ï¿½")]
     public float zoomOutTime = 1.2f;
 
     public AnimationCurve zoomOutCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
 
     [Header("Exit")]
-    [Tooltip("Area ¹ÛÀ¸·Î ³ª°¡¸é ³«ÇÏ Y Follow¸¦ ²ü´Ï´Ù.")]
+    [Tooltip("Area ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ Y Followï¿½ï¿½ ï¿½ï¿½ï¿½Ï´ï¿½.")]
     public bool disableFollowYOnExit = true;
 
-    [Tooltip("Area ¹ÛÀ¸·Î ³ª°¡¸é CameraMovement¿¡°Ô Á¦¾î±ÇÀ» µ¹·ÁÁİ´Ï´Ù.")]
+    [Tooltip("Area ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ CameraMovementï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½İ´Ï´ï¿½.")]
     public bool releaseCameraMovementOnExit = true;
 
     [Header("Debug")]
@@ -131,10 +131,17 @@ public class FallZoomCameraArea : MonoBehaviour
         float progress = GetProgressByPlayerX();
 
         if (followYActive && keepFullEffectAfterFallStarts)
-            progress = 1f;
-
-        ApplyZoomByProgress(progress);
-        ApplyYByProgress(progress);
+        {
+            // ì¤Œ: ì½œë¼ì´ë” ì¤‘ì‹¬ ê¸°ì¤€ X ê±°ë¦¬ (ì–‘ë°©í–¥ zoom-out ê°€ëŠ¥)
+            // Y: í•­ìƒ 1fë¡œ ê³ ì • â€” í”Œë ˆì´ì–´ í˜„ì¬ ìœ„ì¹˜ë¥¼ ì™„ì „ ì¶”ì 
+            ApplyZoomByProgress(GetProgressByPlayerXFromCenter());
+            ApplyYByProgress(1f);
+        }
+        else
+        {
+            ApplyZoomByProgress(progress);
+            ApplyYByProgress(progress);
+        }
     }
 
     private void RefreshReferences()
@@ -288,6 +295,22 @@ public class FallZoomCameraArea : MonoBehaviour
         return Mathf.Clamp01(t);
     }
 
+    private float GetProgressByPlayerXFromCenter()
+    {
+        if (playerTransform == null) return 0f;
+
+        Bounds bounds = GetAreaBounds();
+        float halfWidth = Mathf.Max(bounds.extents.x, 0.001f);
+        float distFromCenter = Mathf.Abs(playerTransform.position.x - bounds.center.x);
+
+        float t = 1f - Mathf.Clamp01(distFromCenter / halfWidth);
+
+        if (progressCurve != null)
+            t = progressCurve.Evaluate(t);
+
+        return t;
+    }
+
     private void ApplyZoomByProgress(float progress)
     {
         if (targetCamera == null)
@@ -339,9 +362,9 @@ public class FallZoomCameraArea : MonoBehaviour
 
         Vector3 pos = cameraRig.position;
 
-        // Áß¿ä:
-        // X´Â Àı´ë °Çµå¸®Áö ¾Ê½À´Ï´Ù.
-        // X´Â ±âÁ¸ CameraMovement°¡ °è¼Ó ´ã´çÇÕ´Ï´Ù.
+        // ï¿½ß¿ï¿½:
+        // Xï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Çµå¸®ï¿½ï¿½ ï¿½Ê½ï¿½ï¿½Ï´ï¿½.
+        // Xï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ CameraMovementï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Õ´Ï´ï¿½.
         pos.y = nextY;
 
         cameraRig.position = pos;
