@@ -4,134 +4,79 @@ using UnityEngine;
 public class CoreActivationController : MonoBehaviour, IArrowHit, ICoreEvent
 {
     [Header("Hit Detection")]
-    [Tooltip("ȭ�� �±� �̸�. ȭ�� ������Ʈ�� Arrow �±׸� �޸� ���� �������Դϴ�.")]
     public string arrowTag = "Arrow";
-
-    [Tooltip("�� �� Ȱ��ȭ�Ǹ� �ٽ� �۵����� �ʰ� �ϱ�")]
     public bool activateOnlyOnce = true;
-
-    [Tooltip("���� ȭ���� ��������")]
     public bool destroyArrowOnHit = false;
 
+    [Header("Tutorial Hint")]
+    [Tooltip("코어를 맞추라고 알려주는 링 오브젝트")]
+    public GameObject coreHintRing;
+
+    [Tooltip("시작할 때 힌트링을 꺼둘지")]
+    public bool hideHintRingOnAwake = true;
+
+    [Header("After Letterbox Tutorial")]
+    public bool showTutorialAfterLetterbox = false;
+    public TutorialAreaPrompt afterLetterboxTutorialPrompt;
+
+    [TextArea(2, 5)]
+    public string afterLetterboxTutorialMessage =
+        "투야는 바람을 지나갈 수 없습니다.\n화살은 바람의 영향을 받아 궤적이 바뀝니다.";
+
     [Header("Player Lock")]
-    [Tooltip("���� �� �÷��̾ ������ �����ϴ� ��ũ��Ʈ")]
     public PlayerCutsceneLocker2D playerCutsceneLocker;
-
-    [Tooltip("���� PlayerController �Է� ��ݿ�. CutsceneLocker�� ���� ���� ���˴ϴ�.")]
     public PlayerController playerController;
-
-    [Tooltip("���� �� �÷��̾� �̵� ����")]
     public bool lockPlayerDuringEvent = true;
-
-    [Tooltip("CutsceneLocker�� ���� �� ����� ���� �Է� ��� �ð�")]
     public float playerLockTime = 10f;
 
     [Header("Letterbox")]
-    [Tooltip("�� �ھ� ���⿡�� ���Ʒ� �����ٸ� �������")]
     public bool useLetterbox = false;
-
-    [Tooltip("������ UI ��ũ��Ʈ")]
     public CutsceneLetterboxUI letterboxUI;
-
-    [Tooltip("�����ٰ� ������ �ð�")]
     public float letterboxInTime = 0.45f;
-
-    [Tooltip("�����ٰ� ������� �ð�")]
     public float letterboxOutTime = 0.45f;
-
-    [Tooltip("���� ���̳� ī�޶� ��Ŀ���� ���� ��, �����ٸ� ������ �ð�")]
     public float letterboxHoldTimeWithoutCamera = 1.5f;
 
     [Header("Visual - Core Circle")]
-    [Tooltip("��Ʈ ���� ª�� ��½�̴� ��")]
     public SpriteRenderer hitFlashRenderer;
-
-    [Tooltip("Ȱ��ȭ�� �� ���� �������� ��")]
     public SpriteRenderer activateGlowRenderer;
-
-    [Tooltip("Ȱ��ȭ �� ��� �����ִ� ������ ��")]
     public SpriteRenderer stableGlowRenderer;
-
-    [Tooltip("���� ���� ���� ������Ʈ")]
     public Transform rotatingLightRing;
 
     [Header("Visual Values")]
-    [Tooltip("��Ʈ ���� �ִ� ����")]
-    [Range(0f, 1f)]
-    public float hitFlashAlpha = 1f;
-
-    [Tooltip("Ȱ��ȭ �� �ִ� ����")]
-    [Range(0f, 1f)]
-    public float activateGlowAlpha = 0.85f;
-
-    [Tooltip("�Ϸ� �� �����Ǵ� �� ����")]
-    [Range(0f, 1f)]
-    public float stableGlowAlpha = 0.45f;
-
-    [Tooltip("Ȱ��ȭ �� ���� �� ȸ�� �ӵ�")]
+    [Range(0f, 1f)] public float hitFlashAlpha = 1f;
+    [Range(0f, 1f)] public float activateGlowAlpha = 0.85f;
+    [Range(0f, 1f)] public float stableGlowAlpha = 0.45f;
     public float ringRotateSpeed = 60f;
 
     [Header("Particles - Core")]
-    [Tooltip("ȭ���� �´� ���� ª�� ���� / ����")]
     public ParticleSystem hitParticle;
-
-    [Tooltip("�ھ ���� �� ������ ����")]
     public ParticleSystem activateParticle;
-
-    [Tooltip("�ھ� �Ϸ� ����")]
     public ParticleSystem completeParticle;
 
     [Header("Audio - Core")]
-    [Tooltip("ȭ���� �ھ �´� ����")]
     public AudioSource hitAudio;
-
-    [Tooltip("�ھ ������ �Ҹ�")]
     public AudioSource activateAudio;
-
-    [Tooltip("�Ϸ� ������")]
     public AudioSource completeAudio;
 
     [Header("Core Self Rise")]
-    [Tooltip("�ھ� ��ü�� ���� ����Ѵٸ� �ֱ�. �ƴϸ� ����α�")]
     public RisingObjectController coreRiseObject;
-
-    [Tooltip("�ھ� ��ü ����� �������")]
     public bool useCoreSelfRise = false;
 
     [Header("Connected Object")]
-    [Tooltip("������ �ö�� �� / �� / ���� �ٴ�. ������ �ϴ� �ھ��� ����μ���.")]
     public RisingObjectController connectedRisingObject;
-
-    [Tooltip("�ö�� ������Ʈ�� ���� ī�޶�� ��������")]
     public bool useCameraFocus = true;
-
-    [Tooltip("ī�޶� ��Ŀ�� ��ũ��Ʈ")]
     public CoreCameraFocus2D cameraFocus;
 
     [Header("Camera Focus Timing")]
-    [Tooltip("ī�޶� �ö�� ������Ʈ �ʿ� �ӹ��� �ð�")]
     public float cameraHoldTime = 6f;
-
-    [Tooltip("üũ�ϸ� ī�޶� �÷��̾�� ���ƿ� ������ ��ٸ� �� �÷��̾ Ǯ���ݴϴ�.")]
     public bool waitUntilCameraFocusEnds = true;
 
     [Header("Timing")]
-    [Tooltip("��Ʈ ���� �ð�")]
     public float hitFlashTime = 0.25f;
-
-    [Tooltip("��Ʈ �� Ȱ��ȭ���� ��ٸ��� �ð�")]
     public float delayBeforeActivate = 0.25f;
-
-    [Tooltip("Ȱ��ȭ ���� �������� �ð�")]
     public float activateGlowTime = 1f;
-
-    [Tooltip("Ȱ��ȭ �� ī�޶� �����̱� �� ���")]
     public float delayBeforeCameraFocus = 0.35f;
-
-    [Tooltip("ī�޶� ���� �ö�� ������Ʈ�� ����ִ� �ð�")]
     public float delayBeforeRise = 2.1f;
-
-    [Tooltip("��� �Ϸ� �� �Ϸ� ������� ���")]
     public float delayBeforeComplete = 0.6f;
 
     [Header("State")]
@@ -151,14 +96,27 @@ public class CoreActivationController : MonoBehaviour, IArrowHit, ICoreEvent
         StopParticle(hitParticle);
         StopParticle(activateParticle);
         StopParticle(completeParticle);
+
+        if (hideHintRingOnAwake && coreHintRing != null)
+            coreHintRing.SetActive(false);
     }
 
     private void Update()
     {
         if (isActivated && rotatingLightRing != null)
-        {
             rotatingLightRing.Rotate(0f, 0f, ringRotateSpeed * Time.deltaTime);
-        }
+    }
+
+    public void ShowCoreHintRing()
+    {
+        if (coreHintRing != null && !isActivated)
+            coreHintRing.SetActive(true);
+    }
+
+    public void HideCoreHintRing()
+    {
+        if (coreHintRing != null)
+            coreHintRing.SetActive(false);
     }
 
     private void OnTriggerEnter2D(Collider2D collision)
@@ -210,6 +168,8 @@ public class CoreActivationController : MonoBehaviour, IArrowHit, ICoreEvent
         isActivated = true;
         isRunning = true;
 
+        HideCoreHintRing();
+
         onActivated?.Invoke();
 
         if (activationCoroutine != null)
@@ -227,7 +187,6 @@ public class CoreActivationController : MonoBehaviour, IArrowHit, ICoreEvent
         if (useLetterbox && letterboxUI != null)
             letterboxUI.ShowBars(letterboxInTime);
 
-        // A. ��Ʈ Ȯ��
         PlayAudio(hitAudio);
         PlayParticle(hitParticle);
 
@@ -236,7 +195,6 @@ public class CoreActivationController : MonoBehaviour, IArrowHit, ICoreEvent
         if (delayBeforeActivate > 0f)
             yield return new WaitForSeconds(delayBeforeActivate);
 
-        // B. Ȱ��ȭ �ν�
         PlayAudio(activateAudio);
         PlayParticle(activateParticle);
 
@@ -249,7 +207,6 @@ public class CoreActivationController : MonoBehaviour, IArrowHit, ICoreEvent
         if (delayBeforeCameraFocus > 0f)
             yield return new WaitForSeconds(delayBeforeCameraFocus);
 
-        // ī�޶� �ö�� ������Ʈ�� �ڿ������� ����
         if (useCameraFocus && cameraFocus != null && connectedRisingObject != null)
         {
             Transform focusTarget = connectedRisingObject.objectToRise;
@@ -264,7 +221,6 @@ public class CoreActivationController : MonoBehaviour, IArrowHit, ICoreEvent
         if (delayBeforeRise > 0f)
             yield return new WaitForSeconds(delayBeforeRise);
 
-        // D. ����� ������Ʈ ���
         if (connectedRisingObject != null)
             connectedRisingObject.StartRise();
 
@@ -273,32 +229,46 @@ public class CoreActivationController : MonoBehaviour, IArrowHit, ICoreEvent
         else
             yield return new WaitForSeconds(delayBeforeComplete);
 
-        // E. �Ϸ� ǥ��
         PlayAudio(completeAudio);
         PlayParticle(completeParticle);
 
         if (startedCameraFocus && waitUntilCameraFocusEnds && cameraFocus != null)
         {
             while (cameraFocus.isFocusing)
-            {
                 yield return null;
-            }
         }
 
-        // ���� ���� ��� ī�޶� ��Ŀ���� ���۵��� ���� ���,
-        // �����ٰ� �ٷ� ������� �ʵ��� ���� ���� �ð� ����
         if (!startedCameraFocus && useLetterbox && letterboxHoldTimeWithoutCamera > 0f)
-        {
             yield return new WaitForSeconds(letterboxHoldTimeWithoutCamera);
-        }
 
         if (useLetterbox && letterboxUI != null)
+        {
             letterboxUI.HideBars(letterboxOutTime);
+
+            if (letterboxOutTime > 0f)
+                yield return new WaitForSeconds(letterboxOutTime);
+        }
 
         UnlockPlayer();
 
+        ShowAfterLetterboxTutorial();
+
         isRunning = false;
         activationCoroutine = null;
+    }
+
+    private void ShowAfterLetterboxTutorial()
+    {
+        if (!showTutorialAfterLetterbox)
+            return;
+
+        if (afterLetterboxTutorialPrompt == null)
+            return;
+
+        afterLetterboxTutorialPrompt.hasShown = false;
+        afterLetterboxTutorialPrompt.isShowing = false;
+        afterLetterboxTutorialPrompt.tutorialMessage = afterLetterboxTutorialMessage;
+        afterLetterboxTutorialPrompt.ShowPrompt();
     }
 
     private void LockPlayer()
@@ -307,13 +277,9 @@ public class CoreActivationController : MonoBehaviour, IArrowHit, ICoreEvent
             return;
 
         if (playerCutsceneLocker != null)
-        {
             playerCutsceneLocker.LockNow();
-        }
         else if (playerController != null)
-        {
             playerController.LockPlayerInput(playerLockTime);
-        }
     }
 
     private void UnlockPlayer()
@@ -322,9 +288,7 @@ public class CoreActivationController : MonoBehaviour, IArrowHit, ICoreEvent
             return;
 
         if (playerCutsceneLocker != null)
-        {
             playerCutsceneLocker.UnlockNow();
-        }
     }
 
     private IEnumerator FlashRenderer(SpriteRenderer renderer, float maxAlpha, float duration)

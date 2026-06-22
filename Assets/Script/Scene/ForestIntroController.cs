@@ -11,13 +11,8 @@ public class ForestIntroController : MonoBehaviour
     public Transform targetPoint;
 
     [Header("Facing")]
-    [Tooltip("방향을 바꿀 대상. 비워두면 Player를 사용함")]
     public Transform facingTarget;
-
-    [Tooltip("투야가 오른쪽을 볼 때 localScale.x 값")]
     public float rightFacingScaleX = -1f;
-
-    [Tooltip("투야가 왼쪽을 볼 때 localScale.x 값")]
     public float leftFacingScaleX = 1f;
 
     [Header("Disable During Intro")]
@@ -26,32 +21,20 @@ public class ForestIntroController : MonoBehaviour
 
     [Header("Camera")]
     public Camera mainCamera;
-
-    [Tooltip("카메라가 실제로 움직이는 오브젝트. CameraRig가 있으면 CameraRig, 없으면 Main Camera")]
     public Transform cameraRootToMove;
-
-    [Tooltip("인트로 시작 때 카메라가 있을 위치")]
     public Transform introCameraPoint;
 
     [Header("Camera Zoom - Orthographic")]
-    [Tooltip("2D Orthographic 카메라용. 작을수록 확대")]
     public float introOrthographicSize = 3.0f;
-
-    [Tooltip("2D Orthographic 카메라용. 평소 게임 화면 크기")]
     public float normalOrthographicSize = 5.5f;
 
     [Header("Camera Zoom - Perspective FOV")]
-    [Tooltip("Perspective 카메라용. 작을수록 확대")]
     public float introFieldOfView = 35f;
-
-    [Tooltip("Perspective 카메라용. 평소 시야각")]
     public float normalFieldOfView = 60f;
 
     [Header("Movement")]
     public float moveSpeed = 2.8f;
     public Animator playerAnimator;
-
-    [Tooltip("Animator Bool 파라미터 이름")]
     public string moveBoolName = "IsMove";
 
     [Header("Letterbox Bars")]
@@ -61,20 +44,15 @@ public class ForestIntroController : MonoBehaviour
     public float barOutTime = 1.2f;
 
     [Header("Scene Fade")]
-    [Tooltip("Forest 씬에 있는 검정 FadeImage")]
     public Image sceneFadeImage;
-
-    [Tooltip("씬 시작 후 검정 화면이 걷히는 시간")]
     public float sceneFadeOutTime = 1.2f;
 
+    [Header("Movement Tutorial")]
+    public TutorialAreaPrompt movementTutorialPrompt;
+
     [Header("Timing")]
-    [Tooltip("씬 시작 후 투야가 움직이기 전 대기 시간. 페이드와 동시에 움직이려면 0")]
     public float startDelay = 0f;
-
-    [Tooltip("도착 후 MovingEnd 애니메이션을 보여줄 시간")]
     public float movingEndWaitTime = 0.45f;
-
-    [Tooltip("검정 바가 열리기 전 잠깐 멈추는 시간")]
     public float waitBeforeOpenBars = 0.2f;
 
     private Vector2 topBarStartPos;
@@ -99,64 +77,44 @@ public class ForestIntroController : MonoBehaviour
 
     private IEnumerator IntroSequence()
     {
-        // 조작 / 카메라 Follow 끄기
         SetScriptsEnabled(playerControlScripts, false);
         SetScriptsEnabled(cameraFollowScripts, false);
 
-        // 플레이어 시작 위치로 이동
         if (player != null && startPoint != null)
-        {
             player.position = startPoint.position;
-        }
 
-        // Rigidbody 초기화
         if (playerRigidbody != null)
         {
             playerRigidbody.velocity = Vector2.zero;
             playerRigidbody.angularVelocity = 0f;
         }
 
-        // 카메라를 인트로 위치로 이동
         if (cameraRootToMove != null && introCameraPoint != null)
-        {
             SetCameraRootPositionXY(introCameraPoint.position);
-        }
 
-        // 카메라 줌인 상태로 시작
         SetIntroZoom();
 
-        // 검정 바 시작 위치 고정
         if (topBar != null)
             topBar.anchoredPosition = topBarStartPos;
 
         if (bottomBar != null)
             bottomBar.anchoredPosition = bottomBarStartPos;
 
-        // Forest 씬 진입 직후 검정 화면으로 덮기
         SetSceneFadeAlpha(1f);
-
-        // 중요:
-        // 페이드를 기다리지 않고 동시에 실행시킴
         StartCoroutine(FadeSceneFromBlack());
 
-        // 페이드와 동시에 움직이고 싶으면 startDelay = 0
         if (startDelay > 0f)
             yield return new WaitForSeconds(startDelay);
 
-        // 이동 방향에 맞춰 투야 방향 설정
         if (player != null && targetPoint != null)
-        {
             FaceMoveDirection(targetPoint.position.x - player.position.x);
-        }
 
-        // Idle → MovingStart → Move
         SetMoveAnimation(true);
 
-        // Y축 고정, X축으로만 이동
         float fixedY = player.position.y;
         float targetX = targetPoint.position.x;
 
-        while (Mathf.Abs(player.position.x - targetX) > 0.03f)
+        while (player != null && Mathf.Abs(player.position.x - targetX) > 0.03f)
         {
             float newX = Mathf.MoveTowards(
                 player.position.x,
@@ -167,22 +125,20 @@ public class ForestIntroController : MonoBehaviour
             Vector2 newPosition = new Vector2(newX, fixedY);
 
             if (playerRigidbody != null)
-            {
                 playerRigidbody.MovePosition(newPosition);
-            }
             else
-            {
                 player.position = newPosition;
-            }
 
             yield return null;
         }
 
-        // 도착 위치 정확히 고정
-        Vector3 finalPos = player.position;
-        finalPos.x = targetPoint.position.x;
-        finalPos.y = fixedY;
-        player.position = finalPos;
+        if (player != null && targetPoint != null)
+        {
+            Vector3 finalPos = player.position;
+            finalPos.x = targetPoint.position.x;
+            finalPos.y = fixedY;
+            player.position = finalPos;
+        }
 
         if (playerRigidbody != null)
         {
@@ -190,31 +146,39 @@ public class ForestIntroController : MonoBehaviour
             playerRigidbody.angularVelocity = 0f;
         }
 
-        // Move → MovingEnd → Idle
         SetMoveAnimation(false);
 
         yield return new WaitForSeconds(movingEndWaitTime);
         yield return new WaitForSeconds(waitBeforeOpenBars);
 
-        // 검정 바 열기 + 줌 정상화
         yield return StartCoroutine(OpenBarsAndZoomOut());
 
-        // 마지막 속도 정리
         if (playerRigidbody != null)
         {
             playerRigidbody.velocity = Vector2.zero;
             playerRigidbody.angularVelocity = 0f;
         }
 
-        // 끝날 때도 이동 방향 유지
         if (player != null && startPoint != null && targetPoint != null)
-        {
             FaceMoveDirection(targetPoint.position.x - startPoint.position.x);
-        }
 
-        // 카메라 Follow / 조작 다시 켜기
         SetScriptsEnabled(cameraFollowScripts, true);
         SetScriptsEnabled(playerControlScripts, true);
+
+        ShowMovementTutorial();
+    }
+
+    private void ShowMovementTutorial()
+    {
+        if (movementTutorialPrompt == null)
+        {
+            Debug.LogWarning("[ForestIntroController] Movement Tutorial Prompt가 비어있습니다.");
+            return;
+        }
+
+        movementTutorialPrompt.hasShown = false;
+        movementTutorialPrompt.isShowing = false;
+        movementTutorialPrompt.ShowPrompt();
     }
 
     private IEnumerator FadeSceneFromBlack()
@@ -228,8 +192,7 @@ public class ForestIntroController : MonoBehaviour
         {
             timer += Time.deltaTime;
 
-            float t = timer / sceneFadeOutTime;
-            t = Mathf.Clamp01(t);
+            float t = Mathf.Clamp01(timer / sceneFadeOutTime);
             t = Mathf.SmoothStep(0f, 1f, t);
 
             SetSceneFadeAlpha(1f - t);
@@ -264,50 +227,22 @@ public class ForestIntroController : MonoBehaviour
         {
             timer += Time.deltaTime;
 
-            float t = timer / barOutTime;
-            t = Mathf.Clamp01(t);
+            float t = Mathf.Clamp01(timer / barOutTime);
             t = Mathf.SmoothStep(0f, 1f, t);
 
-            // 카메라 줌 정상화
             if (mainCamera != null)
             {
                 if (mainCamera.orthographic)
-                {
-                    mainCamera.orthographicSize = Mathf.Lerp(
-                        startOrthoSize,
-                        normalOrthographicSize,
-                        t
-                    );
-                }
+                    mainCamera.orthographicSize = Mathf.Lerp(startOrthoSize, normalOrthographicSize, t);
                 else
-                {
-                    mainCamera.fieldOfView = Mathf.Lerp(
-                        startFOV,
-                        normalFieldOfView,
-                        t
-                    );
-                }
+                    mainCamera.fieldOfView = Mathf.Lerp(startFOV, normalFieldOfView, t);
             }
 
-            // 위 검정 바 열기
             if (topBar != null)
-            {
-                topBar.anchoredPosition = Vector2.Lerp(
-                    topStart,
-                    topEnd,
-                    t
-                );
-            }
+                topBar.anchoredPosition = Vector2.Lerp(topStart, topEnd, t);
 
-            // 아래 검정 바 열기
             if (bottomBar != null)
-            {
-                bottomBar.anchoredPosition = Vector2.Lerp(
-                    bottomStart,
-                    bottomEnd,
-                    t
-                );
-            }
+                bottomBar.anchoredPosition = Vector2.Lerp(bottomStart, bottomEnd, t);
 
             yield return null;
         }
@@ -327,13 +262,9 @@ public class ForestIntroController : MonoBehaviour
             return;
 
         if (mainCamera.orthographic)
-        {
             mainCamera.orthographicSize = introOrthographicSize;
-        }
         else
-        {
             mainCamera.fieldOfView = introFieldOfView;
-        }
     }
 
     private void SetNormalZoom()
@@ -342,13 +273,9 @@ public class ForestIntroController : MonoBehaviour
             return;
 
         if (mainCamera.orthographic)
-        {
             mainCamera.orthographicSize = normalOrthographicSize;
-        }
         else
-        {
             mainCamera.fieldOfView = normalFieldOfView;
-        }
     }
 
     private void SetSceneFadeAlpha(float alpha)
@@ -403,13 +330,9 @@ public class ForestIntroController : MonoBehaviour
         Vector3 scale = facingTarget.localScale;
 
         if (directionX > 0f)
-        {
             scale.x = rightFacingScaleX;
-        }
         else if (directionX < 0f)
-        {
             scale.x = leftFacingScaleX;
-        }
 
         facingTarget.localScale = scale;
     }

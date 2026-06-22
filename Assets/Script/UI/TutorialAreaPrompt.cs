@@ -6,13 +6,8 @@ public class TutorialAreaPrompt : MonoBehaviour
 {
     [Header("Trigger")]
     public string playerTag = "Player";
-
-    [Tooltip("체크하면 이 Area에서는 딱 한 번만 나옵니다.")]
     public bool showOnlyOnce = true;
-
-    [Tooltip("중복 감지 방지 시간")]
     public float duplicateBlockTime = 1.0f;
-
     public bool showDebugLog = true;
 
     [Header("UI References")]
@@ -21,10 +16,27 @@ public class TutorialAreaPrompt : MonoBehaviour
     public TextMeshProUGUI promptText;
     public RectTransform promptRect;
 
-    [Header("Text")]
+    [Header("First Text")]
     [TextArea(2, 5)]
     public string tutorialMessage =
-        "우클릭 길게 누르기 : 조준\n좌클릭 놓기 : 활쏘기";
+        "우클릭으로 조준하고 좌클릭으로 화살을 놓습니다.";
+
+    [Header("Follow Up Text")]
+    public bool useFollowUpPrompt = false;
+
+    [TextArea(2, 5)]
+    public string followUpMessage =
+        "코어에 화살을 맞춰 길을 여세요.";
+
+    public float followUpDelay = 0.2f;
+    public float followUpFadeInTime = 0.6f;
+    public float followUpStayTime = 999f;
+    public float followUpFadeOutTime = 0.6f;
+
+    [Header("Core Hint")]
+    public CoreActivationController coreActivationController;
+    public bool showCoreHintOnFollowUp = true;
+    public bool waitUntilCoreActivated = true;
 
     [Header("Timing")]
     public float fadeInTime = 0.5f;
@@ -36,7 +48,6 @@ public class TutorialAreaPrompt : MonoBehaviour
     public float moveDistance = 18f;
 
     [Header("Hide Option")]
-    [Tooltip("꺼두는 걸 추천. UI 오브젝트를 끄지 않고 투명하게만 숨깁니다.")]
     public bool disableRootWhenHidden = false;
 
     [Header("State")]
@@ -48,7 +59,6 @@ public class TutorialAreaPrompt : MonoBehaviour
     private bool originalPositionCached;
 
     private float lastShowTime = -999f;
-    private GameObject currentPlayerObject;
 
     private void Awake()
     {
@@ -63,9 +73,6 @@ public class TutorialAreaPrompt : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D other)
     {
-        if (showDebugLog)
-            Debug.Log("[TutorialAreaPrompt] Trigger Enter: " + other.name + " / Tag: " + other.tag);
-
         TryShow(other.gameObject);
     }
 
@@ -78,30 +85,14 @@ public class TutorialAreaPrompt : MonoBehaviour
             return;
 
         if (showOnlyOnce && hasShown)
-        {
-            if (showDebugLog)
-                Debug.Log("[TutorialAreaPrompt] 이미 한 번 보여줬으므로 무시");
-
             return;
-        }
 
         if (isShowing)
-        {
-            if (showDebugLog)
-                Debug.Log("[TutorialAreaPrompt] 이미 표시 중이라 무시");
-
             return;
-        }
 
         if (Time.time - lastShowTime < duplicateBlockTime)
-        {
-            if (showDebugLog)
-                Debug.Log("[TutorialAreaPrompt] 중복 감지 방지 시간이라 무시");
-
             return;
-        }
 
-        currentPlayerObject = otherObject;
         ShowPrompt();
     }
 
@@ -119,9 +110,6 @@ public class TutorialAreaPrompt : MonoBehaviour
 
             parent = parent.parent;
         }
-
-        if (showDebugLog)
-            Debug.Log("[TutorialAreaPrompt] 플레이어가 아님: " + otherObject.name + " / Tag: " + otherObject.tag);
 
         return false;
     }
@@ -160,8 +148,44 @@ public class TutorialAreaPrompt : MonoBehaviour
         }
 
         ForcePrepareUI();
+        CacheOriginalPosition();
 
-        promptText.text = tutorialMessage;
+        yield return StartCoroutine(ShowSingleMessage(
+            tutorialMessage,
+            fadeInTime,
+            stayTime,
+            fadeOutTime,
+            false
+        ));
+
+        if (useFollowUpPrompt)
+        {
+            if (followUpDelay > 0f)
+                yield return new WaitForSeconds(followUpDelay);
+
+            if (showCoreHintOnFollowUp && coreActivationController != null)
+                coreActivationController.ShowCoreHintRing();
+
+            yield return StartCoroutine(ShowSingleMessage(
+                followUpMessage,
+                followUpFadeInTime,
+                followUpStayTime,
+                followUpFadeOutTime,
+                waitUntilCoreActivated
+            ));
+        }
+
+        HideInstant();
+
+        isShowing = false;
+        showCoroutine = null;
+    }
+
+    private IEnumerator ShowSingleMessage(string message, float inTime, float holdTime, float outTime, bool waitForCore)
+    {
+        ForcePrepareUI();
+
+        promptText.text = message;
 
         Color textColor = promptText.color;
         textColor.a = 1f;
@@ -172,8 +196,6 @@ public class TutorialAreaPrompt : MonoBehaviour
         promptCanvasGroup.alpha = 0f;
         promptCanvasGroup.interactable = false;
         promptCanvasGroup.blocksRaycasts = false;
-
-        CacheOriginalPosition();
 
         if (promptRect != null)
         {
@@ -186,24 +208,20 @@ public class TutorialAreaPrompt : MonoBehaviour
                 promptRect.anchoredPosition = originalPosition;
         }
 
-        if (showDebugLog)
-            Debug.Log("[TutorialAreaPrompt] UI 표시 시작");
+        yield return StartCoroutine(FadeAndMove(0f, 1f, inTime, true));
 
-        yield return StartCoroutine(FadeAndMove(0f, 1f, fadeInTime, true));
+        if (waitForCore && coreActivationController != null)
+        {
+            while (!coreActivationController.isActivated)
+                yield return null;
+        }
+        else
+        {
+            if (holdTime > 0f)
+                yield return new WaitForSeconds(holdTime);
+        }
 
-        if (stayTime > 0f)
-            yield return new WaitForSeconds(stayTime);
-
-        yield return StartCoroutine(FadeAndMove(1f, 0f, fadeOutTime, false));
-
-        HideInstant();
-
-        isShowing = false;
-        showCoroutine = null;
-        currentPlayerObject = null;
-
-        if (showDebugLog)
-            Debug.Log("[TutorialAreaPrompt] UI 표시 종료");
+        yield return StartCoroutine(FadeAndMove(1f, 0f, outTime, false));
     }
 
     private IEnumerator FadeAndMove(float fromAlpha, float toAlpha, float duration, bool moveIn)
