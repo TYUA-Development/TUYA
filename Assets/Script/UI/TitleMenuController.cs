@@ -1,4 +1,4 @@
-using UnityEngine;
+癤퓎sing UnityEngine;
 using UnityEngine.SceneManagement;
 
 public class TitleMenuController : MonoBehaviour
@@ -14,17 +14,31 @@ public class TitleMenuController : MonoBehaviour
 
     public void ContinueGame()
     {
-        Debug.Log("이어하기 기능은 아직 준비되지 않았습니다.");
+        Debug.Log("Continue is not ready yet.");
     }
 
     public void OpenSettings()
     {
+        TitleUIController titleUI = FindObjectOfType<TitleUIController>();
+        if (titleUI != null)
+        {
+            titleUI.OpenSettings();
+            return;
+        }
+
         if (settingsPanel != null)
             settingsPanel.SetActive(true);
     }
 
     public void CloseSettings()
     {
+        TitleUIController titleUI = FindObjectOfType<TitleUIController>();
+        if (titleUI != null)
+        {
+            titleUI.CloseSettings();
+            return;
+        }
+
         if (settingsPanel != null)
             settingsPanel.SetActive(false);
     }
@@ -34,7 +48,7 @@ public class TitleMenuController : MonoBehaviour
         Application.Quit();
 
 #if UNITY_EDITOR
-        Debug.Log("게임 종료 버튼 눌림. 빌드에서는 게임이 종료됩니다.");
+        Debug.Log("Quit button pressed. The built game will close.");
 #endif
     }
 }

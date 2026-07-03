@@ -1,4 +1,4 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
@@ -20,118 +20,115 @@ public class ScreenModeBoxSelectorUI : MonoBehaviour
     {
         new ScreenModeOption
         {
-            label = "ÀüÃ¼È­¸é",
+            label = "ì „ì²´í™”ë©´",
             mode = FullScreenMode.ExclusiveFullScreen
         },
         new ScreenModeOption
         {
-            label = "Å×µÎ¸® ¾ø´Â ÀüÃ¼È­¸é",
-            mode = FullScreenMode.FullScreenWindow
+            label = "ì°½ëª¨ë“œ",
+            mode = FullScreenMode.Windowed
         },
         new ScreenModeOption
         {
-            label = "Ã¢¸ðµå",
-            mode = FullScreenMode.Windowed
+            label = "ì „ì²´ ì°½ëª¨ë“œ",
+            mode = FullScreenMode.FullScreenWindow
         }
     };
 
     [Header("Start")]
-    [Tooltip("0=ÀüÃ¼È­¸é, 1=Å×µÎ¸® ¾ø´Â ÀüÃ¼È­¸é, 2=Ã¢¸ðµå")]
     public int startIndex = 0;
 
     [Header("Apply")]
-    [Tooltip("Ã¼Å©ÇÏ¸é ¹Ú½º¸¦ ´©¸¦ ¶§ ½ÇÁ¦ È­¸é ¸ðµåµµ ¹Ù·Î ¹Ù²ñ")]
     public bool applyImmediately = true;
 
-    private int currentIndex = 0;
+    private int currentIndex;
+    private bool listenersReady;
 
     private void Awake()
     {
-        if (boxButton != null)
-        {
-            boxButton.onClick.AddListener(SelectNext);
-        }
+        SetupListeners();
     }
 
     private void OnEnable()
     {
-        if (options == null || options.Length == 0)
+        SyncFromSettings();
+        UpdateUI();
+    }
+
+    private void SetupListeners()
+    {
+        if (listenersReady)
             return;
 
-        currentIndex = Mathf.Clamp(startIndex, 0, options.Length - 1);
-        UpdateUI();
+        listenersReady = true;
 
-        if (applyImmediately)
-        {
-            ApplyScreenMode();
-        }
+        if (boxButton != null)
+            boxButton.onClick.AddListener(SelectNext);
+    }
+
+    private void SyncFromSettings()
+    {
+        if (SettingsManager.Instance != null && SettingsManager.Instance.Settings != null)
+            currentIndex = SettingsManager.Instance.Settings.screenModeIndex;
+        else
+            currentIndex = startIndex;
+
+        currentIndex = Mathf.Clamp(currentIndex, 0, GetOptionCount() - 1);
     }
 
     private void SelectNext()
     {
-        if (options == null || options.Length == 0)
-            return;
-
         currentIndex++;
 
-        if (currentIndex >= options.Length)
-        {
+        if (currentIndex >= GetOptionCount())
             currentIndex = 0;
-        }
+
+        if (applyImmediately && SettingsManager.Instance != null)
+            SettingsManager.Instance.SetScreenModeIndex(currentIndex);
 
         UpdateUI();
-
-        if (applyImmediately)
-        {
-            ApplyScreenMode();
-        }
     }
 
     private void UpdateUI()
     {
-        if (options == null || options.Length == 0)
-            return;
-
-        ScreenModeOption option = options[currentIndex];
+        currentIndex = Mathf.Clamp(currentIndex, 0, GetOptionCount() - 1);
 
         if (valueText != null)
-        {
-            valueText.text = option.label;
-        }
-    }
-
-    private void ApplyScreenMode()
-    {
-        if (options == null || options.Length == 0)
-            return;
-
-        ScreenModeOption option = options[currentIndex];
-
-        Screen.fullScreenMode = option.mode;
-
-        if (option.mode == FullScreenMode.Windowed)
-        {
-            Screen.fullScreen = false;
-        }
-        else
-        {
-            Screen.fullScreen = true;
-        }
+            valueText.text = GetCurrentLabel();
     }
 
     public FullScreenMode GetCurrentMode()
     {
-        if (options == null || options.Length == 0)
-            return FullScreenMode.FullScreenWindow;
+        if (options != null && options.Length > 0)
+            return options[currentIndex].mode;
 
-        return options[currentIndex].mode;
+        switch (currentIndex)
+        {
+            case 1:
+                return FullScreenMode.Windowed;
+            case 2:
+                return FullScreenMode.FullScreenWindow;
+            default:
+                return FullScreenMode.ExclusiveFullScreen;
+        }
     }
 
     public string GetCurrentLabel()
     {
-        if (options == null || options.Length == 0)
-            return "ÀüÃ¼È­¸é";
+        if (SettingsManager.Instance != null && SettingsManager.Instance.Settings != null)
+            return SettingsManager.Instance.GetScreenModeString(currentIndex);
 
-        return options[currentIndex].label;
+        if (options != null && options.Length > 0)
+            return options[currentIndex].label;
+
+        return "ì „ì²´í™”ë©´";
+    }
+
+    private int GetOptionCount()
+    {
+        if (options != null && options.Length > 0)
+            return options.Length;
+
+        return SettingsManager.ScreenModeCount;
     }
 }

@@ -15,7 +15,7 @@ public class PlayerInputReader : MonoBehaviour
 
     public bool IsAimingHeld()
     {
-        return Input.GetMouseButton(1) || Input.GetButton("Fire2");
+        return KeyBindingSettings.IsKeyHeld(KeyBindingSettings.Aim);
     }
 
     public void ClearInput()
@@ -27,15 +27,26 @@ public class PlayerInputReader : MonoBehaviour
     {
         PlayerInputData data = new PlayerInputData();
 
-        float h = Input.GetAxisRaw("Horizontal");
+        float h = GetHorizontalInput();
         float v = Input.GetAxisRaw("Vertical");
         data.moveAxis = new Vector2(h, v);
 
-        data.jumpPressed = Input.GetButtonDown("Jump");
+        data.jumpPressed = KeyBindingSettings.IsKeyDown(KeyBindingSettings.Jump);
         data.dashPressed = Input.GetButtonDown("Dash");
         data.aimingPressed = IsAimingHeld();
-        data.attackPressed = Input.GetButtonDown("Fire1");
+        data.attackPressed = KeyBindingSettings.IsKeyDown(KeyBindingSettings.Shoot);
 
         InputData = data;
+    }
+
+    private float GetHorizontalInput()
+    {
+        bool leftHeld = KeyBindingSettings.IsKeyHeld(KeyBindingSettings.MoveLeft);
+        bool rightHeld = KeyBindingSettings.IsKeyHeld(KeyBindingSettings.MoveRight);
+
+        if (leftHeld == rightHeld)
+            return 0f;
+
+        return leftHeld ? -1f : 1f;
     }
 }

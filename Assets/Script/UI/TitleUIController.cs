@@ -18,6 +18,9 @@ public class TitleUIController : MonoBehaviour
 
     void Update()
     {
+        if (SettingsUI.ShouldBlockEscapeNavigation)
+            return;
+
         if (settingsPanel != null && settingsPanel.activeSelf)
         {
             if (Input.GetKeyDown(KeyCode.Escape))
@@ -29,7 +32,9 @@ public class TitleUIController : MonoBehaviour
 
     public void OpenSettings()
     {
-        settingsPanel.SetActive(true);
+        if (settingsPanel != null)
+            settingsPanel.SetActive(true);
+
         ShowMainPanel();
     }
 

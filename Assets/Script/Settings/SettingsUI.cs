@@ -1,9 +1,19 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using TMPro;
 
 public class SettingsUI : MonoBehaviour
 {
+    private class ControlBindingUI
+    {
+        public KeyBindingAction action;
+        public string rowName;
+        public Button button;
+        public TMP_Text tmpText;
+        public Text legacyText;
+    }
+
     [Header("Panels")]
     public GameObject settingsMainPanel;
     public GameObject audioPanel;
@@ -34,6 +44,21 @@ public class SettingsUI : MonoBehaviour
     [Header("Control")]
     public Button controlBackButton;
 
+    private bool listenersReady;
+    private ControlBindingUI[] controlBindings;
+    private bool controlBindingsReady;
+    private bool waitingForKeyInput;
+    private KeyBindingAction waitingAction;
+    private int keyInputWaitStartFrame;
+
+    public static bool IsWaitingForKeyInput { get; private set; }
+    public static bool ShouldBlockEscapeNavigation
+    {
+        get { return IsWaitingForKeyInput || keyInputCancelFrame == Time.frameCount; }
+    }
+
+    private static int keyInputCancelFrame = -1;
+
     private void Awake()
     {
         gameObject.SetActive(false);
@@ -41,100 +66,428 @@ public class SettingsUI : MonoBehaviour
 
     private void Start()
     {
-        if (SettingsManager.Instance != null)
-            SettingsManager.Instance.settingsUIInstance = gameObject;
+        RegisterWithManager();
         SetupListeners();
     }
 
     private void OnEnable()
     {
+        RegisterWithManager();
+        SetupListeners();
         ShowMainPanel();
         InitFromSettings();
     }
 
+    private void OnDisable()
+    {
+        CancelKeyInputWait();
+    }
+
+    private void Update()
+    {
+        UpdateKeyInputWait();
+    }
+
+    private void RegisterWithManager()
+    {
+        if (GetComponentInParent<InGameSettingsMenuController>() != null)
+            return;
+
+        if (SettingsManager.Instance != null)
+            SettingsManager.Instance.settingsUIInstance = gameObject;
+    }
+
     private void InitFromSettings()
     {
-        SettingsData s = SettingsManager.Instance.Settings;
+        if (SettingsManager.Instance == null || SettingsManager.Instance.Settings == null)
+            return;
 
-        if (masterVolumeSlider) masterVolumeSlider.SetValueWithoutNotify(s.masterVolume / 100f);
-        if (bgmVolumeSlider)    bgmVolumeSlider.SetValueWithoutNotify(s.bgmVolume    / 100f);
-        if (sfxVolumeSlider)    sfxVolumeSlider.SetValueWithoutNotify(s.sfxVolume    / 100f);
-        if (brightnessSlider)   brightnessSlider.SetValueWithoutNotify(s.brightness  / 100f);
+        SettingsData settings = SettingsManager.Instance.Settings;
+
+        if (masterVolumeSlider != null)
+            masterVolumeSlider.SetValueWithoutNotify(settings.masterVolume / 100f);
+
+        if (bgmVolumeSlider != null)
+            bgmVolumeSlider.SetValueWithoutNotify(settings.bgmVolume / 100f);
+
+        if (sfxVolumeSlider != null)
+            sfxVolumeSlider.SetValueWithoutNotify(settings.sfxVolume / 100f);
+
+        if (brightnessSlider != null)
+            brightnessSlider.SetValueWithoutNotify(settings.brightness / 100f);
 
         UpdateResolutionText();
         UpdateScreenModeText();
+        UpdateControlBindingTexts();
     }
 
     private void SetupListeners()
     {
-        // 메인 탭 버튼
-        if (audioButton)    audioButton.onClick.AddListener(() => ShowSubPanel(audioPanel));
-        if (graphicsButton) graphicsButton.onClick.AddListener(() => ShowSubPanel(graphicsPanel));
-        if (controlButton)  controlButton.onClick.AddListener(() => ShowSubPanel(controlPanel));
-        if (mainCloseButton) mainCloseButton.onClick.AddListener(() => gameObject.SetActive(false));
+        if (listenersReady)
+            return;
 
-        // 오디오
-        if (masterVolumeSlider) masterVolumeSlider.onValueChanged.AddListener(
-            v => SettingsManager.Instance.SetMasterVolume(Mathf.RoundToInt(v * 100)));
-        if (bgmVolumeSlider) bgmVolumeSlider.onValueChanged.AddListener(
-            v => SettingsManager.Instance.SetBgmVolume(Mathf.RoundToInt(v * 100)));
-        if (sfxVolumeSlider) sfxVolumeSlider.onValueChanged.AddListener(
-            v => SettingsManager.Instance.SetSfxVolume(Mathf.RoundToInt(v * 100)));
-        if (audioBackButton) audioBackButton.onClick.AddListener(ShowMainPanel);
+        listenersReady = true;
 
-        // 그래픽
-        if (brightnessSlider) brightnessSlider.onValueChanged.AddListener(
-            v => SettingsManager.Instance.SetBrightness(Mathf.RoundToInt(v * 100)));
-        if (leftResolutionButton)  leftResolutionButton.onClick.AddListener(() => ChangeResolution(-1));
-        if (rightResolutionButton) rightResolutionButton.onClick.AddListener(() => ChangeResolution(1));
-        if (screenModeButton) screenModeButton.onClick.AddListener(ToggleScreenMode);
-        if (graphicsBackButton) graphicsBackButton.onClick.AddListener(ShowMainPanel);
+        if (audioButton != null)
+            audioButton.onClick.AddListener(() => ShowSubPanel(audioPanel));
 
-        // 조작
-        if (controlBackButton) controlBackButton.onClick.AddListener(ShowMainPanel);
+        if (graphicsButton != null)
+            graphicsButton.onClick.AddListener(() => ShowSubPanel(graphicsPanel));
+
+        if (controlButton != null)
+            controlButton.onClick.AddListener(() => ShowSubPanel(controlPanel));
+
+        if (mainCloseButton != null)
+            mainCloseButton.onClick.AddListener(() => gameObject.SetActive(false));
+
+        if (masterVolumeSlider != null)
+            masterVolumeSlider.onValueChanged.AddListener(value => SetMasterVolume(value));
+
+        if (bgmVolumeSlider != null)
+            bgmVolumeSlider.onValueChanged.AddListener(value => SetBgmVolume(value));
+
+        if (sfxVolumeSlider != null)
+            sfxVolumeSlider.onValueChanged.AddListener(value => SetSfxVolume(value));
+
+        if (audioBackButton != null)
+            audioBackButton.onClick.AddListener(ShowMainPanel);
+
+        if (brightnessSlider != null)
+            brightnessSlider.onValueChanged.AddListener(value => SetBrightness(value));
+
+        bool hasResolutionSelector = HasResolutionSelector();
+
+        if (!hasResolutionSelector && leftResolutionButton != null)
+            leftResolutionButton.onClick.AddListener(() => ChangeResolution(-1));
+
+        if (!hasResolutionSelector && rightResolutionButton != null)
+            rightResolutionButton.onClick.AddListener(() => ChangeResolution(1));
+
+        bool hasScreenModeSelector = HasScreenModeSelector();
+
+        if (!hasScreenModeSelector && screenModeButton != null)
+            screenModeButton.onClick.AddListener(ToggleScreenMode);
+
+        if (graphicsBackButton != null)
+            graphicsBackButton.onClick.AddListener(ShowMainPanel);
+
+        if (controlBackButton != null)
+            controlBackButton.onClick.AddListener(ShowMainPanel);
+
+        SetupControlBindings();
+    }
+
+    private void SetMasterVolume(float value)
+    {
+        if (SettingsManager.Instance != null)
+            SettingsManager.Instance.SetMasterVolume(Mathf.RoundToInt(value * 100f));
+    }
+
+    private void SetBgmVolume(float value)
+    {
+        if (SettingsManager.Instance != null)
+            SettingsManager.Instance.SetBgmVolume(Mathf.RoundToInt(value * 100f));
+    }
+
+    private void SetSfxVolume(float value)
+    {
+        if (SettingsManager.Instance != null)
+            SettingsManager.Instance.SetSfxVolume(Mathf.RoundToInt(value * 100f));
+    }
+
+    private void SetBrightness(float value)
+    {
+        if (SettingsManager.Instance != null)
+            SettingsManager.Instance.SetBrightness(Mathf.RoundToInt(value * 100f));
+    }
+
+    private bool HasResolutionSelector()
+    {
+        ResolutionArrowSelectorUI[] selectors = GetComponentsInChildren<ResolutionArrowSelectorUI>(true);
+        for (int i = 0; i < selectors.Length; i++)
+        {
+            ResolutionArrowSelectorUI selector = selectors[i];
+            if (selector.leftButton == leftResolutionButton || selector.rightButton == rightResolutionButton)
+                return true;
+        }
+
+        return false;
+    }
+
+    private bool HasScreenModeSelector()
+    {
+        ScreenModeBoxSelectorUI[] selectors = GetComponentsInChildren<ScreenModeBoxSelectorUI>(true);
+        for (int i = 0; i < selectors.Length; i++)
+        {
+            ScreenModeBoxSelectorUI selector = selectors[i];
+            if (selector.boxButton == screenModeButton)
+                return true;
+        }
+
+        return false;
     }
 
     private void ShowMainPanel()
     {
-        if (settingsMainPanel) settingsMainPanel.SetActive(true);
-        if (audioPanel)    audioPanel.SetActive(false);
-        if (graphicsPanel) graphicsPanel.SetActive(false);
-        if (controlPanel)  controlPanel.SetActive(false);
+        CancelKeyInputWait();
+
+        if (settingsMainPanel != null)
+            settingsMainPanel.SetActive(true);
+
+        if (audioPanel != null)
+            audioPanel.SetActive(false);
+
+        if (graphicsPanel != null)
+            graphicsPanel.SetActive(false);
+
+        if (controlPanel != null)
+            controlPanel.SetActive(false);
     }
 
     private void ShowSubPanel(GameObject panel)
     {
-        if (settingsMainPanel) settingsMainPanel.SetActive(false);
-        if (audioPanel)    audioPanel.SetActive(false);
-        if (graphicsPanel) graphicsPanel.SetActive(false);
-        if (controlPanel)  controlPanel.SetActive(false);
-        if (panel) panel.SetActive(true);
+        CancelKeyInputWait();
+
+        if (settingsMainPanel != null)
+            settingsMainPanel.SetActive(false);
+
+        if (audioPanel != null)
+            audioPanel.SetActive(false);
+
+        if (graphicsPanel != null)
+            graphicsPanel.SetActive(false);
+
+        if (controlPanel != null)
+            controlPanel.SetActive(false);
+
+        if (panel != null)
+            panel.SetActive(true);
+
+        if (panel == controlPanel)
+            UpdateControlBindingTexts();
     }
 
-    private void ChangeResolution(int dir)
+    private void ChangeResolution(int direction)
     {
-        SettingsData s = SettingsManager.Instance.Settings;
-        int newIdx = Mathf.Clamp(s.resolutionIndex + dir, 0, SettingsManager.Instance.ResolutionCount - 1);
-        SettingsManager.Instance.SetResolutionIndex(newIdx);
+        if (SettingsManager.Instance == null || SettingsManager.Instance.Settings == null)
+            return;
+
+        SettingsData settings = SettingsManager.Instance.Settings;
+        int newIndex = Mathf.Clamp(
+            settings.resolutionIndex + direction,
+            0,
+            SettingsManager.Instance.ResolutionCount - 1
+        );
+
+        SettingsManager.Instance.SetResolutionIndex(newIndex);
         UpdateResolutionText();
     }
 
     private void ToggleScreenMode()
     {
-        SettingsManager.Instance.SetFullscreen(!SettingsManager.Instance.Settings.fullscreen);
+        if (SettingsManager.Instance == null)
+            return;
+
+        SettingsManager.Instance.CycleScreenMode();
         UpdateScreenModeText();
     }
 
     private void UpdateResolutionText()
     {
-        if (resolutionValueText)
-            resolutionValueText.text = SettingsManager.Instance.GetResolutionString(
-                SettingsManager.Instance.Settings.resolutionIndex);
+        if (resolutionValueText == null || SettingsManager.Instance == null)
+            return;
+
+        resolutionValueText.text = SettingsManager.Instance.GetCurrentResolutionString();
     }
 
     private void UpdateScreenModeText()
     {
-        if (screenModeText)
-            screenModeText.text = SettingsManager.Instance.Settings.fullscreen ? "전체화면" : "창 모드";
+        if (screenModeText == null || SettingsManager.Instance == null)
+            return;
+
+        screenModeText.text = SettingsManager.Instance.GetCurrentScreenModeString();
+    }
+
+    private void SetupControlBindings()
+    {
+        if (controlBindingsReady)
+            return;
+
+        controlBindingsReady = true;
+
+        controlBindings = new ControlBindingUI[]
+        {
+            CreateControlBinding(KeyBindingAction.MoveLeft, "MoveLeftRow"),
+            CreateControlBinding(KeyBindingAction.MoveRight, "MoveRightRow"),
+            CreateControlBinding(KeyBindingAction.Jump, "JumpRow"),
+            CreateControlBinding(KeyBindingAction.Aim, "AimRow"),
+            CreateControlBinding(KeyBindingAction.Shoot, "ShootRow")
+        };
+
+        for (int i = 0; i < controlBindings.Length; i++)
+        {
+            ControlBindingUI binding = controlBindings[i];
+            if (binding == null || binding.button == null)
+                continue;
+
+            KeyBindingAction action = binding.action;
+            binding.button.onClick.AddListener(() => StartKeyInputWait(action));
+        }
+
+        UpdateControlBindingTexts();
+    }
+
+    private ControlBindingUI CreateControlBinding(KeyBindingAction action, string rowName)
+    {
+        ControlBindingUI binding = new ControlBindingUI
+        {
+            action = action,
+            rowName = rowName
+        };
+
+        Transform row = FindChildByName(controlPanel != null ? controlPanel.transform : transform, rowName);
+        if (row == null)
+        {
+            Debug.LogWarning("[SettingsUI] Control row not found: " + rowName);
+            return binding;
+        }
+
+        Transform buttonTransform = FindChildByName(row, "KeyBoxButton");
+        if (buttonTransform == null)
+        {
+            Debug.LogWarning("[SettingsUI] KeyBoxButton not found in row: " + rowName);
+            return binding;
+        }
+
+        binding.button = buttonTransform.GetComponent<Button>();
+        if (binding.button == null)
+            binding.button = buttonTransform.GetComponentInChildren<Button>(true);
+
+        if (binding.button == null)
+            Debug.LogWarning("[SettingsUI] Button component not found in row: " + rowName);
+
+        binding.tmpText = buttonTransform.GetComponentInChildren<TMP_Text>(true);
+        binding.legacyText = buttonTransform.GetComponentInChildren<Text>(true);
+
+        if (binding.tmpText == null && binding.legacyText == null)
+            Debug.LogWarning("[SettingsUI] Key text component not found in row: " + rowName);
+
+        return binding;
+    }
+
+    private Transform FindChildByName(Transform root, string childName)
+    {
+        if (root == null)
+            return null;
+
+        Transform[] children = root.GetComponentsInChildren<Transform>(true);
+        for (int i = 0; i < children.Length; i++)
+        {
+            if (children[i].name == childName)
+                return children[i];
+        }
+
+        return null;
+    }
+
+    private void StartKeyInputWait(KeyBindingAction action)
+    {
+        waitingForKeyInput = true;
+        IsWaitingForKeyInput = true;
+        waitingAction = action;
+        keyInputWaitStartFrame = Time.frameCount;
+
+        if (EventSystem.current != null)
+            EventSystem.current.SetSelectedGameObject(null);
+
+        SetControlBindingText(action, "...");
+    }
+
+    private void UpdateKeyInputWait()
+    {
+        if (!waitingForKeyInput)
+            return;
+
+        if (Time.frameCount <= keyInputWaitStartFrame)
+            return;
+
+        KeyCode pressedKey;
+        if (!KeyBindingSettings.TryGetPressedKey(out pressedKey))
+            return;
+
+        if (pressedKey == KeyCode.Escape)
+        {
+            CancelKeyInputWait();
+            return;
+        }
+
+        bool saved = KeyBindingSettings.SetKey(waitingAction, pressedKey);
+        waitingForKeyInput = false;
+        IsWaitingForKeyInput = false;
+
+        if (!saved)
+        {
+            Debug.LogWarning("[SettingsUI] Key binding was not changed: " + KeyBindingSettings.GetDisplayName(pressedKey));
+        }
+
+        UpdateControlBindingTexts();
+    }
+
+    private void CancelKeyInputWait()
+    {
+        if (!waitingForKeyInput)
+            return;
+
+        waitingForKeyInput = false;
+        IsWaitingForKeyInput = false;
+        keyInputCancelFrame = Time.frameCount;
+        UpdateControlBindingTexts();
+    }
+
+    private void UpdateControlBindingTexts()
+    {
+        KeyBindingSettings.EnsureLoaded();
+
+        if (controlBindings == null)
+            return;
+
+        for (int i = 0; i < controlBindings.Length; i++)
+        {
+            ControlBindingUI binding = controlBindings[i];
+            if (binding == null)
+                continue;
+
+            SetControlBindingText(binding, KeyBindingSettings.GetDisplayName(binding.action));
+        }
+    }
+
+    private void SetControlBindingText(KeyBindingAction action, string text)
+    {
+        ControlBindingUI binding = FindControlBinding(action);
+        if (binding != null)
+            SetControlBindingText(binding, text);
+    }
+
+    private void SetControlBindingText(ControlBindingUI binding, string text)
+    {
+        if (binding.tmpText != null)
+            binding.tmpText.text = text;
+
+        if (binding.legacyText != null)
+            binding.legacyText.text = text;
+    }
+
+    private ControlBindingUI FindControlBinding(KeyBindingAction action)
+    {
+        if (controlBindings == null)
+            return null;
+
+        for (int i = 0; i < controlBindings.Length; i++)
+        {
+            if (controlBindings[i] != null && controlBindings[i].action == action)
+                return controlBindings[i];
+        }
+
+        return null;
     }
 }

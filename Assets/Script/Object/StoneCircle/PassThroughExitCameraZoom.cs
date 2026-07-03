@@ -1,5 +1,6 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 [DefaultExecutionOrder(20000)]
 public class PassThroughExitCameraZoom : MonoBehaviour
@@ -40,6 +41,13 @@ public class PassThroughExitCameraZoom : MonoBehaviour
     public float startDelay = 0f;
 
     public AnimationCurve zoomCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
+
+    [Header("SH MissionArea Zoom")]
+    [SerializeField] private bool allowSameSideExitWhenSHMissionArea = true;
+    [SerializeField] private float shMissionAreaZoomTime = 4f;
+    [SerializeField] private float missionArea2ZoomTime = 6f;
+    [SerializeField] private bool skipZoomWhenMissionArea2ExitsLeft = true;
+    [SerializeField] private string shMissionAreaZoomSceneName = "SeungHyun2_Restore";
 
     [Header("Safe Y Move")]
     [Tooltip("PassThrough ���� �� CameraRig�� Y�� �����ϰ� �̵��մϴ�.")]
@@ -101,6 +109,8 @@ public class PassThroughExitCameraZoom : MonoBehaviour
 
     private bool hasActivated;
     private bool isRunning;
+    private bool hasSHMissionAreaCamera;
+    private bool warnedSkipRestoreForSH;
 
     private Coroutine zoomCoroutine;
     private Coroutine clearYOffsetCoroutine;
@@ -120,10 +130,32 @@ public class PassThroughExitCameraZoom : MonoBehaviour
     private float activePlayerXOffset;
     private float xVelocity;
 
+    public float EffectiveZoomTime
+    {
+        get
+        {
+            if (hasSHMissionAreaCamera)
+            {
+                if (gameObject.name == "MissionArea (2)")
+                    return Mathf.Max(0.001f, missionArea2ZoomTime);
+
+                return Mathf.Max(0.001f, shMissionAreaZoomTime);
+            }
+
+            return Mathf.Max(0.001f, zoomTime);
+        }
+    }
+
+    public float TotalZoomDuration
+    {
+        get { return Mathf.Max(0f, startDelay) + EffectiveZoomTime; }
+    }
+
     private void Awake()
     {
         RefreshReferences();
         areaCollider = GetComponent<Collider2D>();
+        hasSHMissionAreaCamera = GetComponent<SH_MissionAreaCamera>() != null;
     }
 
     private void RefreshReferences()
@@ -150,6 +182,20 @@ public class PassThroughExitCameraZoom : MonoBehaviour
 
         RefreshReferences();
 
+        if (hasSHMissionAreaCamera && zoomCoroutine != null)
+        {
+            StopCoroutine(zoomCoroutine);
+            zoomCoroutine = null;
+            isRunning = false;
+            Debug.Log($"{gameObject.name} Exit Zoom Cancelled By Re-enter");
+        }
+
+        if (hasSHMissionAreaCamera && fovRestoreCoroutine != null)
+        {
+            StopCoroutine(fovRestoreCoroutine);
+            fovRestoreCoroutine = null;
+        }
+
         playerTransform = collision.transform;
         enterSide = GetPlayerSide(collision.transform.position);
 
@@ -174,6 +220,20 @@ public class PassThroughExitCameraZoom : MonoBehaviour
 
         if (showDebugLog)
             Debug.Log($"{gameObject.name} Exit Side : {exitSide}");
+
+        if (hasSHMissionAreaCamera && !CanUseSHMissionAreaZoomFeature())
+        {
+            enterSide = EnterSide.None;
+            Debug.Log($"{gameObject.name} Exit Zoom Skipped / SH MissionArea zoom feature disabled here");
+            return;
+        }
+
+        if (ShouldSkipZoomForMissionArea2LeftExit(exitSide))
+        {
+            enterSide = EnterSide.None;
+            Debug.Log($"{gameObject.name} Exit Zoom Skipped / using normal camera");
+            return;
+        }
 
         if (!CanStartZoom(enterSide, exitSide))
         {
@@ -229,6 +289,18 @@ public class PassThroughExitCameraZoom : MonoBehaviour
         if (startSide == EnterSide.None || endSide == EnterSide.None)
             return false;
 
+        if (hasSHMissionAreaCamera && CanUseSHMissionAreaZoomFeature() && allowSameSideExitWhenSHMissionArea)
+        {
+            if (passDirection == PassDirection.Both)
+                return true;
+
+            if (passDirection == PassDirection.LeftToRightOnly)
+                return endSide == EnterSide.Right;
+
+            if (passDirection == PassDirection.RightToLeftOnly)
+                return endSide == EnterSide.Left;
+        }
+
         if (requireOppositeExit && startSide == endSide)
             return false;
 
@@ -239,6 +311,32 @@ public class PassThroughExitCameraZoom : MonoBehaviour
             return startSide == EnterSide.Right && endSide == EnterSide.Left;
 
         return startSide != endSide;
+    }
+
+    private bool ShouldSkipZoomForMissionArea2LeftExit(EnterSide exitSide)
+    {
+        return hasSHMissionAreaCamera
+            && CanUseSHMissionAreaZoomFeature()
+            && skipZoomWhenMissionArea2ExitsLeft
+            && gameObject.name == "MissionArea (2)"
+            && exitSide == EnterSide.Left;
+    }
+
+    private bool CanUseSHMissionAreaZoomFeature()
+    {
+        if (SceneManager.GetActiveScene().name != shMissionAreaZoomSceneName)
+            return false;
+
+        switch (gameObject.name)
+        {
+            case "MissionArea (2)":
+            case "MissionArea (3)":
+            case "MissionArea (4)":
+            case "MissionArea (5)":
+                return true;
+            default:
+                return false;
+        }
     }
 
     private IEnumerator ZoomAndMoveRoutine()
@@ -260,6 +358,9 @@ public class PassThroughExitCameraZoom : MonoBehaviour
 
         startRigPosition = cameraRig.position;
         startFieldOfView = targetCamera.fieldOfView;
+        bool moveRig = useSafeRigYMove && !hasSHMissionAreaCamera;
+
+        Debug.Log($"{gameObject.name} Exit Zoom Start / startFOV: {startFieldOfView:F3}, targetFOV: {targetFieldOfView:F3}");
 
         startCameraY = cameraRig.position.y;
         // 플레이어 실제 Y 기준으로 목표 Y 계산 (이전 카메라 시스템이 Y를 고정했더라도 플레이어 위치로 확대)
@@ -278,20 +379,21 @@ public class PassThroughExitCameraZoom : MonoBehaviour
                 activePlayerXOffset = playerXOffset;
         }
 
-        float realYMoveTime = yMoveTime <= 0f ? zoomTime : yMoveTime;
+        float effectiveZoomTime = EffectiveZoomTime;
+        float realYMoveTime = yMoveTime <= 0f ? effectiveZoomTime : yMoveTime;
 
         float timer = 0f;
 
-        while (timer < zoomTime)
+        while (timer < effectiveZoomTime)
         {
             timer += Time.deltaTime;
 
-            if (takeCameraOwnershipWhileRunning && CameraMovement.Instance != null)
+            if (!hasSHMissionAreaCamera && takeCameraOwnershipWhileRunning && CameraMovement.Instance != null)
             {
                 CameraMovement.Instance.isMovingEvent = true;
             }
 
-            float zoomT = zoomTime <= 0f ? 1f : Mathf.Clamp01(timer / zoomTime);
+            float zoomT = effectiveZoomTime <= 0f ? 1f : Mathf.Clamp01(timer / effectiveZoomTime);
             float curvedZoomT = zoomCurve.Evaluate(zoomT);
 
             float nextFOV = Mathf.Lerp(
@@ -304,7 +406,7 @@ public class PassThroughExitCameraZoom : MonoBehaviour
 
             Vector3 nextRigPos = cameraRig.position;
 
-            if (followPlayerXWhileRunning && playerTransform != null)
+            if (!hasSHMissionAreaCamera && followPlayerXWhileRunning && playerTransform != null)
             {
                 float desiredX = playerTransform.position.x + activePlayerXOffset;
 
@@ -317,7 +419,7 @@ public class PassThroughExitCameraZoom : MonoBehaviour
                 );
             }
 
-            if (useSafeRigYMove)
+            if (moveRig)
             {
                 float yT = realYMoveTime <= 0f ? 1f : Mathf.Clamp01(timer / realYMoveTime);
                 float curvedYT = yMoveCurve.Evaluate(yT);
@@ -333,7 +435,8 @@ public class PassThroughExitCameraZoom : MonoBehaviour
                     CameraMovement.Instance.SetCameraRigY(nextRigPos.y);
             }
 
-            cameraRig.position = nextRigPos;
+            if (!hasSHMissionAreaCamera)
+                cameraRig.position = nextRigPos;
 
             if (showDebugLog)
             {
@@ -356,22 +459,35 @@ public class PassThroughExitCameraZoom : MonoBehaviour
         if (targetCamera != null && keepZoomAfterComplete)
             targetCamera.fieldOfView = targetFieldOfView;
 
-        if (cameraRig != null && keepYAfterComplete && useSafeRigYMove)
+        if (!hasSHMissionAreaCamera && cameraRig != null && keepYAfterComplete && useSafeRigYMove)
         {
             Vector3 pos = cameraRig.position;
             pos.y = targetCameraY;
             cameraRig.position = pos;
         }
 
-        if (returnControlAfterComplete && CameraMovement.Instance != null)
+        if (!hasSHMissionAreaCamera && returnControlAfterComplete && CameraMovement.Instance != null)
             CameraMovement.Instance.isMovingEvent = false;
 
         if (restoreFieldOfViewAfterComplete && targetCamera != null)
         {
-            if (fovRestoreCoroutine != null)
-                StopCoroutine(fovRestoreCoroutine);
-            fovRestoreCoroutine = StartCoroutine(FovRestoreRoutine());
+            if (hasSHMissionAreaCamera && keepZoomAfterComplete)
+            {
+                if (!warnedSkipRestoreForSH)
+                {
+                    warnedSkipRestoreForSH = true;
+                    Debug.LogWarning($"{gameObject.name} Skip Restore Because SH_MissionAreaCamera Exists / SH_MissionAreaCamera detected, keeping PassThrough target FOV and skipping restore.");
+                }
+            }
+            else
+            {
+                if (fovRestoreCoroutine != null)
+                    StopCoroutine(fovRestoreCoroutine);
+                fovRestoreCoroutine = StartCoroutine(FovRestoreRoutine());
+            }
         }
+
+        Debug.Log($"{gameObject.name} Exit Zoom Complete / finalFOV: {(targetCamera != null ? targetCamera.fieldOfView : 0f):F3}");
 
         if (showDebugLog)
             Debug.Log($"{gameObject.name} Complete");
@@ -403,9 +519,21 @@ public class PassThroughExitCameraZoom : MonoBehaviour
             zoomCoroutine = null;
         }
 
+        if (fovRestoreCoroutine != null)
+        {
+            StopCoroutine(fovRestoreCoroutine);
+            fovRestoreCoroutine = null;
+        }
+
+        if (clearYOffsetCoroutine != null)
+        {
+            StopCoroutine(clearYOffsetCoroutine);
+            clearYOffsetCoroutine = null;
+        }
+
         isRunning = false;
 
-        if (returnControlAfterComplete && CameraMovement.Instance != null)
+        if (!hasSHMissionAreaCamera && returnControlAfterComplete && CameraMovement.Instance != null)
             CameraMovement.Instance.isMovingEvent = false;
     }
 
@@ -452,7 +580,7 @@ public class PassThroughExitCameraZoom : MonoBehaviour
 
     private void OnDisable()
     {
-        if (isRunning && returnControlAfterComplete && CameraMovement.Instance != null)
+        if (!hasSHMissionAreaCamera && isRunning && returnControlAfterComplete && CameraMovement.Instance != null)
         {
             CameraMovement.Instance.isMovingEvent = false;
         }

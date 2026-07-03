@@ -1,4 +1,4 @@
-using UnityEngine;
+癤퓎sing UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
@@ -13,7 +13,6 @@ public class ResolutionArrowSelectorUI : MonoBehaviour
 
     [Header("UI")]
     public TextMeshProUGUI valueText;
-
     public Button leftButton;
     public Button rightButton;
 
@@ -35,13 +34,29 @@ public class ResolutionArrowSelectorUI : MonoBehaviour
     };
 
     [Header("Start")]
-    [Tooltip("처음 선택될 해상도 번호. 0=3840x2160, 1=2560x1440, 2=1920x1080, 3=1600x900, 4=1280x720")]
     public int startIndex = 2;
 
-    private int currentIndex = 0;
+    private int currentIndex;
+    private bool listenersReady;
 
     private void Awake()
     {
+        SetupListeners();
+    }
+
+    private void OnEnable()
+    {
+        SyncFromSettings();
+        UpdateUI();
+    }
+
+    private void SetupListeners()
+    {
+        if (listenersReady)
+            return;
+
+        listenersReady = true;
+
         if (leftButton != null)
             leftButton.onClick.AddListener(SelectPrevious);
 
@@ -49,55 +64,45 @@ public class ResolutionArrowSelectorUI : MonoBehaviour
             rightButton.onClick.AddListener(SelectNext);
     }
 
-    private void OnEnable()
+    private void SyncFromSettings()
     {
-        if (options == null || options.Length == 0)
-            return;
+        if (SettingsManager.Instance != null && SettingsManager.Instance.Settings != null)
+            currentIndex = SettingsManager.Instance.Settings.resolutionIndex;
+        else
+            currentIndex = startIndex;
 
-        currentIndex = Mathf.Clamp(startIndex, 0, options.Length - 1);
-        UpdateUI();
+        currentIndex = Mathf.Clamp(currentIndex, 0, GetOptionCount() - 1);
     }
 
     private void SelectPrevious()
     {
-        if (options == null || options.Length == 0)
-            return;
-
-        if (currentIndex <= 0)
-            return;
-
-        currentIndex--;
-        UpdateUI();
+        ChangeResolution(-1);
     }
 
     private void SelectNext()
     {
-        if (options == null || options.Length == 0)
-            return;
+        ChangeResolution(1);
+    }
 
-        if (currentIndex >= options.Length - 1)
-            return;
+    private void ChangeResolution(int direction)
+    {
+        currentIndex = Mathf.Clamp(currentIndex + direction, 0, GetOptionCount() - 1);
 
-        currentIndex++;
+        if (SettingsManager.Instance != null)
+            SettingsManager.Instance.SetResolutionIndex(currentIndex);
+
         UpdateUI();
     }
 
     private void UpdateUI()
     {
-        if (options == null || options.Length == 0)
-            return;
-
-        currentIndex = Mathf.Clamp(currentIndex, 0, options.Length - 1);
-
-        ResolutionOption option = options[currentIndex];
+        currentIndex = Mathf.Clamp(currentIndex, 0, GetOptionCount() - 1);
 
         if (valueText != null)
-        {
-            valueText.text = option.width + " x " + option.height;
-        }
+            valueText.text = GetCurrentWidth() + " x " + GetCurrentHeight();
 
         bool canGoLeft = currentIndex > 0;
-        bool canGoRight = currentIndex < options.Length - 1;
+        bool canGoRight = currentIndex < GetOptionCount() - 1;
 
         if (leftButton != null)
             leftButton.interactable = canGoLeft;
@@ -114,17 +119,25 @@ public class ResolutionArrowSelectorUI : MonoBehaviour
 
     public int GetCurrentWidth()
     {
-        if (options == null || options.Length == 0)
-            return 1920;
+        if (options != null && options.Length > 0)
+            return options[currentIndex].width;
 
-        return options[currentIndex].width;
+        return SettingsManager.FixedResolutions[currentIndex].width;
     }
 
     public int GetCurrentHeight()
     {
-        if (options == null || options.Length == 0)
-            return 1080;
+        if (options != null && options.Length > 0)
+            return options[currentIndex].height;
 
-        return options[currentIndex].height;
+        return SettingsManager.FixedResolutions[currentIndex].height;
+    }
+
+    private int GetOptionCount()
+    {
+        if (options != null && options.Length > 0)
+            return options.Length;
+
+        return SettingsManager.FixedResolutions.Length;
     }
 }
