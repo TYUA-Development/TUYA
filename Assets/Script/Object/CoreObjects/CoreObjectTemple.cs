@@ -61,6 +61,14 @@ public class CoreObjectTemple : MonoBehaviour, IArrowHit, ICoreEvent
     private Coroutine coreEventCoroutine;
     private Coroutine templeAudioCoroutine;
 
+    void Awake()
+    {
+        if(controller == null)
+        {
+            controller = FindObjectOfType<PlayerController>();
+        }
+    }
+
     public void OnCoreEvent()
     {
         if (activateTemple)

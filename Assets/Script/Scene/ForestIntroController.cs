@@ -58,6 +58,19 @@ public class ForestIntroController : MonoBehaviour
     private Vector2 topBarStartPos;
     private Vector2 bottomBarStartPos;
 
+    void Awake()
+    {
+        if(player == null)
+        {
+            player = FindObjectOfType<PlayerController>().gameObject.transform;
+        }
+
+        if(playerAnimator == null)
+        {
+            playerAnimator = player.gameObject.GetComponentInChildren<Animator>();
+        }
+    }
+
     private void Start()
     {
         if (facingTarget == null)
@@ -114,22 +127,26 @@ public class ForestIntroController : MonoBehaviour
         float fixedY = player.position.y;
         float targetX = targetPoint.position.x;
 
-        while (player != null && Mathf.Abs(player.position.x - targetX) > 0.03f)
+        while (player != null)
         {
-            float newX = Mathf.MoveTowards(
-                player.position.x,
-                targetX,
-                moveSpeed * Time.deltaTime
-            );
+            float currentX = playerRigidbody != null ? playerRigidbody.position.x : player.position.x;
+            if (Mathf.Abs(currentX - targetX) <= 0.03f)
+                break;
 
+            float dt = playerRigidbody != null ? Time.fixedDeltaTime : Time.deltaTime;
+            float newX = Mathf.MoveTowards(currentX, targetX, moveSpeed * dt);
             Vector2 newPosition = new Vector2(newX, fixedY);
 
             if (playerRigidbody != null)
+            {
                 playerRigidbody.MovePosition(newPosition);
+                yield return new WaitForFixedUpdate();
+            }
             else
+            {
                 player.position = newPosition;
-
-            yield return null;
+                yield return null;
+            }
         }
 
         if (player != null && targetPoint != null)
@@ -172,7 +189,7 @@ public class ForestIntroController : MonoBehaviour
     {
         if (movementTutorialPrompt == null)
         {
-            Debug.LogWarning("[ForestIntroController] Movement Tutorial Prompt°¡ ºñ¾îÀÖ½À´Ï´Ù.");
+            Debug.LogWarning("[ForestIntroController] Movement Tutorial Promptï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Ö½ï¿½ï¿½Ï´ï¿½.");
             return;
         }
 
