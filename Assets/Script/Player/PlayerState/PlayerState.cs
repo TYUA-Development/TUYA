@@ -95,6 +95,7 @@ public class PlayerMoveState : PlayerState
 
     private float sensorX;
     private float sensorDistance;
+    private bool wasGrounded;
     public PlayerMoveState(PlayerController controller) : base(controller)
     {
         moveSpeed = controller.moveSpeed;
@@ -116,6 +117,11 @@ public class PlayerMoveState : PlayerState
 
     public override void LogicUpdate()
     {
+        if (wasGrounded && !controller.isGround)
+            controller.StartCoyoteTime();
+
+        wasGrounded = controller.isGround;
+
         if (InputData.aimingPressed)
         {
             controller.OnAttack();
@@ -124,7 +130,7 @@ public class PlayerMoveState : PlayerState
 
         if (CheckFall() && !controller.isGround)
         {
-            controller.OnFall();
+            controller.OnFall(grantCoyote: true);
             return;
         }
 
@@ -140,8 +146,9 @@ public class PlayerMoveState : PlayerState
         //}
 
         // 점프가 가능한 상태인지 체크
-        if (InputData.jumpPressed && controller.isGround)
+        if (InputData.jumpPressed && (controller.isGround || controller.CanCoyoteJump))
         {
+            controller.ConsumeCoyoteTime();
             controller.OnJump();
         }
 
@@ -361,6 +368,10 @@ public class PlayerAttackState : PlayerState
     private float minAngle;
     private float maxAngle;
 
+    private float arrowSpeed;
+    private float arrowFlyTime;
+    private float arrowGravityValue;
+
     public PlayerAttackState(PlayerController controller) : base(controller)
     {
         minAngle = controller.upperBodyMinAngle * -1;
@@ -369,6 +380,18 @@ public class PlayerAttackState : PlayerState
         isAiming = false;
         isFinishingAttack = false;
         attackQueued = false;
+
+        if (controller.arrowObject != null)
+        {
+            Arrow arrow = controller.arrowObject.GetComponent<Arrow>();
+            Rigidbody2D arrowRb = controller.arrowObject.GetComponent<Rigidbody2D>();
+            if (arrow != null)
+            {
+                arrowSpeed = arrow.speed;
+                arrowFlyTime = arrow.flyTime;
+                arrowGravityValue = arrowRb != null ? arrowRb.gravityScale : arrow.gravityValue;
+            }
+        }
     }
 
     public override void Enter()
@@ -387,6 +410,7 @@ public class PlayerAttackState : PlayerState
 
     public override void Exit()
     {
+        controller.HideTrajectory();
         controller.LockPlayerInput(1.0f);
         controller.RequireAimingReleaseBeforeAttack();
 
@@ -502,6 +526,8 @@ public class PlayerAttackState : PlayerState
             }
 
 
+            controller.UpdateTrajectory(direction, arrowSpeed, arrowFlyTime, arrowGravityValue);
+
             if (InputData.attackPressed && controller.attackTimer <= 0)
             {
                 controller.ShootArrow(direction);
@@ -517,6 +543,7 @@ public class PlayerAttackState : PlayerState
 
     private void StartAttackEnd()
     {
+        controller.HideTrajectory();
         controller.HideHeldArrow();
         controller.animator.SetBool("IsAiming", false);
         controller.animator.SetBool("IsAttack", false);
@@ -599,6 +626,13 @@ public class PlayerFallState : PlayerState
 
     public override void LogicUpdate()
     {
+        if (controller.CanCoyoteJump && InputData.jumpPressed)
+        {
+            controller.ConsumeCoyoteTime();
+            controller.OnJump();
+            return;
+        }
+
         //if (isLanding)
         //    return;
 

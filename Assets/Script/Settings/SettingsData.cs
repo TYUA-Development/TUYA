@@ -88,6 +88,8 @@ public class DefaultSettings : ScriptableObject
     public int bgmVolume = 100;
     public int sfxVolume = 100;
     public int brightness = 100;
+    [Range(0, 100)]
+    public int minBrightness = 0;
     public int resolutionIndex = 2;
     public int screenModeIndex = 0;
 

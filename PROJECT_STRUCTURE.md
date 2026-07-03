@@ -93,30 +93,36 @@ Assets/
 ```text
 Assets/Script/
 +-- Arrow/              Arrow interfaces and small utilities
-+-- Camera/             Camera follow, zoom, parallax, title camera logic
++-- Camera/             Camera follow, zoom, parallax, trigger areas, title camera logic
 +-- Object/             Puzzle and interactive objects
+|   +-- CoreObjects/    Core activation, temple, bridge, floor movement, rising objects
+|   +-- Stone Pillar/   Pillar and windmill objects
+|   +-- StoneCircle/    Circle rotation, propeller, wind machine, passage looper
+|   +-- StoneFloor/     Breakable platform events
+|   +-- Wind/           Wind force objects
 +-- Particle/           Custom particle/object-pool system
-+-- Player/             Player controller, input, state machine, attack
-+-- Scene/              Currently no C# files
-+-- Settings/           Settings persistence and settings UI
++-- Player/             Player controller, input, state machine, attack, visual effects
++-- Scene/              Scene-specific intro/cutscene controllers
++-- Settings/           Settings persistence, settings UI, key bindings, in-game settings
 +-- Shader/             Shader helper scripts
-+-- Sky/                Sky/background manager
-+-- UI/                 Title, fade, menu UI
++-- Sky/                Sky/background manager, zone particle activator
++-- UI/                 Title, fade, menu UI, tutorial prompts
 +-- Utils/              Shared interfaces, noise, generic Pair
 ```
 
 Approximate C# file counts:
 
-- `Player`: 5
-- `Camera`: 13
-- `Object`: 13
-- `Particle`: 8
-- `Settings`: 5
-- `UI`: 4
+- `Camera`: 20
+- `Object`: 24
+- `UI`: 11
+- `Settings`: 9
+- `Player`: 7
+- `Particle`: 9
 - `Utils`: 3
 - `Arrow`: 2
+- `Sky`: 2
+- `Scene`: 1
 - `Shader`: 1
-- `Sky`: 1
 
 ## Runtime Architecture
 
@@ -129,6 +135,8 @@ Key files:
 - `Assets/Script/Player/PlayerState/PlayerState.cs`
 - `Assets/Script/Player/Attack/Arrow.cs`
 - `Assets/Script/Player/UpperBodyArrowEventRelay.cs`
+- `Assets/Script/Player/PlayerSilhouetteController.cs`
+- `Assets/Script/Player/PlayerBloomAreaTrigger.cs`
 
 `PlayerController` is the central player component. In `Awake`, it initializes the input reader, Rigidbody2D, audio references, bow SFX, held-arrow visuals, FX templates, and state objects. In `Update`, it reads input when the current state allows it, updates the current state, handles attack cooldown, and plays footstep audio.
 
@@ -158,6 +166,8 @@ Notes:
 - `PlayerController.ChangeDirection(float dir)` flips `transform.localScale.x`.
 - Footsteps depend on `isGround`, `isOnGrass`, horizontal Rigidbody2D velocity, and `grassFootsteps`.
 - Several source comments have mojibake/encoding damage. Prefer actual code flow over comments.
+- `PlayerSilhouetteController` lerps SpriteRenderer colors toward a silhouette color using `transitionSpeed`. Call `SetSilhouette(float)` to trigger.
+- `PlayerBloomAreaTrigger` enables/disables a bloom effect when the player enters or exits a trigger zone.
 
 ### Input
 
@@ -198,12 +208,19 @@ Important files:
 - `Assets/Script/Camera/CameraMovement.cs`
 - `Assets/Script/Camera/CameraMoveManager.cs`
 - `Assets/Script/Camera/MissionAreaCamera.cs`
+- `Assets/Script/Camera/SH_MissionAreaCamera.cs`
 - `Assets/Script/Camera/StartInsideMissionCamera.cs`
 - `Assets/Script/Camera/FakeZZoomManager.cs`
 - `Assets/Script/Camera/NaturalCameraSway.cs`
 - `Assets/Script/Camera/SkyZoomScaler.cs`
 - `Assets/Script/Camera/TitlePerspectiveManager.cs`
 - `Assets/Script/Camera/CameraPerspectiveData.cs`
+- `Assets/Script/Camera/PlayerCutsceneLocker2D.cs`
+- `Assets/Script/Camera/BacklightAreaTrigger.cs`
+- `Assets/Script/Camera/CameraYLockZoomArea.cs`
+- `Assets/Script/Camera/CameraRestoreAreaTrigger.cs`
+- `Assets/Script/Camera/FallZoomCameraArea.cs`
+- `Assets/Script/Camera/DemoEndFadeToTitle.cs`
 - `Assets/Script/Camera/Parallax/ParallaxManager.cs`
 - `Assets/Script/Camera/Parallax/ParallaxImage.cs`
 - `Assets/Script/Camera/DistanceParallax/DistanceParallaxManager.cs`
@@ -212,6 +229,14 @@ Important files:
 `CameraMovement` is the core follow/staging camera class and exposes `CameraMovement.Instance`. It follows the player object named by the `Charactor` field, supports fixed/event camera moves, optional player-Y following, and shake/noise.
 
 Puzzle scripts such as `StoneBridge` and `CoreObjectTemple` call into `CameraMovement` for staging.
+
+Additional camera area scripts:
+- `PlayerCutsceneLocker2D`: locks player input/movement during cutscene sequences; released by timeout or explicit call.
+- `BacklightAreaTrigger`: toggles backlight/bloom camera effects on player enter/exit.
+- `CameraYLockZoomArea`: locks camera Y axis and adjusts zoom while player is inside the trigger.
+- `CameraRestoreAreaTrigger`: restores camera to default follow state when player re-enters a zone.
+- `FallZoomCameraArea`: adjusts camera zoom during fall zones.
+- `DemoEndFadeToTitle`: fades screen and loads the title scene when the player reaches the demo end.
 
 ### Puzzle And Interactive Objects
 
@@ -234,17 +259,45 @@ Key files:
 - `BasicObject.cs`: helper for drawing/instantiating sprite objects.
 - `RunwayObject.cs`: toggles a runway collider while the player is inside/staying on it.
 - `SampleObject.cs`: minimal `IArrowHit` sample.
+- `CoreActivationController.cs`: implements both `IArrowHit` and `ICoreEvent`. On arrow hit, fires a full cutscene sequence — letterbox, player lock via `PlayerCutsceneLocker2D`, camera focus, tutorial prompt, hint ring — then broadcasts the core activation event.
 - `CoreObjectTemple.cs`: raises temple pieces and optionally moves the player with a selected piece.
 - `CoreObjectMoveFloor.cs`: toggles wind objects, toggles propeller rotation, and moves floors between previous/next positions.
+- `CoreCameraFocus2D.cs`: smoothly pans and zooms the camera to a focus point during core events.
+- `CorePropellerDoorSequence.cs`: sequences a propeller spin → door open animation on core activation.
+- `CoreTimedStoneGroupTrigger.cs`: activates a group of stone objects after a timed delay on core event.
+- `RisingObjectController.cs`: moves a set of objects upward on activation.
+- `TimedRisingObjectController.cs`: same as `RisingObjectController` but with configurable per-object delay.
 - `StoneBridge.cs`: moves bridge pieces, raises core, and triggers camera movement/noise.
 - `StonePillarManager.cs`: creates stone pillars and windmills; windmill hits move connected pillars by step.
 - `WindMillObject.cs`: `IArrowHit` adapter that calls `StonePillarManager.PillarMove`.
 - `StoneCircleManager.cs`: rotates connected circles for a trigger id.
 - `CircleHitObject.cs`: `IArrowHit` adapter that calls `StoneCircleManager.RotateCircles`.
+- `PropellerSpinner.cs`: spins a propeller object continuously or on activation.
+- `RotatingPassageLooper.cs`: loops a passage object's rotation for ambient motion.
+- `WindMachineActivationController.cs`: activates the wind machine sequence on core event.
+- `PassThroughExitCameraZoom.cs`: adjusts camera zoom when the player exits a pass-through area.
 - `Object_Wind.cs`: applies directional wind force to Rigidbody2D objects inside its trigger.
 - `WindSystemManager.cs`: mostly empty placeholder at the time of writing.
+- `BreakableFragmentPlatformEvent.cs` (`StoneFloor/`): on player contact, disables the platform collider and triggers a fall sequence via `PlayerController.OnFall()` after a configurable FixedUpdate delay.
 
 When changing puzzles, check Inspector-serialized lists and scene/prefab references. Many connections depend on list index order.
+
+### Scene Controllers
+
+Key file:
+
+- `Assets/Script/Scene/ForestIntroController.cs`
+
+`ForestIntroController` drives the Forest scene intro sequence on `Start`:
+
+1. Disables player control and camera follow scripts.
+2. Teleports the player to `startPoint`, resets Rigidbody2D, and snaps the camera to `introCameraPoint`.
+3. Starts a concurrent `FadeSceneFromBlack` coroutine.
+4. Walks the player to `targetPoint` using `Rigidbody2D.MovePosition` synchronized to `WaitForFixedUpdate` with `Time.fixedDeltaTime`.
+5. After the walk, runs `OpenBarsAndZoomOut` to animate letterbox bars out and zoom the camera back to normal size.
+6. Re-enables player control and camera follow, then triggers `TutorialAreaPrompt.ShowPrompt()`.
+
+Important: the walk loop reads `playerRigidbody.position.x` (not `player.position.x`) and uses `Time.fixedDeltaTime` + `yield return new WaitForFixedUpdate()` to avoid frame-rate-dependent movement.
 
 ### Particles
 
@@ -274,10 +327,21 @@ Important files:
 - `Assets/Script/Settings/SettingsUI.cs`
 - `Assets/Script/Settings/StageUI.cs`
 - `Assets/Script/Settings/StageUIInput.cs`
+- `Assets/Script/Settings/KeyBindingSettings.cs`
+- `Assets/Script/Settings/InGameSettingsBootstrap.cs`
+- `Assets/Script/Settings/InGameSettingsMenuController.cs`
+- `Assets/Script/Settings/InGameTitleReturnButton.cs`
 - `Assets/Script/UI/TitleMenuController.cs`
+- `Assets/Script/UI/TitleUIController.cs`
 - `Assets/Script/UI/TitleFadeSceneLoader.cs`
+- `Assets/Script/UI/PortalFadeSceneLoader.cs`
 - `Assets/Script/UI/SceneFadeIn.cs`
 - `Assets/Script/UI/MenuTextHover.cs`
+- `Assets/Script/UI/TutorialAreaPrompt.cs`
+- `Assets/Script/UI/CutsceneLetterboxUI.cs`
+- `Assets/Script/UI/ResolutionArrowSelectorUI.cs`
+- `Assets/Script/UI/ScreenModeBoxSelectorUI.cs`
+- `Assets/Script/UI/SettingsMenuButtonAlpha.cs`
 
 `SettingsManager` is a singleton and uses `DontDestroyOnLoad`. Settings are persisted through `PlayerPrefs`.
 
@@ -286,11 +350,29 @@ Currently applied setting behavior:
 - Master volume is applied through `AudioListener.volume`.
 - BGM/SFX values are saved and logged, but not routed to separate AudioMixer groups in the current code.
 
+Key binding:
+
+- `KeyBindingSettings` is a static class that loads/saves `KeyCode` values from `PlayerPrefs` for MoveLeft, MoveRight, Jump, Aim, and Shoot actions.
+- `KeyBindingAction` enum defines the five bindable actions.
+
+In-game settings:
+
+- `InGameSettingsBootstrap` uses `[RuntimeInitializeOnLoadMethod]` to auto-create an `InGameSettingsMenuController` when the `Forest` or `SeungHyun2_Restore` scene loads.
+- `InGameSettingsMenuController` provides a pause-style settings overlay usable during gameplay.
+- `InGameTitleReturnButton` handles returning to the title scene from within a gameplay scene.
+
 Title flow:
 
 - `TitleMenuController.NewGame()` loads `newGameSceneName`.
 - `TitleFadeSceneLoader.StartNewGame()` fades screen/audio and loads `nextSceneName`, defaulting to `Forest`.
+- `PortalFadeSceneLoader`: fades the screen and loads the next scene when the player enters a portal trigger.
 - `MenuTextHover` controls hover/click alpha and selection behavior for TMP text.
+
+Tutorial UI:
+
+- `TutorialAreaPrompt`: trigger-based UI prompt. When the player enters the collider, fades a TMP message in/out with optional motion. Supports a follow-up message and can wait until `CoreActivationController.isActivated` is true before fading out.
+- `CutsceneLetterboxUI`: animates top/bottom letterbox bars in and out for cutscene framing.
+- `ResolutionArrowSelectorUI` / `ScreenModeBoxSelectorUI`: UI selectors for display resolution and screen mode in the settings menu.
 
 ### Audio
 
@@ -393,7 +475,8 @@ Approximate asset counts:
 - Do not edit `Library`, `Temp`, `obj`, or `.vs`.
 - Runtime scripts generally have no namespace. New scripts should usually follow that local style unless a broader refactor is intended.
 - Many fields are serialized in Inspector. Renaming serialized fields can break scene or prefab references.
-- `IArrowHit` and `ICoreEvent` are the key puzzle/event contracts.
+- `IArrowHit` and `ICoreEvent` are the key puzzle/event contracts. `CoreActivationController` is the primary concrete implementation of both.
+- `KeyBindingSettings` is a static class; it is not a MonoBehaviour and should not be added to a GameObject.
 - `CameraMovement.Instance` and `SettingsManager.Instance` assume required scene objects exist.
 - Some comments are mojibake. Trust code flow and Unity references over damaged comments.
 - `PlayerTurnState` is not implemented.
@@ -415,12 +498,18 @@ Approximate asset counts:
 
 - Player movement/jump/fall: `PlayerState.cs`, `PlayerController.cs`
 - Aiming and arrow shooting: `PlayerAttackState`, `PlayerController.ShootArrow`, `Arrow.cs`
-- Arrow-hit puzzles: `IArrowHit`, `CoreObject*`, `StoneBridge`, `StoneCircleManager`, `StonePillarManager`
+- Arrow-hit puzzles: `IArrowHit`, `CoreActivationController`, `CoreObject*`, `StoneBridge`, `StoneCircleManager`, `StonePillarManager`
 - Camera follow/staging: `CameraMovement.cs`, `MissionAreaCamera.cs`, `FakeZZoomManager.cs`
 - Parallax/background depth: `ParallaxManager.cs`, `ParallaxImage.cs`, `DistanceParallaxManager.cs`
 - Particles: `ParticleManager.cs`, `ParticleScriptable.cs`
 - Settings persistence: `SettingsData.cs`, `SettingsManager.cs`
 - Title/fade UI: `TitleMenuController.cs`, `TitleFadeSceneLoader.cs`, `SceneFadeIn.cs`
+- Tutorial UI: `TutorialAreaPrompt.cs`, `CutsceneLetterboxUI.cs`
+- Forest intro sequence: `ForestIntroController.cs`
+- In-game settings: `InGameSettingsMenuController.cs`, `InGameSettingsBootstrap.cs`
+- Key bindings: `KeyBindingSettings.cs`
+- Breakable platform: `BreakableFragmentPlatformEvent.cs`
+- Player visual effects: `PlayerSilhouetteController.cs`, `PlayerBloomAreaTrigger.cs`
 - Audio: `BowSFXRandomizer.cs`, `BGMFadeIn.cs`, `SteppeZoneTrigger.cs`
 
 ## Git Status Note

@@ -24,6 +24,11 @@ public class CameraMovement : MonoBehaviour
     {
         Instance = this;
         isMovingEvent = false;
+
+        if(Charactor == null)
+        {
+            Charactor = FindObjectOfType<PlayerController>().gameObject;
+        }
     }
 
     private void Start()

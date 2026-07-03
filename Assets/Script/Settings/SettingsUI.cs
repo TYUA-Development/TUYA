@@ -114,7 +114,11 @@ public class SettingsUI : MonoBehaviour
             sfxVolumeSlider.SetValueWithoutNotify(settings.sfxVolume / 100f);
 
         if (brightnessSlider != null)
+        {
+            float minNormalized = SettingsManager.Instance != null ? SettingsManager.Instance.MinBrightness / 100f : 0f;
             brightnessSlider.SetValueWithoutNotify(settings.brightness / 100f);
+            brightnessSlider.minValue = minNormalized;
+        }
 
         UpdateResolutionText();
         UpdateScreenModeText();

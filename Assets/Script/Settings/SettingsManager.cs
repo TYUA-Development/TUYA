@@ -43,6 +43,8 @@ public class SettingsManager : MonoBehaviour
     public static SettingsManager Instance { get; private set; }
     public static int ScreenModeCount => ScreenModes.Length;
 
+    public int MinBrightness => defaultSettings != null ? defaultSettings.minBrightness : 0;
+
     [SerializeField] private DefaultSettings defaultSettings;
 
     [Header("Audio")]
@@ -210,7 +212,7 @@ public class SettingsManager : MonoBehaviour
 
     public void SetBrightness(int value)
     {
-        settings.brightness = Mathf.Clamp(value, 0, 100);
+        settings.brightness = Mathf.Clamp(value, MinBrightness, 100);
         ApplyBrightness();
         SaveSettings();
     }
@@ -247,6 +249,7 @@ public class SettingsManager : MonoBehaviour
             LoadSettings();
 
         settings.Clamp();
+        settings.brightness = Mathf.Max(settings.brightness, MinBrightness);
         ApplyVolume();
         ApplyBrightness();
         ApplyResolutionAndScreenMode();

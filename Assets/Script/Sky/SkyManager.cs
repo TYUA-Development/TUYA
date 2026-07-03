@@ -7,10 +7,10 @@ public struct SkyObject
 {
     public GameObject skyObject;
 
-    // ¾ËÆÄ °¨¼Ò ½ÃÀÛ À§Ä¡
+    // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡
     public float startPos;
 
-    // ¾ËÆÄ°¡ 0ÀÌ µÇ´Â À§Ä¡
+    // ï¿½ï¿½ï¿½Ä°ï¿½ 0ï¿½ï¿½ ï¿½Ç´ï¿½ ï¿½ï¿½Ä¡
     public float endPos;
 }
 
@@ -19,6 +19,14 @@ public class SkyManager : MonoBehaviour
     public Transform player;
 
     public List<SkyObject> skyObjects;
+
+    void Awake()
+    {
+        if(player == null)
+        {
+            player = FindObjectOfType<PlayerController>().gameObject.transform;
+        }
+    }
 
     void Update()
     {
@@ -37,14 +45,14 @@ public class SkyManager : MonoBehaviour
 
             Color color = renderer.color;
 
-            // 0 ~ 1 º¸°£°ª °è»ê
+            // 0 ~ 1 ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½
             float t = Mathf.InverseLerp(
                 sky.startPos,
                 sky.endPos,
                 playerX);
 
-            // startPos¿¡¼­´Â 1
-            // endPos¿¡¼­´Â 0
+            // startPosï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ 1
+            // endPosï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ 0
             color.a = 1.0f - t;
 
             renderer.color = color;

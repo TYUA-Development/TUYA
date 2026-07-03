@@ -5,65 +5,65 @@ using UnityEngine;
 public class CoreCameraFocus2D : MonoBehaviour
 {
     [Header("Camera")]
-    [Tooltip("½ÇÁ¦ Ä«¸Þ¶ó. º¸Åë Main Camera¸¦ ³ÖÀ¸¸é µË´Ï´Ù.")]
+    [Tooltip("ï¿½ï¿½ï¿½ï¿½ Ä«ï¿½Þ¶ï¿½. ï¿½ï¿½ï¿½ï¿½ Main Cameraï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ë´Ï´ï¿½.")]
     public Camera targetCamera;
 
-    [Tooltip("½ÇÁ¦·Î ¿òÁ÷ÀÏ Ä«¸Þ¶ó ·çÆ®. CameraRig¸¦ ³ÖÀ¸¼¼¿ä.")]
+    [Tooltip("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Ä«ï¿½Þ¶ï¿½ ï¿½ï¿½Æ®. CameraRigï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½.")]
     public Transform cameraMoveRoot;
 
     [Header("Player")]
-    [Tooltip("Ä«¸Þ¶ó°¡ ´Ù½Ã µ¹¾Æ¿Ã ÇÃ·¹ÀÌ¾î")]
+    [Tooltip("Ä«ï¿½Þ¶ï¿½ ï¿½Ù½ï¿½ ï¿½ï¿½ï¿½Æ¿ï¿½ ï¿½Ã·ï¿½ï¿½Ì¾ï¿½")]
     public Transform playerTarget;
 
     [Header("Focus Target Position")]
-    [Tooltip("Å¸°Ù À§Ä¡¿¡¼­ Ãß°¡·Î ¾ó¸¶³ª ¿·/À§·Î º¼Áö")]
+    [Tooltip("Å¸ï¿½ï¿½ ï¿½ï¿½Ä¡ï¿½ï¿½ï¿½ï¿½ ï¿½ß°ï¿½ï¿½ï¿½ ï¿½ó¸¶³ï¿½ ï¿½ï¿½/ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½")]
     public Vector2 focusOffset = new Vector2(0f, 0.5f);
 
     [Header("Partial Focus")]
-    [Tooltip("Ã¼Å©ÇÏ¸é Å¸°ÙÀ» ¿ÏÀüÈ÷ Áß¾Ó¿¡ µÎÁö ¾Ê°í, ÇöÀç Ä«¸Þ¶ó À§Ä¡¿¡¼­ ÀÏºÎ¸¸ ÀÌµ¿ÇÕ´Ï´Ù.")]
+    [Tooltip("Ã¼Å©ï¿½Ï¸ï¿½ Å¸ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ß¾Ó¿ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ê°ï¿½, ï¿½ï¿½ï¿½ï¿½ Ä«ï¿½Þ¶ï¿½ ï¿½ï¿½Ä¡ï¿½ï¿½ï¿½ï¿½ ï¿½ÏºÎ¸ï¿½ ï¿½Ìµï¿½ï¿½Õ´Ï´ï¿½.")]
     public bool usePartialFocus = true;
 
-    [Tooltip("XÃàÀ¸·Î Å¸°ÙÀ» ¾ó¸¶³ª µû¶ó°¥Áö. 0ÀÌ¸é ¾È ¿òÁ÷ÀÌ°í, 1ÀÌ¸é ¿ÏÀüÈ÷ Å¸°ÙÀ» º¾´Ï´Ù.")]
+    [Tooltip("Xï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Å¸ï¿½ï¿½ï¿½ï¿½ ï¿½ó¸¶³ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½. 0ï¿½Ì¸ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ì°ï¿½, 1ï¿½Ì¸ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Å¸ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ï´ï¿½.")]
     [Range(0f, 1f)]
     public float horizontalFocusAmount = 0.65f;
 
-    [Tooltip("YÃàÀ¸·Î Å¸°ÙÀ» ¾ó¸¶³ª µû¶ó°¥Áö. 0ÀÌ¸é ¾È ¿òÁ÷ÀÌ°í, 1ÀÌ¸é ¿ÏÀüÈ÷ Å¸°ÙÀ» º¾´Ï´Ù.")]
+    [Tooltip("Yï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Å¸ï¿½ï¿½ï¿½ï¿½ ï¿½ó¸¶³ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½. 0ï¿½Ì¸ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ì°ï¿½, 1ï¿½Ì¸ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Å¸ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ï´ï¿½.")]
     [Range(0f, 1f)]
     public float verticalFocusAmount = 0.12f;
 
     [Header("Max Camera Move Limit")]
-    [Tooltip("XÃà ÃÖ´ë ÀÌµ¿ °Å¸®. ³Ê¹« ¸Ö¸® ÀÌµ¿ÇÏ´Â °É ¸·½À´Ï´Ù.")]
+    [Tooltip("Xï¿½ï¿½ ï¿½Ö´ï¿½ ï¿½Ìµï¿½ ï¿½Å¸ï¿½. ï¿½Ê¹ï¿½ ï¿½Ö¸ï¿½ ï¿½Ìµï¿½ï¿½Ï´ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½.")]
     public float maxMoveX = 5.5f;
 
-    [Tooltip("YÃà ÃÖ´ë ÀÌµ¿ °Å¸®. ³Ê¹« À§¾Æ·¡·Î ÀÌµ¿ÇÏ´Â °É ¸·½À´Ï´Ù.")]
+    [Tooltip("Yï¿½ï¿½ ï¿½Ö´ï¿½ ï¿½Ìµï¿½ ï¿½Å¸ï¿½. ï¿½Ê¹ï¿½ ï¿½ï¿½ï¿½Æ·ï¿½ï¿½ï¿½ ï¿½Ìµï¿½ï¿½Ï´ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½.")]
     public float maxMoveY = 1f;
 
     [Header("Focus Settings")]
-    [Tooltip("Å¸°Ù ÂÊÀ¸·Î ÀÌµ¿ÇÏ´Â ½Ã°£")]
+    [Tooltip("Å¸ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ìµï¿½ï¿½Ï´ï¿½ ï¿½Ã°ï¿½")]
     public float moveToTargetTime = 1.8f;
 
-    [Tooltip("Å¸°Ù ÂÊÀ» ¹Ù¶óº¸¸ç À¯ÁöÇÏ´Â ½Ã°£")]
+    [Tooltip("Å¸ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ù¶óº¸¸ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½ ï¿½Ã°ï¿½")]
     public float holdTime = 6f;
 
-    [Tooltip("ÇÃ·¹ÀÌ¾î¿¡°Ô µ¹¾Æ¿À´Â ½Ã°£")]
+    [Tooltip("ï¿½Ã·ï¿½ï¿½Ì¾î¿¡ï¿½ï¿½ ï¿½ï¿½ï¿½Æ¿ï¿½ï¿½ï¿½ ï¿½Ã°ï¿½")]
     public float returnTime = 1.8f;
 
-    [Tooltip("Ä«¸Þ¶ó ÀÌµ¿ °î¼±")]
+    [Tooltip("Ä«ï¿½Þ¶ï¿½ ï¿½Ìµï¿½ ï¿½î¼±")]
     public AnimationCurve cameraMoveCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
 
     [Header("Hold Lock")]
-    [Tooltip("Ã¼Å©ÇÏ¸é Hold Time µ¿¾È Ä«¸Þ¶ó À§Ä¡¸¦ °­Á¦·Î °íÁ¤ÇÕ´Ï´Ù. ±âÁ¸ Ä«¸Þ¶ó ÃßÀû ½ºÅ©¸³Æ®°¡ ²ø°í °¡´Â ¹®Á¦¸¦ ¸·½À´Ï´Ù.")]
+    [Tooltip("Ã¼Å©ï¿½Ï¸ï¿½ Hold Time ï¿½ï¿½ï¿½ï¿½ Ä«ï¿½Þ¶ï¿½ ï¿½ï¿½Ä¡ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Õ´Ï´ï¿½. ï¿½ï¿½ï¿½ï¿½ Ä«ï¿½Þ¶ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Å©ï¿½ï¿½Æ®ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½.")]
     public bool forceHoldPosition = true;
 
     [Header("Return")]
-    [Tooltip("Ã¼Å©ÇÏ¸é ÇÃ·¹ÀÌ¾î À§Ä¡°¡ ¾Æ´Ï¶ó, ¿¬Ãâ ½ÃÀÛ Àü Ä«¸Þ¶ó À§Ä¡·Î µ¹¾Æ°©´Ï´Ù.")]
+    [Tooltip("Ã¼Å©ï¿½Ï¸ï¿½ ï¿½Ã·ï¿½ï¿½Ì¾ï¿½ ï¿½ï¿½Ä¡ï¿½ï¿½ ï¿½Æ´Ï¶ï¿½, ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ Ä«ï¿½Þ¶ï¿½ ï¿½ï¿½Ä¡ï¿½ï¿½ ï¿½ï¿½ï¿½Æ°ï¿½ï¿½Ï´ï¿½.")]
     public bool returnToStartPosition = true;
 
     [Header("Disable Camera Scripts During Focus")]
-    [Tooltip("±âÁ¸ Ä«¸Þ¶ó µû¶ó°¡±â ½ºÅ©¸³Æ®°¡ ÀÖÀ¸¸é ¿©±â¿¡ ³ÖÀ¸¼¼¿ä.")]
+    [Tooltip("ï¿½ï¿½ï¿½ï¿½ Ä«ï¿½Þ¶ï¿½ ï¿½ï¿½ï¿½ó°¡±ï¿½ ï¿½ï¿½Å©ï¿½ï¿½Æ®ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½â¿¡ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½.")]
     public MonoBehaviour[] scriptsToDisableDuringFocus;
 
-    [Tooltip("Ã¼Å©ÇÏ¸é CameraRig¿¡ ºÙ¾îÀÖ´Â ´Ù¸¥ Ä«¸Þ¶ó ½ºÅ©¸³Æ®¸¦ ÀÚµ¿À¸·Î Àá±ñ ²ü´Ï´Ù.")]
+    [Tooltip("Ã¼Å©ï¿½Ï¸ï¿½ CameraRigï¿½ï¿½ ï¿½Ù¾ï¿½ï¿½Ö´ï¿½ ï¿½Ù¸ï¿½ Ä«ï¿½Þ¶ï¿½ ï¿½ï¿½Å©ï¿½ï¿½Æ®ï¿½ï¿½ ï¿½Úµï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ï´ï¿½.")]
     public bool autoDisableOtherScriptsOnCameraRoot = true;
 
     [Header("State")]
@@ -74,6 +74,11 @@ public class CoreCameraFocus2D : MonoBehaviour
 
     private void Awake()
     {
+         if(playerTarget == null)
+        {
+            playerTarget = FindObjectOfType<PlayerController>().transform;
+        }
+
         if (targetCamera == null)
             targetCamera = Camera.main;
 

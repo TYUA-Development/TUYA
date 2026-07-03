@@ -9,15 +9,15 @@ public class PlayerController : MonoBehaviour
     public Rigidbody2D Rigidbody2D;
     public SpriteRenderer charactorSprite;
 
-    public bool isGround;
-    public bool isDash;
-    public bool isOnRunway;
+    [HideInInspector] public bool isGround;
+    [HideInInspector] public bool isDash;
+    [HideInInspector] public bool isOnRunway;
 
     // 풀 위인지
-    public bool isOnGrass;
+    [HideInInspector] public bool isOnGrass;
 
     // 돌 / 신전바닥 / Runway 위인지
-    public bool isOnStone;
+    [HideInInspector] public bool isOnStone;
 
     public float setSpeed;
     [HideInInspector] public float moveSpeed;
@@ -25,6 +25,11 @@ public class PlayerController : MonoBehaviour
     public float dashPower;
     [SerializeField] private float attackCoolTime;
     public float attackTimer;
+
+    [Header("Coyote Time")]
+    [SerializeField] private float coyoteTime = 0.15f;
+    private float coyoteTimer = 0f;
+    public bool CanCoyoteJump => coyoteTimer > 0f;
 
     [Header("Footstep SFX")]
     public AudioSource footstepSource;
@@ -90,6 +95,15 @@ public class PlayerController : MonoBehaviour
     [Header("Held Arrow Fade")]
     public float heldArrowFadeTime = 1.0f;
 
+    [Header("Trajectory Preview")]
+    public GameObject trajectoryDotPrefab;
+    public int trajectoryPointCount = 40;
+    public float trajectoryMaxTime = 3f;
+    [Range(0f, 1f)] [SerializeField] private float trajectoryFadeStart = 0.6f;
+
+    private List<GameObject> trajectoryDots = new List<GameObject>();
+    private List<SpriteRenderer> trajectoryRenderers = new List<SpriteRenderer>();
+
     private SpriteRenderer[] heldArrowRenderers;
     private Coroutine heldArrowFadeCoroutine;
     private bool heldArrowVisible;
@@ -151,6 +165,9 @@ public class PlayerController : MonoBehaviour
 
         UpdateAimingReleaseLock();
 
+        if (coyoteTimer > 0f)
+            coyoteTimer -= Time.deltaTime;
+
         currentState.LogicUpdate();
         CoolDown();
         PlayFootstep();
@@ -211,11 +228,24 @@ public class PlayerController : MonoBehaviour
         ChangeState(jumpState);
     }
 
-    public void OnFall()
+    public void OnFall(bool grantCoyote = false)
     {
+        if (grantCoyote)
+            coyoteTimer = coyoteTime;
+
         HideHeldArrow();
         HideUpperBody();
         ChangeState(fallState);
+    }
+
+    public void StartCoyoteTime()
+    {
+        coyoteTimer = coyoteTime;
+    }
+
+    public void ConsumeCoyoteTime()
+    {
+        coyoteTimer = 0f;
     }
 
     public void OnAttack()
@@ -474,6 +504,80 @@ public class PlayerController : MonoBehaviour
             c.a = alpha;
             heldArrowRenderers[i].color = c;
         }
+    }
+
+    public void UpdateTrajectory(Vector2 dir, float arrowSpeed, float arrowFlyTime, float arrowGravityValue)
+    {
+        if (trajectoryDotPrefab == null)
+            return;
+
+        EnsureTrajectoryDots();
+
+        Vector3[] points = CalculateTrajectoryPoints(GetFirePointPosition(), dir, arrowSpeed, arrowFlyTime, arrowGravityValue);
+
+        int count = trajectoryDots.Count;
+        int fadeStartIndex = Mathf.RoundToInt((count - 1) * trajectoryFadeStart);
+        int fadeRange = (count - 1) - fadeStartIndex;
+
+        for (int i = 0; i < count; i++)
+        {
+            trajectoryDots[i].transform.position = points[i];
+            trajectoryDots[i].SetActive(true);
+
+            if (trajectoryRenderers[i] != null)
+            {
+                float alpha = i < fadeStartIndex
+                    ? 1f
+                    : 1f - (fadeRange > 0 ? (float)(i - fadeStartIndex) / fadeRange : 1f);
+                Color c = trajectoryRenderers[i].color;
+                c.a = alpha;
+                trajectoryRenderers[i].color = c;
+            }
+        }
+    }
+
+    public void HideTrajectory()
+    {
+        for (int i = 0; i < trajectoryDots.Count; i++)
+            trajectoryDots[i].SetActive(false);
+    }
+
+    private void EnsureTrajectoryDots()
+    {
+        while (trajectoryDots.Count < trajectoryPointCount)
+        {
+            GameObject dot = Instantiate(trajectoryDotPrefab, transform);
+            dot.SetActive(false);
+            trajectoryDots.Add(dot);
+            trajectoryRenderers.Add(dot.GetComponent<SpriteRenderer>());
+        }
+    }
+
+    private Vector3[] CalculateTrajectoryPoints(Vector2 start, Vector2 dir, float speed, float flyTime, float gravityValue)
+    {
+        Vector3[] points = new Vector3[trajectoryPointCount];
+        float g = Physics2D.gravity.y * gravityValue;
+        Vector2 phase1End = start + dir * speed * flyTime;
+
+        for (int i = 0; i < trajectoryPointCount; i++)
+        {
+            float t = (i / (float)(trajectoryPointCount - 1)) * trajectoryMaxTime;
+            Vector2 pos;
+
+            if (t <= flyTime)
+            {
+                pos = start + dir * speed * t;
+            }
+            else
+            {
+                float tau = t - flyTime;
+                pos = phase1End + dir * speed * tau + new Vector2(0f, 0.5f * g * tau * tau);
+            }
+
+            points[i] = new Vector3(pos.x, pos.y, 0f);
+        }
+
+        return points;
     }
 
     private void CoolDown()
