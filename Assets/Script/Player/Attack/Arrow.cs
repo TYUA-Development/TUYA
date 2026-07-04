@@ -10,11 +10,6 @@ public class Arrow : MonoBehaviour
     [Header("Hit FX")]
     public GameObject arrowHitFX;
 
-    [Header("Special Stick Surfaces")]
-    public bool stickToForestTemple9ChildGameObject = true;
-    public string templeStickParentName = "temple_9";
-    public string templeStickObjectName = "GameObject";
-
     private Rigidbody2D rb;
     private Transform shooter;
 
@@ -26,10 +21,6 @@ public class Arrow : MonoBehaviour
     void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
-
-        if (rb != null)
-            rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
-
         flightParticles = GetComponentsInChildren<ParticleSystem>(true);
         flightTrails = GetComponentsInChildren<TrailRenderer>(true);
     }
@@ -78,75 +69,39 @@ public class Arrow : MonoBehaviour
 
     public void OnTriggerEnter2D(Collider2D other)
     {
-        HandleHit(other, other.ClosestPoint(transform.position));
-    }
-
-    private void OnCollisionEnter2D(Collision2D collision)
-    {
-        if (collision == null || collision.collider == null)
-            return;
-
-        Vector2 hitPoint = transform.position;
-
-        if (collision.contactCount > 0)
-            hitPoint = collision.GetContact(0).point;
-        else
-            hitPoint = collision.collider.ClosestPoint(transform.position);
-
-        HandleHit(collision.collider, hitPoint);
-    }
-
-    private void HandleHit(Collider2D other, Vector2 hitPoint)
-    {
         if (hasHit)
-            return;
-
-        if (other == null)
             return;
 
         if (shooter == other.transform)
             return;
 
-        IArrowHit target = null;
-        bool shouldStick = other.TryGetComponent<IArrowHit>(out target);
+        if (other.TryGetComponent<IArrowHit>(out IArrowHit target))
+        {
+            hasHit = true;
 
-        if (!shouldStick)
-            shouldStick = IsSpecialStickSurface(other.transform);
+            // ���� ���� ���
+            Vector2 hitPoint = other.ClosestPoint(transform.position);
 
-        if (!shouldStick)
-            return;
+            // ���ư��� �� �ڿ��� ������ ��ƼŬ/�ܻ� ����
+            StopFlightFX();
 
-        hasHit = true;
+            // ���� �� ���� ���
+            BowSFXRandomizer bowSFX = FindObjectOfType<BowSFXRandomizer>();
 
-        StopFlightFX();
+            if (bowSFX != null)
+                bowSFX.PlayHit(transform.position);
 
-        BowSFXRandomizer bowSFX = FindObjectOfType<BowSFXRandomizer>();
+            // ���� �� ����Ʈ ����
+            SpawnHitFX(hitPoint);
 
-        if (bowSFX != null)
-            bowSFX.PlayHit(transform.position);
-
-        SpawnHitFX(hitPoint);
-
-        if (target != null)
+            // ���� ����/��ġ ���� ����
             target.OnHit();
 
-        Stick(other.transform, hitPoint);
-    }
+            // ȭ�� ������
+            Stick(other.transform, hitPoint);
+        }
 
-    private bool IsSpecialStickSurface(Transform target)
-    {
-        if (!stickToForestTemple9ChildGameObject)
-            return false;
-
-        if (target == null)
-            return false;
-
-        if (target.name != templeStickObjectName)
-            return false;
-
-        Transform parent = target.parent;
-
-        return parent != null && parent.name == templeStickParentName;
+        // IArrowHit�� ���� ������Ʈ�� ����� ���� �������� ����
     }
 
     void StartFlightFX()
