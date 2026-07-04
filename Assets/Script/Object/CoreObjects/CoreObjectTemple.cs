@@ -48,6 +48,8 @@ public class CoreObjectTemple : MonoBehaviour, IArrowHit, ICoreEvent
 
     [Tooltip("신전 상승 사운드를 사용할지")]
     public bool useTempleRiseAudio = true;
+    [Tooltip("신전 상승 완료 몇 초 전부터 루프 사운드를 줄일지")]
+    public float templeRiseLoopFadeOutLeadTime = 1.5f;
 
     [Header("Player Ride Settings")]
     public int includePlayerIndex = -1;
@@ -188,10 +190,27 @@ public class CoreObjectTemple : MonoBehaviour, IArrowHit, ICoreEvent
         PlayAudio(templeRiseLoopAudio);
         PlayAudio(templeDebrisAudio);
 
-        if (totalRiseDuration > 0f)
-            yield return new WaitForSeconds(totalRiseDuration);
+        float fadeDuration = Mathf.Min(
+            Mathf.Max(0f, templeRiseLoopFadeOutLeadTime),
+            Mathf.Max(0f, totalRiseDuration)
+        );
+        float waitBeforeFade = Mathf.Max(0f, totalRiseDuration - fadeDuration);
 
-        StopAudio(templeRiseLoopAudio);
+        if (waitBeforeFade > 0f)
+            yield return new WaitForSeconds(waitBeforeFade);
+
+        if (fadeDuration > 0f && templeRiseLoopAudio != null)
+            yield return StartCoroutine(FadeOutAudio(templeRiseLoopAudio, fadeDuration));
+        else if (fadeDuration > 0f)
+            yield return new WaitForSeconds(fadeDuration);
+        else
+            StopAudio(templeRiseLoopAudio);
+
+        float remainingTime = totalRiseDuration - waitBeforeFade - fadeDuration;
+
+        if (remainingTime > 0f)
+            yield return new WaitForSeconds(remainingTime);
+
         StopAudio(templeDebrisAudio);
 
         PlayAudio(templeCompleteAudio);
@@ -330,6 +349,26 @@ public class CoreObjectTemple : MonoBehaviour, IArrowHit, ICoreEvent
 
         if (CameraMovement.Instance != null)
             CameraMovement.Instance.SetFollowPlayerY(false);
+    }
+
+    private IEnumerator FadeOutAudio(AudioSource audioSource, float duration)
+    {
+        if (audioSource == null)
+            yield break;
+
+        float startVolume = audioSource.volume;
+        float elapsed = 0f;
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float t = Mathf.Clamp01(elapsed / duration);
+            audioSource.volume = Mathf.Lerp(startVolume, 0f, t);
+            yield return null;
+        }
+
+        audioSource.Stop();
+        audioSource.volume = startVolume;
     }
 
     private void PlayAudio(AudioSource audioSource)

@@ -41,6 +41,7 @@ public class TutorialAreaPrompt : MonoBehaviour
     [Header("Timing")]
     public float fadeInTime = 0.5f;
     public float stayTime = 3.0f;
+    public float aimShootTutorialExtraStayTime = 2.0f;
     public float fadeOutTime = 0.7f;
 
     [Header("Motion")]
@@ -153,7 +154,7 @@ public class TutorialAreaPrompt : MonoBehaviour
         yield return StartCoroutine(ShowSingleMessage(
             tutorialMessage,
             fadeInTime,
-            stayTime,
+            GetFirstMessageStayTime(),
             fadeOutTime,
             false
         ));
@@ -222,6 +223,22 @@ public class TutorialAreaPrompt : MonoBehaviour
         }
 
         yield return StartCoroutine(FadeAndMove(1f, 0f, outTime, false));
+    }
+
+    private float GetFirstMessageStayTime()
+    {
+        if (IsAimShootTutorialMessage(tutorialMessage))
+            return stayTime + aimShootTutorialExtraStayTime;
+
+        return stayTime;
+    }
+
+    private bool IsAimShootTutorialMessage(string message)
+    {
+        if (string.IsNullOrEmpty(message))
+            return false;
+
+        return message.Contains("\uC6B0\uD074\uB9AD\uC73C\uB85C \uC870\uC900") && message.Contains("\uC88C\uD074\uB9AD\uC73C\uB85C \uD654\uC0B4");
     }
 
     private IEnumerator FadeAndMove(float fromAlpha, float toAlpha, float duration, bool moveIn)
