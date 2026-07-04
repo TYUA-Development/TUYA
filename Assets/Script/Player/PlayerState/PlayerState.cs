@@ -49,7 +49,6 @@ public class PlayerIdleState : PlayerState
 
     public override void LogicUpdate()
     {
-        controller.animator.SetTrigger("DetectFloor");
         if (controller.ChangeDirection(InputData.moveAxis.x))
         {
             Debug.Log("Turn");
@@ -172,6 +171,10 @@ public class PlayerMoveState : PlayerState
         }
 
         velocity.x = moveDirect * moveSpeed;
+
+        if (controller.isGround)
+            velocity.y = Mathf.Min(velocity.y, 0f);
+
         controller.Rigidbody2D.velocity = velocity;
 
         if (controller.ChangeDirection(moveDirect))
@@ -187,9 +190,9 @@ public class PlayerMoveState : PlayerState
     {
         Vector2 origin = new Vector2(col.bounds.center.x, col.bounds.min.y);
 
-        RaycastHit2D hit = Physics2D.Raycast(origin, Vector2.down, 0.2f, groundLayer);
+        RaycastHit2D hit = Physics2D.Raycast(origin, Vector2.down, 0.1f, groundLayer);
 
-        return hit.collider == null;
+        return hit.collider == null || hit.collider.isTrigger;
     }
 
     private bool CheckRunWayFromFront()
@@ -254,7 +257,9 @@ public class PlayerJumpState : PlayerState
         //    return;
         //}
 
-        // 점프 
+        // 점프
+
+        controller.animator.ResetTrigger("DetectFloor");
 
         controller.animator.SetBool("IsJump", true);
     }
@@ -288,6 +293,7 @@ public class PlayerJumpState : PlayerState
         Vector2 velocity = controller.Rigidbody2D.velocity;
         velocity.x = moveDirect * controller.moveSpeed;
         controller.Rigidbody2D.velocity = velocity;
+
     }
 }
 
@@ -633,16 +639,6 @@ public class PlayerFallState : PlayerState
             return;
         }
 
-        //if (isLanding)
-        //    return;
-
-        //if (controller.isGround && controller.Rigidbody2D.velocity.y <= 0.01f)
-        //{
-        //    if (Mathf.Abs(InputData.moveAxis.x) > 0.01f)
-        //        controller.OnMove();
-        //    else
-        //        controller.OnIdle();
-        //}
     }
 
     public override void PhysicsUpdate()
@@ -659,9 +655,12 @@ public class PlayerFallState : PlayerState
 
         if (isLanding)
         {
+            if (moveDirect != 0)
+                controller.animator.SetBool("IsMove", true);
+
             AnimatorStateInfo info = controller.animator.GetCurrentAnimatorStateInfo(0);
 
-            if ((info.IsName("JumpEnd") && info.normalizedTime >= 1f) || info.IsName("Idle"))
+            if ((info.IsName("JumpEnd") && info.normalizedTime >= 1f) || info.IsName("Idle") || info.IsName("Move"))
             {
                 if (Mathf.Abs(InputData.moveAxis.x) > 0.01f)
                     controller.OnMove();
@@ -669,42 +668,6 @@ public class PlayerFallState : PlayerState
                     controller.OnIdle();
             }
         }
-
-        //if (isFalling)
-        //{
-        //    Vector2 origin = new Vector2(col.bounds.center.x, col.bounds.min.y);
-
-        //    RaycastHit2D hit = Physics2D.Raycast(origin, Vector2.down, 0.5f, groundLayer);
-
-        //    if (hit.collider != null && !isLanding)
-        //    {
-        //        isLanding = true;
-        //        controller.animator.SetTrigger("DetectFloor");
-        //        Debug.Log("DetectFloor Falling");
-        //    }
-        //}
-
-        //float moveDirect = InputData.moveAxis.x;
-
-        //controller.ChangeDirection(moveDirect);
-
-        //Vector2 velocity = controller.Rigidbody2D.velocity;
-        //velocity.x = moveDirect * controller.moveSpeed;
-        //controller.Rigidbody2D.velocity = velocity;
-
-        //if (isLanding)
-        //{
-        //    Debug.Log("Landing");
-
-        //    AnimatorStateInfo info = controller.animator.GetCurrentAnimatorStateInfo(0);
-        //    if (info.IsName("JumpEnd") || info.IsName("Idle"))
-        //    {
-        //        if (Mathf.Abs(InputData.moveAxis.x) > 0.01f)
-        //            controller.OnMove();
-        //        else
-        //            controller.OnIdle();
-        //    }
-        //}
     }
 
     private void CheckLanding()
@@ -741,6 +704,7 @@ public class PlayerFallState : PlayerState
         }
 
         isLanding = true;
+        controller.animator.SetBool("IsFall", false);
         controller.animator.SetTrigger("DetectFloor");
 
         Debug.Log("Landing Detect");

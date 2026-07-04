@@ -9,7 +9,7 @@ public class PlayerController : MonoBehaviour
     public Rigidbody2D Rigidbody2D;
     public SpriteRenderer charactorSprite;
 
-    [HideInInspector] public bool isGround;
+    public bool isGround;
     [HideInInspector] public bool isDash;
     [HideInInspector] public bool isOnRunway;
 
@@ -642,8 +642,23 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    private void HandleGroundCollision(Collider2D col)
+    private void HandleGroundCollision(Collision2D collision)
     {
+        Collider2D col = collision.collider;
+
+        bool isTopContact = false;
+        for (int i = 0; i < collision.contactCount; i++)
+        {
+            if (collision.GetContact(i).normal.y > 0.5f)
+            {
+                isTopContact = true;
+                break;
+            }
+        }
+
+        if (!isTopContact)
+            return;
+
         if (col.CompareTag("Floor") || col.CompareTag("Runway"))
         {
             isGround = true;
@@ -664,12 +679,12 @@ public class PlayerController : MonoBehaviour
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        HandleGroundCollision(collision.collider);
+        HandleGroundCollision(collision);
     }
 
     private void OnCollisionStay2D(Collision2D collision)
     {
-        HandleGroundCollision(collision.collider);
+        HandleGroundCollision(collision);
     }
 
     private void OnCollisionExit2D(Collision2D collision)
