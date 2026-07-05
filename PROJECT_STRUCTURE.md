@@ -45,12 +45,15 @@ m_EditorVersion: 2022.3.45f1
 Important packages from `Packages/manifest.json`:
 
 - `com.unity.render-pipelines.universal`: URP `14.0.11`
-- `com.unity.feature.2d`: Unity 2D feature set
+- `com.unity.feature.2d`: Unity 2D feature set `2.0.1`
 - `com.unity.textmeshpro`: TextMesh Pro `3.0.6`
 - `com.unity.postprocessing`: Post Processing `3.4.0`
 - `com.unity.recorder`: Recorder `4.0.3`
+- `com.unity.timeline`: Timeline `1.7.6` (newly added; backs the `*_Profiles` Volume Profile assets under `Assets/Scenes`)
+- `com.unity.ugui`: uGUI `1.0.0`
 - `com.unity.visualscripting`: Visual Scripting `1.9.4`
 - `com.unity.test-framework`: Unity Test Framework `1.1.33`
+- `com.unity.collab-proxy`: Unity Version Control `2.11.2`
 - `com.coplaydev.unity-mcp`: Unity MCP package from GitHub
 - IDE integration packages: Rider, Visual Studio, VS Code
 
@@ -58,33 +61,37 @@ Important packages from `Packages/manifest.json`:
 
 Enabled in `ProjectSettings/EditorBuildSettings.asset`:
 
-- `Assets/Scenes/SeungHyun.unity`
+- `Assets/Scenes/InGameScene/TitleScene.unity`
 - `Assets/Scenes/InGameScene/Forest.unity`
+- `Assets/Scenes/InGameScene/SeungHyun2_Restore.unity`
 
 Present but disabled in build settings:
 
 - `Assets/Scenes/1 Stage.unity`
-- `Assets/Scenes/TitleScene.unity`
 - `Assets/Scenes/Jinho.unity`
+- `Assets/Scenes/SeungHyun.unity`
 
-Other scene file:
-
-- `Assets/Scenes/SeungHyun2_Restore.unity`
+Note: the enabled/disabled set and scene paths have changed since the last snapshot — `TitleScene` and `SeungHyun2_Restore` moved under `Assets/Scenes/InGameScene/` and are now enabled, while `SeungHyun.unity` (root-level, distinct from the `InGameScene` copy) is now disabled. Each main scene has a matching `<SceneName>_Profiles/` folder next to it holding Volume Profile `.asset` files (e.g. `Scenes/SeungHyun_Profiles/`, `Scenes/InGameScene/Forest_Profiles/`, `Scenes/1 Stage_Profiles/`) — treat these as scene-owned post-processing/volume data, not shared assets.
 
 ## Assets Layout
 
 ```text
 Assets/
++-- Audio/              Project-wide AudioMixer (GameAudioMixer.mixer)
 +-- Editor/             Unity Editor-only tools
-+-- Prefab/             Shared prefabs
-+-- Scenes/             Unity scenes and scene-related assets
-+-- Script/             Main gameplay C# scripts
-+-- sounds/             BGM, SFX, ambient audio, audio helper scripts
-+-- TextMesh Pro/       TMP default resources
-+-- Texture/            Character, background, object, environment art
-+-- URP_*.asset         URP pipeline/renderer assets
-+-- *.renderTexture     Render textures
++-- Physics/             Currently empty folder (reserved, no assets yet)
++-- Prefabs/            Shared prefabs (formerly "Prefab/", now plural; includes Prefabs/UI/)
++-- Scenes/             Unity scenes, per-scene Volume Profile folders
++-- Script/              Main gameplay C# scripts (also holds some prefabs/materials/animations colocated with their systems)
++-- sounds/              BGM, SFX, ambient audio, audio helper scripts
++-- TextMesh Pro/        TMP default resources
++-- Texture/             Character, background, object, environment, UI, and effect art
++-- NewAudioMixer.mixer   Legacy/root-level mixer asset (see Audio/ for the current one)
++-- URP_*.asset          URP pipeline/renderer assets
++-- *.renderTexture      Render textures
 ```
+
+Note: the `Assets/Prefab/` folder named in earlier notes has been renamed to `Assets/Prefabs/` (plural) and gained a `Prefabs/UI/` subfolder. `Assets/Physics/` is a new, currently empty folder. `Assets/Audio/` is new and holds `GameAudioMixer.mixer`; a second, likely legacy, `NewAudioMixer.mixer` still sits at the `Assets/` root.
 
 ## Main Script Layout
 
@@ -92,7 +99,7 @@ Assets/
 
 ```text
 Assets/Script/
-+-- Arrow/              Arrow interfaces and small utilities
++-- Arrow/              Arrow interfaces, small utilities, and arrow prefabs/materials
 +-- Camera/             Camera follow, zoom, parallax, trigger areas, title camera logic
 +-- Object/             Puzzle and interactive objects
 |   +-- CoreObjects/    Core activation, temple, bridge, floor movement, rising objects
@@ -101,28 +108,37 @@ Assets/Script/
 |   +-- StoneFloor/     Breakable platform events
 |   +-- Wind/           Wind force objects
 +-- Particle/           Custom particle/object-pool system
-+-- Player/             Player controller, input, state machine, attack, visual effects
++-- Player/             Player controller, input, state machine, attack, animations
+|   +-- Animation/       Player .anim clips and Animator controllers (new)
+|   +-- Attack/          Arrow.cs
+|   +-- PlayerState/     PlayerState.cs (all state classes live in this one file)
 +-- Scene/              Scene-specific intro/cutscene controllers
 +-- Settings/           Settings persistence, settings UI, key bindings, in-game settings
-+-- Shader/             Shader helper scripts
++-- Shader/             Shader helper scripts, shader/material assets
 +-- Sky/                Sky/background manager, zone particle activator
 +-- UI/                 Title, fade, menu UI, tutorial prompts
 +-- Utils/              Shared interfaces, noise, generic Pair
 ```
 
-Approximate C# file counts:
+Approximate C# file counts (90 total under `Assets/Script`):
 
-- `Camera`: 20
-- `Object`: 24
+- `Camera` (incl. `Parallax`, `DistanceParallax`): 20
+- `Object` (incl. `CoreObjects`, `Stone Pillar`, `StoneCircle`, `StoneFloor`, `Wind`): 24
 - `UI`: 11
 - `Settings`: 9
-- `Player`: 7
-- `Particle`: 9
+- `Player` (incl. `PlayerState`, `Attack`): 7
+- `Particle` (incl. `ParticleComponent`): 9
 - `Utils`: 3
 - `Arrow`: 2
 - `Sky`: 2
 - `Scene`: 1
 - `Shader`: 1
+
+Additional related script files outside `Assets/Script`:
+
+- `Assets/ParticleSystemOption.cs` (Assets root)
+- `Assets/sounds/BGM/BGMFadeIn.cs`, `Assets/sounds/SFX/Bow/BowSFXRandomizer.cs`, `Assets/sounds/SteppeZoneTrigger.cs`
+- `Assets/Editor/ReplaceSelectedWithPrefab.cs`
 
 ## Runtime Architecture
 
@@ -140,7 +156,7 @@ Key files:
 
 `PlayerController` is the central player component. In `Awake`, it initializes the input reader, Rigidbody2D, audio references, bow SFX, held-arrow visuals, FX templates, and state objects. In `Update`, it reads input when the current state allows it, updates the current state, handles attack cooldown, and plays footstep audio.
 
-The state machine is implemented by `PlayerState` and these concrete states:
+The state machine is implemented by `PlayerState` and these concrete states, **all defined in the single file `Assets/Script/Player/PlayerState/PlayerState.cs`**:
 
 - `PlayerIdleState`
 - `PlayerMoveState`
@@ -168,6 +184,14 @@ Notes:
 - Several source comments have mojibake/encoding damage. Prefer actual code flow over comments.
 - `PlayerSilhouetteController` lerps SpriteRenderer colors toward a silhouette color using `transitionSpeed`. Call `SetSilhouette(float)` to trigger.
 - `PlayerBloomAreaTrigger` enables/disables a bloom effect when the player enters or exits a trigger zone.
+
+### Player Animation
+
+`Assets/Script/Player/Animation/` holds the player's Animator assets, colocated with code rather than under `Assets/Texture`:
+
+- `PlayerAnimation.controller`, `PlayerUpperAnimation.controller` — lower/upper body Animator Controllers.
+- Root clips: `Idle.anim`, `Move.anim`, `MoveTurn.anim`, `MovingStart.anim`, `MovingEnd.anim`, `JumpStart.anim`, `JumpUp.anim`, `JumpDown.anim`, `JumpEnd.anim`, `JumpEnd 1.anim`.
+- `Attack/` subfolder: `Aiming.anim`, `Attack.anim`, `AttackEnd.anim`, `NoneAnimation.anim`.
 
 ### Input
 
@@ -201,6 +225,11 @@ Key files:
 
 Most puzzle interactions are connected through the `IArrowHit.OnHit()` contract.
 
+Arrow-related prefabs/materials live in `Assets/Script/Arrow/`:
+
+- `Arrow.prefab`, `ArrowHitFX.prefab`, `ArrowTrajectoryPrefab.prefab` (new — likely a trajectory/aim-preview prefab)
+- `M_Tuya_ArrowTrail.mat`, `M_Tuya_DustParticle.mat`
+
 ### Camera
 
 Important files:
@@ -225,6 +254,7 @@ Important files:
 - `Assets/Script/Camera/Parallax/ParallaxImage.cs`
 - `Assets/Script/Camera/DistanceParallax/DistanceParallaxManager.cs`
 - `Assets/Script/Camera/DistanceParallax/DistanceParallaxObject.cs`
+- `Assets/Script/Camera/PinLightBlend.shadergraph`
 
 `CameraMovement` is the core follow/staging camera class and exposes `CameraMovement.Instance`. It follows the player object named by the `Charactor` field, supports fixed/event camera moves, optional player-Y following, and shake/noise.
 
@@ -246,6 +276,7 @@ Important folders:
 - `Assets/Script/Object/CoreObjects/`
 - `Assets/Script/Object/Stone Pillar/`
 - `Assets/Script/Object/StoneCircle/`
+- `Assets/Script/Object/StoneFloor/`
 - `Assets/Script/Object/Wind/`
 
 Common contracts:
@@ -311,6 +342,7 @@ Important files:
 - `Assets/Script/Particle/ParticleComponent/ParticlePulse.cs`
 - `Assets/Script/Particle/ParticleComponent/ParticleFade.cs`
 - `Assets/Script/Particle/ParticleComponent/ParticleMovement.cs`
+- `Assets/ParticleSystemOption.cs` (Assets root, not under `Script/`)
 
 `ParticleManager` implements a custom ScriptableObject-driven particle system with object pooling. `ParticleScriptable` assets are created through `Create > Custom > Particle Preset`.
 
@@ -348,7 +380,7 @@ Important files:
 Currently applied setting behavior:
 
 - Master volume is applied through `AudioListener.volume`.
-- BGM/SFX values are saved and logged, but not routed to separate AudioMixer groups in the current code.
+- BGM/SFX values are saved and logged, but not routed to separate AudioMixer groups in the current code (note: `Assets/Audio/GameAudioMixer.mixer` now exists as a dedicated mixer asset — check whether it has been wired in before assuming this is still true).
 
 Key binding:
 
@@ -378,8 +410,9 @@ Tutorial UI:
 
 Important folders:
 
+- `Assets/Audio/` — project AudioMixer asset (`GameAudioMixer.mixer`)
 - `Assets/sounds/BGM/`
-- `Assets/sounds/SFX/Bow/`
+- `Assets/sounds/SFX/Bow/`, `Assets/sounds/SFX/step/`, `Assets/sounds/SFX/stone_shaker/`
 - `Assets/sounds/ambient/`
 
 Important scripts:
@@ -388,7 +421,16 @@ Important scripts:
 - `Assets/sounds/SFX/Bow/BowSFXRandomizer.cs`: randomizes bow pull/shoot/hit clips and pitch.
 - `Assets/sounds/SteppeZoneTrigger.cs`: fades steppe BGM and ambience on trigger enter/exit.
 
-Audio files found include roughly 15 `.wav` files and 5 `.mp3` files.
+Audio content by folder:
+
+- `BGM/`: 9 tracks (`BlueSteppe_BGM`, `Forest2_BGM`, `Forest3_BGM`, `sky_temple_BGM`, `Steppe_BGM`, `temple_BGM`, `Temple3_BGM`, `title_BGM_1`, `title_BGM_2`).
+- `SFX/Bow/`: bow pull/shoot/hit variants (`bow_pull_1/2`, `bow_shoot_1/2`, `bow_hit_1/2/3`).
+- `SFX/step/`: `step_grass_1`-`6`, `step_stone_1`-`5` (footstep variants by surface).
+- `SFX/stone_shaker/`: `stone_shaker_1` through `6` (with a `stone_shaker_2_1` variant).
+- `SFX/` root: `core.wav`, `windmill.wav`, `windmill_drum.wav`, plus one CC-licensed crumbling-wall SFX (`829103__squirrel_404__...`).
+- `ambient/`: `forest_ambient.mp3`, `Forest_Bird.mp3`, `steppe_ambient.mp3`, `sky_temple_ambient.wav`, `Temple2_ambient.wav`.
+
+This is a larger and more organized audio set than earlier notes suggested (footstep and stone-shaker SFX are now split into dedicated per-surface subfolders).
 
 ### Shader, Wind, Sky
 
@@ -396,11 +438,13 @@ Important files:
 
 - `Assets/Script/Shader/SpriteTopWind.shader`
 - `Assets/Script/Shader/ReedWindChain.cs`
+- `Assets/Script/Shader/M_Reed_Wind.mat`
 - `Assets/Texture/artwork/Leaf/*.shadergraph`
 - `Assets/Script/Camera/PinLightBlend.shadergraph`
 - `Assets/Script/Sky/SkyManager.cs`
+- `Assets/Script/Sky/ZoneParticleActivator.cs`
 
-`ReedWindChain` applies wind-like rotation to a root/mid/top bone chain. `SkyManager` manages sky/background objects based on the player position.
+`ReedWindChain` applies wind-like rotation to a root/mid/top bone chain. `SkyManager` manages sky/background objects based on the player position. `ZoneParticleActivator` (in `Sky/`) toggles ambient particle effects by zone.
 
 ## Texture And Art Layout
 
@@ -410,12 +454,14 @@ Important files:
 Assets/Texture/
 +-- artwork/            Environment/object/stage art
 +-- Charactor/          Character sprites and animation frames
++-- effect/             Standalone VFX sprites (new: e.g. Ellipse 147.png)
 +-- Leaf/               Leaf/wind materials
 +-- material/           Shared materials
 +-- Object/             Circle, windmill, pillar object sprites
 +-- Sky/                Time-of-day sky images
 +-- test/               Test images
 +-- Title/              Title screen images
++-- UI/                 UI sprites and the CoreHintRing animator/animation (new)
 ```
 
 Important `Assets/Texture/artwork` folders:
@@ -425,7 +471,7 @@ Important `Assets/Texture/artwork` folders:
 - `core`
 - `fog`
 - `foliage`
-- `grass`
+- `grass` (contains `PrefabsReeds/` with 13 reed/grass prefabs)
 - `Leaf`
 - `light`
 - `Mountain`
@@ -441,29 +487,33 @@ Important `Assets/Texture/artwork` folders:
 
 The folder name `Charactor` appears to be misspelled, but it is the real path. Do not rename it casually because Unity asset references may depend on it.
 
+`Assets/Texture/UI/` is new since the last snapshot and holds `CoreHintRing.controller` + `CoreHintRing_Pulse.anim` (the core-activation hint ring referenced from `CoreActivationController`) alongside UI sprites (`Ellipse 18.png`, `Group 10 (1).png`, `Rectangle 30/31/35.png`, `UI_Background.png`). `Assets/Texture/effect/` is also new and currently holds a single sprite (`Ellipse 147.png`).
+
 ## Prefabs And Assets
 
-Shared prefabs at the root prefab folder:
+Shared prefabs now live under `Assets/Prefabs/` (renamed from the singular `Prefab/`):
 
-- `Assets/Prefab/MissionArea.prefab`
-- `Assets/Prefab/Settings.prefab`
+- `Assets/Prefabs/MissionArea.prefab`
+- `Assets/Prefabs/Settings.prefab`
+- `Assets/Prefabs/Player(-1~1).prefab` (new)
+- `Assets/Prefabs/UI/SettingsMenuPrefab.prefab` (new subfolder)
 
 Other prefabs are stored near their systems:
 
-- `Assets/Script/Arrow/Arrow.prefab`
-- `Assets/Script/Arrow/ArrowHitFX.prefab`
+- `Assets/Script/Arrow/Arrow.prefab`, `ArrowHitFX.prefab`, `ArrowTrajectoryPrefab.prefab`
 - `Assets/Script/Object/Stone Pillar/StonePillar.prefab`
 - `Assets/Script/Object/Wind/WindMill.prefab`
-- `Assets/Texture/artwork/grass/PrefabsReeds/*.prefab`
+- `Assets/Texture/artwork/grass/PrefabsReeds/*.prefab` (13 reed/flame-grass prefabs)
 
 Approximate asset counts:
 
-- `.prefab`: 19
-- `.asset`: 27
-- `.mat`: 14
-- `.shader`: 14
+- `.prefab`: 22
+- `.asset`: 29
+- `.mat`: 15
+- `.shader`: 14 (1 gameplay shader in `Script/Shader/`, the remaining 13 are TextMesh Pro built-ins)
 - `.shadergraph`: 3
 - `.renderTexture`: 2
+- `.mixer`: 2 (`Assets/Audio/GameAudioMixer.mixer`, `Assets/NewAudioMixer.mixer`)
 
 ## Editor Tools
 
@@ -482,6 +532,9 @@ Approximate asset counts:
 - `PlayerTurnState` is not implemented.
 - `SettingsManager.Update()` logs the master volume every frame.
 - Several player states also log every frame. Console noise may be high during Play Mode.
+- `Assets/Prefab/` was renamed to `Assets/Prefabs/` at some point after the last structure snapshot; if you find stale references or docs mentioning `Assets/Prefab/`, treat `Assets/Prefabs/` as authoritative.
+- `Assets/Physics/` currently contains no assets — do not assume physics materials/settings live there yet.
+- Two AudioMixer assets exist (`Assets/Audio/GameAudioMixer.mixer` and `Assets/NewAudioMixer.mixer`); confirm which one scene/audio scripts actually reference before editing mixer routing.
 
 ## Recommended AI Inspection Order
 
@@ -497,6 +550,7 @@ Approximate asset counts:
 ## Feature Entry Points
 
 - Player movement/jump/fall: `PlayerState.cs`, `PlayerController.cs`
+- Player animation: `Script/Player/Animation/PlayerAnimation.controller`, `PlayerUpperAnimation.controller`
 - Aiming and arrow shooting: `PlayerAttackState`, `PlayerController.ShootArrow`, `Arrow.cs`
 - Arrow-hit puzzles: `IArrowHit`, `CoreActivationController`, `CoreObject*`, `StoneBridge`, `StoneCircleManager`, `StonePillarManager`
 - Camera follow/staging: `CameraMovement.cs`, `MissionAreaCamera.cs`, `FakeZZoomManager.cs`
@@ -510,8 +564,10 @@ Approximate asset counts:
 - Key bindings: `KeyBindingSettings.cs`
 - Breakable platform: `BreakableFragmentPlatformEvent.cs`
 - Player visual effects: `PlayerSilhouetteController.cs`, `PlayerBloomAreaTrigger.cs`
-- Audio: `BowSFXRandomizer.cs`, `BGMFadeIn.cs`, `SteppeZoneTrigger.cs`
+- Audio: `BowSFXRandomizer.cs`, `BGMFadeIn.cs`, `SteppeZoneTrigger.cs`, `Assets/Audio/GameAudioMixer.mixer`
 
 ## Git Status Note
 
-Before creating this document, `.codex/` was already untracked. It appears to be local Codex configuration and is unrelated to project source structure.
+Before creating the original version of this document, `.codex/` was already untracked. It appears to be local Codex configuration and is unrelated to project source structure.
+
+This revision was generated by re-scanning `Assets/`, `Packages/manifest.json`, and `ProjectSettings/` directly; see the "Change Safety Notes" and inline notes above for what has moved or been added since the previous snapshot.

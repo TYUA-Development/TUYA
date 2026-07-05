@@ -655,8 +655,7 @@ public class PlayerFallState : PlayerState
 
         if (isLanding)
         {
-            if (moveDirect != 0)
-                controller.animator.SetBool("IsMove", true);
+            controller.animator.SetBool("IsMove", moveDirect != 0);
 
             AnimatorStateInfo info = controller.animator.GetCurrentAnimatorStateInfo(0);
 

@@ -201,7 +201,7 @@ public class PlayerBloomAreaTrigger : MonoBehaviour
             entry.glow.sortingOrder = entry.source.sortingOrder + sortingOrderOffset;
             entry.glow.maskInteraction = entry.source.maskInteraction;
             entry.glow.enabled = entry.source.enabled;
-            entry.glow.color = GetGlowColor(currentAlpha);
+            entry.glow.color = GetGlowColor(currentAlpha * entry.source.color.a);
         }
     }
 
