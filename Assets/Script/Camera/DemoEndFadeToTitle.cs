@@ -69,6 +69,14 @@ public class DemoEndFadeToTitle : MonoBehaviour
     [Tooltip("Pretendard TMP Font Asset을 연결하세요. 예: Assets/TextMesh Pro/Fonts/PretendardVariable SDF.asset")]
     public TMP_FontAsset pretendardFontAsset;
 
+    [Header("Credits Logo")]
+    [Tooltip("첫 TUYA 텍스트 대신 사용할 로고 스프라이트입니다. 예: Assets/Texture/Title/11.png")]
+    public Sprite mainTitleSprite;
+    public Vector2 mainTitleSpriteSize = new Vector2(360f, 202f);
+
+    [Header("Credits Color")]
+    public Color creditsColor = new Color(240f / 255f, 234f / 255f, 248f / 255f, 1f);
+
     [Header("Canvas")]
     public Vector2 referenceResolution = new Vector2(1920f, 1080f);
     [Range(0f, 1f)] public float canvasMatchWidthOrHeight = 0.5f;
@@ -170,6 +178,7 @@ public class DemoEndFadeToTitle : MonoBehaviour
     private void Awake()
     {
         TryAssignPretendardFontAsset();
+        TryAssignMainTitleSprite();
         SetupInitialUI();
         CreateRuntimeCreditsUI();
     }
@@ -271,14 +280,33 @@ public class DemoEndFadeToTitle : MonoBehaviour
             if (string.IsNullOrWhiteSpace(line))
                 continue;
 
-            CreditLineStyle style = GetLineStyle(line);
-            TMP_Text text = CreateText("CreditLine_" + i, creditsRoot, line, style.fontSize);
-            text.fontStyle = style.fontStyle;
-            text.rectTransform.anchoredPosition = new Vector2(0f, y);
+            if (line == "TUYA" && mainTitleSprite != null)
+            {
+                Image logo = CreateImage("CreditLogo_" + i, creditsRoot, Color.white);
+                logo.sprite = mainTitleSprite;
+                logo.preserveAspect = true;
+                logo.raycastTarget = false;
 
-            runtimeCreditTexts.Add(text);
+                RectTransform logoRect = logo.rectTransform;
+                logoRect.anchorMin = new Vector2(0.5f, 1f);
+                logoRect.anchorMax = new Vector2(0.5f, 1f);
+                logoRect.pivot = new Vector2(0.5f, 0.5f);
+                logoRect.sizeDelta = mainTitleSpriteSize;
+                logoRect.anchoredPosition = new Vector2(0f, y - (mainTitleSpriteSize.y * 0.5f));
 
-            y -= style.height + compactLineSpacing + GetCompactSpacingAfter(line);
+                y -= mainTitleSpriteSize.y + compactLineSpacing + GetCompactSpacingAfter(line);
+            }
+            else
+            {
+                CreditLineStyle style = GetLineStyle(line);
+                TMP_Text text = CreateText("CreditLine_" + i, creditsRoot, line, style.fontSize);
+                text.fontStyle = style.fontStyle;
+                text.rectTransform.anchoredPosition = new Vector2(0f, y);
+
+                runtimeCreditTexts.Add(text);
+
+                y -= style.height + compactLineSpacing + GetCompactSpacingAfter(line);
+            }
         }
 
         creditsRoot.sizeDelta = new Vector2(creditsWidth, Mathf.Abs(y) + creditsEndPadding);
@@ -550,7 +578,7 @@ public class DemoEndFadeToTitle : MonoBehaviour
         TextMeshProUGUI text = textObject.AddComponent<TextMeshProUGUI>();
         text.text = value;
         text.fontSize = fontSize;
-        text.color = Color.white;
+        text.color = creditsColor;
         text.alignment = TextAlignmentOptions.Center;
         text.enableWordWrapping = false;
         text.raycastTarget = false;
@@ -586,6 +614,16 @@ public class DemoEndFadeToTitle : MonoBehaviour
                 return;
             }
         }
+#endif
+    }
+
+    private void TryAssignMainTitleSprite()
+    {
+        if (mainTitleSprite != null)
+            return;
+
+#if UNITY_EDITOR
+        mainTitleSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Texture/Title/11.png");
 #endif
     }
 
@@ -708,8 +746,11 @@ public class DemoEndFadeToTitle : MonoBehaviour
         if (line == "오승현" || line == "장진호" || line == "And You" || line == "Sound Effects from Freesound" || line == "Licensed under SIL OFL")
             return compactGroupSpacing;
 
-        if (line == "CONNECT" || line == "EXP" || line == "C.Y.S")
+        if (line == "CONNECT" || line == "EXP")
             return compactNameSpacing;
+
+        if (line == "C.Y.S" || line == "Family and Friends")
+            return compactBodySpacing;
 
         if (line == "Generated with Suno AI" || line == "Pretendard")
             return compactBodySpacing;

@@ -1,4 +1,4 @@
-using System.Collections;
+ï»¿using System.Collections;
 using UnityEngine;
 
 [DefaultExecutionOrder(70000)]
@@ -7,95 +7,110 @@ public class BreakableFragmentPlatformEvent : MonoBehaviour
     [Header("Trigger")]
     public string playerTag = "Player";
     public bool activateOnlyOnce = true;
+    public bool triggerOnPlayerEnter = false;
+
+    [Header("Core Impact Trigger")]
+    public CoreActivationController[] coreActivationSources;
+    public bool autoCollectCoreActivationSources = true;
+    public Transform coreImpactTransform;
+    public bool playCoreImpactDrop = true;
+    public float coreImpactDelay = 0f;
+    public float coreDropDistance = 1.4f;
+    public float coreDropDuration = 0.35f;
+    public float coreImpactHoldTime = 0.15f;
+    public AudioSource coreImpactAudio;
+    public ParticleSystem coreImpactParticle;
+    public bool startCollapseAfterCoreImpact = true;
+    public bool skipWarningAfterCoreImpact = true;
 
     [Header("Player")]
     public PlayerController playerController;
     public Rigidbody2D playerRigidbody;
 
-    [Tooltip("PlayerController´Â ²ôÁö ¾Ê°í ÀÔ·Â¸¸ Àá±Ş´Ï´Ù.")]
+    [Tooltip("PlayerControllerëŠ” ë„ì§€ ì•Šê³  ì…ë ¥ë§Œ ì ê¸‰ë‹ˆë‹¤.")]
     public bool usePlayerControllerInputLock = true;
 
-    [Tooltip("µµÂø ¼ø°£ ¼Óµµ¸¦ 0À¸·Î ¸ØÃä´Ï´Ù.")]
+    [Tooltip("ë„ì°© ìˆœê°„ ì†ë„ë¥¼ 0ìœ¼ë¡œ ë©ˆì¶¥ë‹ˆë‹¤.")]
     public bool stopPlayerVelocityOnStart = true;
 
-    [Tooltip("¹Ù´Ú Collider°¡ ²¨Áø µÚ PlayerController.OnFall()À» ÇÑ ¹ø È£ÃâÇÕ´Ï´Ù.")]
+    [Tooltip("ë°”ë‹¥ Colliderê°€ êº¼ì§„ ë’¤ PlayerController.OnFall()ì„ í•œ ë²ˆ í˜¸ì¶œí•©ë‹ˆë‹¤.")]
     public bool callFallOnceAfterPlatformBreak = true;
 
-    [Tooltip("Collider OFF ÈÄ ¸î ¹øÀÇ FixedUpdate¸¦ ±â´Ù¸° µÚ OnFallÀ» È£ÃâÇÒÁö")]
+    [Tooltip("Collider OFF í›„ ëª‡ ë²ˆì˜ FixedUpdateë¥¼ ê¸°ë‹¤ë¦° ë’¤ OnFallì„ í˜¸ì¶œí• ì§€")]
     public int fixedFramesBeforeCallFall = 2;
 
-    [Tooltip("OnFall È£Ãâ Á÷Àü¿¡ ¾Æ·¡ ¹æÇâ ¼Óµµ¸¦ »ìÂ¦ Áİ´Ï´Ù.")]
+    [Tooltip("OnFall í˜¸ì¶œ ì§ì „ì— ì•„ë˜ ë°©í–¥ ì†ë„ë¥¼ ì‚´ì§ ì¤ë‹ˆë‹¤.")]
     public float fallStartDownVelocity = -0.35f;
 
-    [Tooltip("ÃÖÁ¾ Äô ÀÌÈÄ ÀÔ·Â Àá±İÀ» Á¶±İ ´õ À¯ÁöÇÏ´Â ½Ã°£")]
+    [Tooltip("ìµœì¢… ì¿µ ì´í›„ ì…ë ¥ ì ê¸ˆì„ ì¡°ê¸ˆ ë” ìœ ì§€í•˜ëŠ” ì‹œê°„")]
     public float extraInputLockAfterFinalImpact = 0.25f;
 
     [Header("Cinematic Fall Speed Curve")]
-    [Tooltip("ÆÄÆí ±¸°£ ³«ÇÏ ¼Óµµ¸¦ ¿¬Ãâ¿ëÀ¸·Î Á¶ÀıÇÕ´Ï´Ù.")]
+    [Tooltip("íŒŒí¸ êµ¬ê°„ ë‚™í•˜ ì†ë„ë¥¼ ì—°ì¶œìš©ìœ¼ë¡œ ì¡°ì ˆí•©ë‹ˆë‹¤.")]
     public bool useCinematicFallSpeed = true;
 
-    [Tooltip("ÆÄÆí ³«ÇÏ¿¡¼­ »ç¿ëÇÒ ¿ø·¡ Áß·Â°ª. Player Rigidbody2DÀÇ ±âº» Gravity Scale °ªÀ» Á÷Á¢ ³ÖÀ¸¼¼¿ä.")]
+    [Tooltip("íŒŒí¸ ë‚™í•˜ì—ì„œ ì‚¬ìš©í•  ì›ë˜ ì¤‘ë ¥ê°’. Player Rigidbody2Dì˜ ê¸°ë³¸ Gravity Scale ê°’ì„ ì§ì ‘ ë„£ìœ¼ì„¸ìš”.")]
     public float normalFallGravityScale = 1f;
 
-    [Tooltip("Ã³À½ ¶³¾îÁú ¶§ Åö ¶³¾îÁö´Â ´À³¦À» ÁÖ´Â ½ÃÀÛ ¼Óµµ")]
+    [Tooltip("ì²˜ìŒ ë–¨ì–´ì§ˆ ë•Œ íˆ­ ë–¨ì–´ì§€ëŠ” ëŠë‚Œì„ ì£¼ëŠ” ì‹œì‘ ì†ë„")]
     public float initialNormalFallVelocity = -2.2f;
 
-    [Tooltip("³«ÇÏ°¡ ³¡³ª´Â ¹Ù´Ú À§Ä¡¸¦ ¾Ë·ÁÁÖ´Â ºó ¿ÀºêÁ§Æ®. ÃÖÁ¾ µµÂø ¹Ù´Ú ±ÙÃ³¿¡ µÎ¼¼¿ä.")]
+    [Tooltip("ë‚™í•˜ê°€ ëë‚˜ëŠ” ë°”ë‹¥ ìœ„ì¹˜ë¥¼ ì•Œë ¤ì£¼ëŠ” ë¹ˆ ì˜¤ë¸Œì íŠ¸. ìµœì¢… ë„ì°© ë°”ë‹¥ ê·¼ì²˜ì— ë‘ì„¸ìš”.")]
     public Transform fallEndPoint;
 
-    [Tooltip("Fall End Point°¡ ¾øÀ» ¶§ »ç¿ëÇÒ µµÂø Y°ª")]
+    [Tooltip("Fall End Pointê°€ ì—†ì„ ë•Œ ì‚¬ìš©í•  ë„ì°© Yê°’")]
     public float fallEndY = -10f;
 
-    [Tooltip("Ã³À½ ÀÌ ºñÀ²¸¸Å­Àº ¿ø·¡ ¼Óµµ·Î ¶³¾îÁı´Ï´Ù.")]
+    [Tooltip("ì²˜ìŒ ì´ ë¹„ìœ¨ë§Œí¼ì€ ì›ë˜ ì†ë„ë¡œ ë–¨ì–´ì§‘ë‹ˆë‹¤.")]
     [Range(0f, 0.45f)]
     public float topNormalPercent = 0.2f;
 
-    [Tooltip("¸¶Áö¸· ÀÌ ºñÀ²¸¸Å­Àº ¿ø·¡ ¼Óµµ·Î ¶³¾îÁı´Ï´Ù.")]
+    [Tooltip("ë§ˆì§€ë§‰ ì´ ë¹„ìœ¨ë§Œí¼ì€ ì›ë˜ ì†ë„ë¡œ ë–¨ì–´ì§‘ë‹ˆë‹¤.")]
     [Range(0f, 0.45f)]
     public float bottomNormalPercent = 0.22f;
 
-    [Tooltip("´À¸° ±¸°£À¸·Î ºÎµå·´°Ô µé¾î°¡°í ³ª¿À´Â Æø")]
+    [Tooltip("ëŠë¦° êµ¬ê°„ìœ¼ë¡œ ë¶€ë“œëŸ½ê²Œ ë“¤ì–´ê°€ê³  ë‚˜ì˜¤ëŠ” í­")]
     [Range(0.01f, 0.3f)]
     public float slowBlendPercent = 0.08f;
 
-    [Tooltip("Áß°£ ±¸°£ Áß·Â. ³·À»¼ö·Ï ÃµÃµÈ÷ ¶³¾îÁı´Ï´Ù.")]
+    [Tooltip("ì¤‘ê°„ êµ¬ê°„ ì¤‘ë ¥. ë‚®ì„ìˆ˜ë¡ ì²œì²œíˆ ë–¨ì–´ì§‘ë‹ˆë‹¤.")]
     public float middleGravityScale = 0.35f;
 
-    [Tooltip("Áß°£ ±¸°£ ÃÖ´ë ³«ÇÏ ¼Óµµ. 0¿¡ °¡±î¿ï¼ö·Ï ÃµÃµÈ÷ ¶³¾îÁı´Ï´Ù.")]
+    [Tooltip("ì¤‘ê°„ êµ¬ê°„ ìµœëŒ€ ë‚™í•˜ ì†ë„. 0ì— ê°€ê¹Œìš¸ìˆ˜ë¡ ì²œì²œíˆ ë–¨ì–´ì§‘ë‹ˆë‹¤.")]
     public float middleMaxFallSpeed = -2.4f;
 
-    [Tooltip("Ã³À½/³¡ ±¸°£ ÃÖ´ë ³«ÇÏ ¼Óµµ. º¸Åë Å©°Ô µÓ´Ï´Ù.")]
+    [Tooltip("ì²˜ìŒ/ë êµ¬ê°„ ìµœëŒ€ ë‚™í•˜ ì†ë„. ë³´í†µ í¬ê²Œ ë‘¡ë‹ˆë‹¤.")]
     public float normalMaxFallSpeed = -20f;
 
-    [Tooltip("³«ÇÏ ½ÃÀÛ ÈÄ ÀÌ ½Ã°£ Àü¿¡´Â ÂøÁö ÆÇÁ¤À» º¸Áö ¾Ê½À´Ï´Ù.")]
+    [Tooltip("ë‚™í•˜ ì‹œì‘ í›„ ì´ ì‹œê°„ ì „ì—ëŠ” ì°©ì§€ íŒì •ì„ ë³´ì§€ ì•ŠìŠµë‹ˆë‹¤.")]
     public float minCinematicFallTime = 0.25f;
 
-    [Tooltip("º¹±¸ ¾ÈÀüÀåÄ¡ ½Ã°£")]
+    [Tooltip("ë³µêµ¬ ì•ˆì „ì¥ì¹˜ ì‹œê°„")]
     public float maxCinematicFallTime = 8f;
 
     [Header("Cinematic Fall Camera Lag")]
-    [Tooltip("ÆÄÆí ³«ÇÏ Áß Ä«¸Ş¶ó°¡ Ä³¸¯ÅÍ¸¦ »ìÂ¦ ´Ê°Ô µû¶ó°¡°Ô ÇÕ´Ï´Ù.")]
+    [Tooltip("íŒŒí¸ ë‚™í•˜ ì¤‘ ì¹´ë©”ë¼ê°€ ìºë¦­í„°ë¥¼ ì‚´ì§ ëŠ¦ê²Œ ë”°ë¼ê°€ê²Œ í•©ë‹ˆë‹¤.")]
     public bool useFallCameraLag = true;
 
-    [Tooltip("ºñ¿öµÎ¸é Main Camera¸¦ »ç¿ëÇÕ´Ï´Ù. °¡´ÉÇÏ¸é Camera Root/Rig¸¦ ³Ö´Â °Ô ÁÁ½À´Ï´Ù.")]
+    [Tooltip("ë¹„ì›Œë‘ë©´ Main Cameraë¥¼ ì‚¬ìš©í•©ë‹ˆë‹¤. ê°€ëŠ¥í•˜ë©´ Camera Root/Rigë¥¼ ë„£ëŠ” ê²Œ ì¢‹ìŠµë‹ˆë‹¤.")]
     public Transform fallCameraTarget;
 
-    [Tooltip("Ä«¸Ş¶ó°¡ Ä³¸¯ÅÍº¸´Ù À§¸¦ º¸°Ô ÇÏ´Â °ª. Å¬¼ö·Ï Ä³¸¯ÅÍ°¡ È­¸é ¾Æ·¡ÂÊ¿¡ º¸ÀÔ´Ï´Ù.")]
+    [Tooltip("ì¹´ë©”ë¼ê°€ ìºë¦­í„°ë³´ë‹¤ ìœ„ë¥¼ ë³´ê²Œ í•˜ëŠ” ê°’. í´ìˆ˜ë¡ ìºë¦­í„°ê°€ í™”ë©´ ì•„ë˜ìª½ì— ë³´ì…ë‹ˆë‹¤.")]
     public float fallCameraYOffset = 2.3f;
 
-    [Tooltip("Ä«¸Ş¶ó µû¶ó°¡´Â ´À¸² Á¤µµ. Å¬¼ö·Ï ´Ê°Ô µû¶ó°©´Ï´Ù.")]
+    [Tooltip("ì¹´ë©”ë¼ ë”°ë¼ê°€ëŠ” ëŠë¦¼ ì •ë„. í´ìˆ˜ë¡ ëŠ¦ê²Œ ë”°ë¼ê°‘ë‹ˆë‹¤.")]
     public float fallCameraSmoothTime = 0.9f;
 
-    [Tooltip("ÂøÁö Á÷Àü¿¡´Â Ä«¸Ş¶ó°¡ Á¶±İ ´õ »¡¸® µû¶ó¿À°Ô ÇÒÁö")]
+    [Tooltip("ì°©ì§€ ì§ì „ì—ëŠ” ì¹´ë©”ë¼ê°€ ì¡°ê¸ˆ ë” ë¹¨ë¦¬ ë”°ë¼ì˜¤ê²Œ í• ì§€")]
     public bool fasterCameraNearBottom = true;
 
-    [Tooltip("ÂøÁö Á÷Àü Ä«¸Ş¶ó Smooth Time")]
+    [Tooltip("ì°©ì§€ ì§ì „ ì¹´ë©”ë¼ Smooth Time")]
     public float bottomCameraSmoothTime = 0.45f;
 
-    [Tooltip("Ä«¸Ş¶ó ÃÖ´ë ÀÌµ¿ ¼Óµµ")]
+    [Tooltip("ì¹´ë©”ë¼ ìµœëŒ€ ì´ë™ ì†ë„")]
     public float fallCameraMaxSpeed = 30f;
 
-    [Tooltip("³«ÇÏ ½ÃÀÛ ÈÄ Ä«¸Ş¶ó°¡ µû¶ó°¡±â ½ÃÀÛÇÏ±â±îÁö µô·¹ÀÌ")]
+    [Tooltip("ë‚™í•˜ ì‹œì‘ í›„ ì¹´ë©”ë¼ê°€ ë”°ë¼ê°€ê¸° ì‹œì‘í•˜ê¸°ê¹Œì§€ ë”œë ˆì´")]
     public float fallCameraStartDelay = 0.08f;
 
     [Header("Platform Collider")]
@@ -159,7 +174,7 @@ public class BreakableFragmentPlatformEvent : MonoBehaviour
     public float crackDownOffset = 0.04f;
     public float crackVerticalJitter = 0.05f;
 
-    [Tooltip("´ëÁö Æ÷ÇÔ ÆÄÆíÀÌ¸é 0 À¯Áö ÃßÃµ")]
+    [Tooltip("ëŒ€ì§€ í¬í•¨ íŒŒí¸ì´ë©´ 0 ìœ ì§€ ì¶”ì²œ")]
     public float crackMaxSpinAngle = 0f;
 
     [Header("Final Collapse")]
@@ -174,7 +189,7 @@ public class BreakableFragmentPlatformEvent : MonoBehaviour
 
     public float fallGravity = 5.5f;
 
-    [Tooltip("´ëÁö Æ÷ÇÔ ÆÄÆíÀÌ¸é 0 À¯Áö ÃßÃµ")]
+    [Tooltip("ëŒ€ì§€ í¬í•¨ íŒŒí¸ì´ë©´ 0 ìœ ì§€ ì¶”ì²œ")]
     public float maxSpinSpeed = 0f;
 
     public bool fadeOutFragments = true;
@@ -185,7 +200,7 @@ public class BreakableFragmentPlatformEvent : MonoBehaviour
     [Header("Camera On Final Impact")]
     public bool releaseCameraEventOnFinalImpact = true;
 
-    [Tooltip("FallZoomCameraArea°¡ ³«ÇÏ Ä«¸Ş¶ó¸¦ ´ã´çÇÏ¸é ²¨µÎ¼¼¿ä.")]
+    [Tooltip("FallZoomCameraAreaê°€ ë‚™í•˜ ì¹´ë©”ë¼ë¥¼ ë‹´ë‹¹í•˜ë©´ êº¼ë‘ì„¸ìš”.")]
     public bool enableCameraFollowYOnFinalImpact = false;
 
     [Header("State")]
@@ -206,6 +221,8 @@ public class BreakableFragmentPlatformEvent : MonoBehaviour
     private Coroutine eventCoroutine;
     private Coroutine cameraShakeCoroutine;
     private Coroutine callFallCoroutine;
+    private Coroutine coreImpactCoroutine;
+    private bool skipWarningForNextCollapse;
 
     private float originalGravityScale;
     private bool hasOriginalGravityScale;
@@ -220,6 +237,7 @@ public class BreakableFragmentPlatformEvent : MonoBehaviour
     {
         triggerCollider = GetComponent<Collider2D>();
 
+        CollectCoreActivationSources();
         CollectPlatformColliders();
         CollectFragments();
         CacheFragmentOriginalState();
@@ -229,6 +247,12 @@ public class BreakableFragmentPlatformEvent : MonoBehaviour
         StopParticle(dustOnThirdRumble);
         StopParticle(dustOnCrack);
         StopParticle(dustOnFinalImpact);
+        StopParticle(coreImpactParticle);
+    }
+
+    private void OnEnable()
+    {
+        SubscribeCoreActivationSources();
     }
 
     private void FixedUpdate()
@@ -244,18 +268,15 @@ public class BreakableFragmentPlatformEvent : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
+        if (!triggerOnPlayerEnter)
+            return;
+
         if (!collision.CompareTag(playerTag))
-            return;
-
-        if (activateOnlyOnce && hasActivated)
-            return;
-
-        if (isRunning)
             return;
 
         FindPlayerReferences(collision);
 
-        eventCoroutine = StartCoroutine(CollapseEventRoutine());
+        StartCollapseEvent();
     }
 
     private void FindPlayerReferences(Collider2D collision)
@@ -267,20 +288,178 @@ public class BreakableFragmentPlatformEvent : MonoBehaviour
             playerRigidbody = collision.GetComponentInParent<Rigidbody2D>();
     }
 
+    private void CollectCoreActivationSources()
+    {
+        if (!autoCollectCoreActivationSources)
+            return;
+
+        if (coreActivationSources != null && coreActivationSources.Length > 0)
+            return;
+
+        coreActivationSources = GetComponentsInParent<CoreActivationController>(true);
+
+        if (coreActivationSources == null || coreActivationSources.Length == 0)
+            coreActivationSources = GetComponentsInChildren<CoreActivationController>(true);
+    }
+
+    private void SubscribeCoreActivationSources()
+    {
+        if (coreActivationSources == null)
+            return;
+
+        for (int i = 0; i < coreActivationSources.Length; i++)
+        {
+            if (coreActivationSources[i] != null)
+            {
+                coreActivationSources[i].onActivated -= HandleCoreActivated;
+                coreActivationSources[i].onActivated += HandleCoreActivated;
+            }
+        }
+    }
+
+    private void UnsubscribeCoreActivationSources()
+    {
+        if (coreActivationSources == null)
+            return;
+
+        for (int i = 0; i < coreActivationSources.Length; i++)
+        {
+            if (coreActivationSources[i] != null)
+                coreActivationSources[i].onActivated -= HandleCoreActivated;
+        }
+    }
+
+    private void HandleCoreActivated()
+    {
+        TriggerByCoreImpact();
+    }
+
+    public void OnCoreEvent()
+    {
+        TriggerByCoreImpact();
+    }
+
+    public void TriggerByCoreImpact()
+    {
+        if (activateOnlyOnce && hasActivated)
+            return;
+
+        if (isRunning || coreImpactCoroutine != null)
+            return;
+
+        ResolvePlayerReferences();
+        coreImpactCoroutine = StartCoroutine(CoreImpactRoutine());
+    }
+
+    public void StartCollapseEvent()
+    {
+        if (activateOnlyOnce && hasActivated)
+            return;
+
+        if (isRunning)
+            return;
+
+        ResolvePlayerReferences();
+        eventCoroutine = StartCoroutine(CollapseEventRoutine());
+    }
+
+    private void ResolvePlayerReferences()
+    {
+        if (playerController == null)
+            playerController = FindObjectOfType<PlayerController>();
+
+        if (playerRigidbody == null && playerController != null)
+            playerRigidbody = playerController.GetComponent<Rigidbody2D>();
+
+        if (playerRigidbody == null)
+            playerRigidbody = FindObjectOfType<Rigidbody2D>();
+    }
+
+    private IEnumerator CoreImpactRoutine()
+    {
+        if (coreImpactDelay > 0f)
+            yield return new WaitForSeconds(coreImpactDelay);
+
+        Transform impactTarget = GetCoreImpactTransform();
+
+        if (playCoreImpactDrop && impactTarget != null)
+            yield return StartCoroutine(CoreDropRoutine(impactTarget));
+
+        PlayAudio(coreImpactAudio);
+        PlayParticle(coreImpactParticle);
+        StartCameraShake(finalImpactShakeTime, finalImpactShakePower);
+
+        if (coreImpactHoldTime > 0f)
+            yield return new WaitForSeconds(coreImpactHoldTime);
+
+        coreImpactCoroutine = null;
+
+        if (startCollapseAfterCoreImpact)
+        {
+            skipWarningForNextCollapse = skipWarningAfterCoreImpact;
+            StartCollapseEvent();
+        }
+    }
+
+    private Transform GetCoreImpactTransform()
+    {
+        if (coreImpactTransform != null)
+            return coreImpactTransform;
+
+        if (coreActivationSources == null)
+            return null;
+
+        for (int i = 0; i < coreActivationSources.Length; i++)
+        {
+            if (coreActivationSources[i] != null)
+                return coreActivationSources[i].transform;
+        }
+
+        return null;
+    }
+
+    private IEnumerator CoreDropRoutine(Transform impactTarget)
+    {
+        Vector3 startPosition = impactTarget.position;
+        Vector3 targetPosition = startPosition + Vector3.down * coreDropDistance;
+
+        if (coreDropDuration <= 0f)
+        {
+            impactTarget.position = targetPosition;
+            yield break;
+        }
+
+        float timer = 0f;
+
+        while (timer < coreDropDuration)
+        {
+            timer += Time.deltaTime;
+            float t = Mathf.Clamp01(timer / coreDropDuration);
+            t = EaseInCubic(t);
+            impactTarget.position = Vector3.Lerp(startPosition, targetPosition, t);
+            yield return null;
+        }
+
+        impactTarget.position = targetPosition;
+    }
+
     private IEnumerator CollapseEventRoutine()
     {
         isRunning = true;
         hasActivated = true;
+        bool skipWarning = skipWarningForNextCollapse;
+        skipWarningForNextCollapse = false;
 
         LockInputOnly();
 
-        if (warningLoopAudio != null)
+        if (!skipWarning && warningLoopAudio != null)
         {
             warningLoopAudio.Stop();
             warningLoopAudio.Play();
         }
 
-        yield return StartCoroutine(WarningRoutine());
+        if (!skipWarning)
+            yield return StartCoroutine(WarningRoutine());
 
         if (warningLoopAudio != null)
             warningLoopAudio.Stop();
@@ -858,7 +1037,7 @@ public class BreakableFragmentPlatformEvent : MonoBehaviour
     {
         if (platformCollidersToDisable == null || platformCollidersToDisable.Length == 0)
         {
-            Debug.LogWarning($"{gameObject.name} : Platform Colliders To DisableÀÌ ºñ¾îÀÖ½À´Ï´Ù. ½ÇÁ¦ ¹ßÆÇ Collider¸¦ ³Ö¾îÁÖ¼¼¿ä.");
+            Debug.LogWarning($"{gameObject.name} : Platform Colliders To Disableì´ ë¹„ì–´ìˆìŠµë‹ˆë‹¤. ì‹¤ì œ ë°œíŒ Colliderë¥¼ ë„£ì–´ì£¼ì„¸ìš”.");
             return;
         }
 
@@ -1006,8 +1185,16 @@ public class BreakableFragmentPlatformEvent : MonoBehaviour
         return 1f - Mathf.Pow(1f - t, 3f);
     }
 
+    private float EaseInCubic(float t)
+    {
+        t = Mathf.Clamp01(t);
+        return t * t * t;
+    }
+
     private void OnDisable()
     {
+        UnsubscribeCoreActivationSources();
+
         if (warningLoopAudio != null)
             warningLoopAudio.Stop();
 

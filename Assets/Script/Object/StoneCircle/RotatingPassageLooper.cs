@@ -10,16 +10,21 @@ public class RotatingPassageLooper : MonoBehaviour
         public string partName;
         public Transform partRoot;
 
-        [Header("Angles")]
+        [Header("Legacy Angles")]
         public float angleA = 45f;
         public float angleB = 0f;
         public float angleC = -45f;
         public float angleD = 0f;
 
-        [Header("Timing")]
+        [Header("Legacy Timing")]
         public float startDelay = 0f;
         public float rotateTime = 0.9f;
         public float holdTime = 0.9f;
+
+        [Header("Legacy Sequence Spin")]
+        public float spinSpeed = 20f;
+        public float freeSpinTime = 2.5f;
+        public float lockToZeroTime = 0.75f;
 
         [Header("Sound")]
         public bool playSound = true;
@@ -35,126 +40,233 @@ public class RotatingPassageLooper : MonoBehaviour
 
     [Header("Option")]
     public bool playOnStart = false;
+    public bool restartIfAlreadyPlaying = false;
+
+    [Header("Start Timing")]
+    public float initialStartDelay = 5f;
+    public float partStartInterval = 1f;
+    public bool usePartStartDelayOffsets = false;
+
+    [Header("Rotation")]
+    public float sequenceSpinSpeed = 20f;
+    public bool usePerPartSpinSpeed = false;
+    public float spinDirection = 1f;
+    public float spinRampTime = 0f;
+
+    [Header("Lock")]
+    public float targetLockAngle = 45f;
+    public float lockAngleTolerance = 2f;
+    public float requiredRotationsBeforeLock = 2f;
+    public float lockInterval = 1f;
 
     private bool isLooping = false;
-    private Coroutine[] loopRoutines;
+    private Coroutine sequenceRoutine;
+    private Coroutine[] partRoutines;
+    private bool[] partLocked;
+    private int nextLockIndex;
+    private float nextLockAllowedTime;
 
     private void Start()
     {
         if (playOnStart)
-        {
             StartLoop();
-        }
     }
 
     public void StartLoop()
     {
         if (isLooping)
-            return;
+        {
+            if (!restartIfAlreadyPlaying)
+                return;
 
-        isLooping = true;
+            StopLoop();
+        }
 
         if (parts == null || parts.Length == 0)
             return;
 
-        loopRoutines = new Coroutine[parts.Length];
+        isLooping = true;
+        nextLockIndex = 0;
+        nextLockAllowedTime = Time.time;
+        partRoutines = new Coroutine[parts.Length];
+        partLocked = new bool[parts.Length];
 
-        for (int i = 0; i < parts.Length; i++)
-        {
-            if (parts[i] != null && parts[i].partRoot != null)
-            {
-                loopRoutines[i] = StartCoroutine(PartLoop(parts[i]));
-            }
-        }
+        sequenceRoutine = StartCoroutine(PassageSequence());
     }
 
     public void StopLoop()
     {
         isLooping = false;
 
-        if (loopRoutines == null)
-            return;
-
-        for (int i = 0; i < loopRoutines.Length; i++)
+        if (sequenceRoutine != null)
         {
-            if (loopRoutines[i] != null)
-            {
-                StopCoroutine(loopRoutines[i]);
-                loopRoutines[i] = null;
-            }
+            StopCoroutine(sequenceRoutine);
+            sequenceRoutine = null;
         }
+
+        StopAllPartRoutines();
     }
 
-    private IEnumerator PartLoop(PassagePart part)
+    private IEnumerator PassageSequence()
     {
-        yield return new WaitForSeconds(part.startDelay);
-
-        float[] angles =
+        for (int i = 0; i < parts.Length; i++)
         {
-            part.angleA,
-            part.angleB,
-            part.angleC,
-            part.angleD
-        };
+            PassagePart part = parts[i];
 
-        int index = 0;
-
-        while (isLooping)
-        {
-            float targetAngle = angles[index];
-
-            yield return StartCoroutine(RotatePartToAngle(part, targetAngle));
-
-            if (part.playSound && lockClip != null && audioSource != null)
+            if (part == null || part.partRoot == null)
             {
-                audioSource.PlayOneShot(lockClip);
+                partLocked[i] = true;
+                continue;
             }
 
-            yield return new WaitForSeconds(part.holdTime);
-
-            index++;
-
-            if (index >= angles.Length)
-                index = 0;
+            partRoutines[i] = StartCoroutine(RotatePartUntilLockWindow(i, part));
         }
+
+        while (isLooping && !AreAllPartsLocked())
+            yield return null;
+
+        isLooping = false;
+        sequenceRoutine = null;
     }
 
-    private IEnumerator RotatePartToAngle(PassagePart part, float targetZ)
+    private IEnumerator RotatePartUntilLockWindow(int index, PassagePart part)
     {
-        if (part == null || part.partRoot == null)
+        float delay = Mathf.Max(0f, initialStartDelay) + Mathf.Max(0f, partStartInterval) * index;
+
+        if (usePartStartDelayOffsets)
+            delay += Mathf.Max(0f, part.startDelay);
+
+        if (delay > 0f)
+            yield return new WaitForSeconds(delay);
+
+        if (!isLooping)
             yield break;
 
         if (part.playSound && rotateStartClip != null && audioSource != null)
-        {
             audioSource.PlayOneShot(rotateStartClip);
-        }
 
         float timer = 0f;
+        float rotatedDegrees = 0f;
+        float direction = GetSpinDirection();
+        float speed = GetSpinSpeed(part);
+        float requiredDegrees = Mathf.Max(0f, requiredRotationsBeforeLock) * 360f;
 
-        float startZ = part.partRoot.localEulerAngles.z;
-
-        if (startZ > 180f)
-            startZ -= 360f;
-
-        while (timer < part.rotateTime)
+        while (isLooping)
         {
             timer += Time.deltaTime;
 
-            float t = timer / part.rotateTime;
-            t = Mathf.Clamp01(t);
-            t = Mathf.SmoothStep(0f, 1f, t);
-
-            float z = Mathf.LerpAngle(startZ, targetZ, t);
+            float speedMultiplier = GetSpeedMultiplier(timer);
+            float delta = direction * speed * speedMultiplier * Time.deltaTime;
+            rotatedDegrees += Mathf.Abs(delta);
 
             Vector3 euler = part.partRoot.localEulerAngles;
-            euler.z = z;
+            euler.z = Mathf.Repeat(euler.z + delta, 360f);
             part.partRoot.localEulerAngles = euler;
+
+            if (CanLockPart(index, rotatedDegrees, euler.z, requiredDegrees))
+            {
+                LockPart(index, part);
+                yield break;
+            }
 
             yield return null;
         }
+    }
 
-        Vector3 finalEuler = part.partRoot.localEulerAngles;
-        finalEuler.z = targetZ;
-        part.partRoot.localEulerAngles = finalEuler;
+    private bool CanLockPart(int index, float rotatedDegrees, float currentZ, float requiredDegrees)
+    {
+        if (index != nextLockIndex)
+            return false;
+
+        if (Time.time < nextLockAllowedTime)
+            return false;
+
+        if (rotatedDegrees < requiredDegrees)
+            return false;
+
+        return IsNearAngle(currentZ, targetLockAngle, lockAngleTolerance);
+    }
+
+    private void LockPart(int index, PassagePart part)
+    {
+        partLocked[index] = true;
+        partRoutines[index] = null;
+
+        if (part.playSound && lockClip != null && audioSource != null)
+            audioSource.PlayOneShot(lockClip);
+
+        nextLockIndex++;
+        nextLockAllowedTime = Time.time + Mathf.Max(0f, lockInterval);
+
+        while (nextLockIndex < parts.Length && IsPartMissing(nextLockIndex))
+        {
+            partLocked[nextLockIndex] = true;
+            nextLockIndex++;
+        }
+    }
+
+    private bool IsPartMissing(int index)
+    {
+        if (parts == null || index < 0 || index >= parts.Length)
+            return true;
+
+        return parts[index] == null || parts[index].partRoot == null;
+    }
+
+    private bool AreAllPartsLocked()
+    {
+        if (partLocked == null)
+            return true;
+
+        for (int i = 0; i < partLocked.Length; i++)
+        {
+            if (!partLocked[i])
+                return false;
+        }
+
+        return true;
+    }
+
+    private void StopAllPartRoutines()
+    {
+        if (partRoutines == null)
+            return;
+
+        for (int i = 0; i < partRoutines.Length; i++)
+        {
+            if (partRoutines[i] != null)
+            {
+                StopCoroutine(partRoutines[i]);
+                partRoutines[i] = null;
+            }
+        }
+    }
+
+    private float GetSpinDirection()
+    {
+        return spinDirection < 0f ? -1f : 1f;
+    }
+
+    private float GetSpinSpeed(PassagePart part)
+    {
+        if (usePerPartSpinSpeed && part != null)
+            return Mathf.Abs(part.spinSpeed);
+
+        return Mathf.Abs(sequenceSpinSpeed);
+    }
+
+    private float GetSpeedMultiplier(float timer)
+    {
+        if (spinRampTime <= 0f)
+            return 1f;
+
+        float t = Mathf.Clamp01(timer / spinRampTime);
+        return Mathf.SmoothStep(0f, 1f, t);
+    }
+
+    private bool IsNearAngle(float currentZ, float targetZ, float tolerance)
+    {
+        float delta = Mathf.Abs(Mathf.DeltaAngle(currentZ, targetZ));
+        return delta <= Mathf.Max(0.01f, tolerance);
     }
 }
