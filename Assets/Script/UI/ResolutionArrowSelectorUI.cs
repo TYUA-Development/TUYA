@@ -41,7 +41,19 @@ public class ResolutionArrowSelectorUI : MonoBehaviour
 
     private void Awake()
     {
+        options = BuildOptionsFromSystem();
         SetupListeners();
+    }
+
+    private static ResolutionOption[] BuildOptionsFromSystem()
+    {
+        SettingsManager.ResolutionOption[] supported = SettingsManager.FixedResolutions;
+        ResolutionOption[] result = new ResolutionOption[supported.Length];
+
+        for (int i = 0; i < supported.Length; i++)
+            result[i] = new ResolutionOption { width = supported[i].width, height = supported[i].height };
+
+        return result;
     }
 
     private void OnEnable()

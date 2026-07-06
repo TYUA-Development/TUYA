@@ -417,7 +417,7 @@ public class PlayerAttackState : PlayerState
     public override void Exit()
     {
         controller.HideTrajectory();
-        controller.LockPlayerInput(1.0f);
+        controller.LockPlayerInput(0.25f);
         controller.RequireAimingReleaseBeforeAttack();
 
         controller.animator.SetBool("IsAiming", false);
@@ -569,7 +569,7 @@ public class PlayerAttackState : PlayerState
 
         if (info.IsName("AttackEnd"))
         {
-            if (info.normalizedTime >= 1f)
+            if (info.normalizedTime >= 0.1f)
                 controller.OnIdle();
 
             return;
@@ -581,7 +581,7 @@ public class PlayerAttackState : PlayerState
             return;
         }
 
-        if (info.IsName("Attack") && info.normalizedTime >= 1.05f)
+        if (info.IsName("Attack") && info.normalizedTime >= 0.1f)
         {
             controller.HideUpperBody();
             controller.animator.Play("AttackEnd", 0, 0f);

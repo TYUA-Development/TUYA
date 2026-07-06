@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Audio;
 using UnityEngine.SceneManagement;
@@ -17,14 +18,47 @@ public class SettingsManager : MonoBehaviour
         }
     }
 
-    public static readonly ResolutionOption[] FixedResolutions =
+    private static ResolutionOption[] fixedResolutions;
+
+    public static ResolutionOption[] FixedResolutions
     {
-        new ResolutionOption(3840, 2160),
-        new ResolutionOption(2560, 1440),
-        new ResolutionOption(1920, 1080),
-        new ResolutionOption(1600, 900),
-        new ResolutionOption(1280, 720)
-    };
+        get
+        {
+            if (fixedResolutions == null)
+                fixedResolutions = BuildSupportedResolutions();
+
+            return fixedResolutions;
+        }
+    }
+
+    private static ResolutionOption[] BuildSupportedResolutions()
+    {
+        Resolution[] systemResolutions = Screen.resolutions;
+        List<ResolutionOption> unique = new List<ResolutionOption>();
+
+        for (int i = systemResolutions.Length - 1; i >= 0; i--)
+        {
+            Resolution candidate = systemResolutions[i];
+            bool alreadyAdded = false;
+
+            for (int j = 0; j < unique.Count; j++)
+            {
+                if (unique[j].width == candidate.width && unique[j].height == candidate.height)
+                {
+                    alreadyAdded = true;
+                    break;
+                }
+            }
+
+            if (!alreadyAdded)
+                unique.Add(new ResolutionOption(candidate.width, candidate.height));
+        }
+
+        if (unique.Count == 0)
+            unique.Add(new ResolutionOption(Screen.currentResolution.width, Screen.currentResolution.height));
+
+        return unique.ToArray();
+    }
 
     private static readonly FullScreenMode[] ScreenModes =
     {
