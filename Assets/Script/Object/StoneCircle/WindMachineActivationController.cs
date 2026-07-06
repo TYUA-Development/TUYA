@@ -28,6 +28,7 @@ public class WindMachineActivationController : MonoBehaviour
     public AudioClip arrowHitClip;
     public AudioClip lockClickClip;
     public AudioClip machineStartClip;
+    [Range(0f, 1f)] public float machineStartVolume = 1f;
     public AudioClip backgroundStartClip;
     public AudioClip passageStartClip;
 
@@ -150,7 +151,7 @@ public class WindMachineActivationController : MonoBehaviour
         yield return new WaitForSeconds(centerStartDelay);
 
         // 3. ��� ������
-        PlayOneShot(machineStartClip);
+        PlayOneShot(machineStartClip, machineStartVolume);
 
         // 4. ���� ����� ����
         StartMachineLoop();
@@ -194,13 +195,18 @@ public class WindMachineActivationController : MonoBehaviour
 
     private void PlayOneShot(AudioClip clip)
     {
+        PlayOneShot(clip, 1f);
+    }
+
+    private void PlayOneShot(AudioClip clip, float volumeScale)
+    {
         if (clip == null)
             return;
 
         if (oneShotAudioSource == null)
             return;
 
-        oneShotAudioSource.PlayOneShot(clip);
+        oneShotAudioSource.PlayOneShot(clip, Mathf.Clamp01(volumeScale));
     }
 
     private void StartMachineLoop()
