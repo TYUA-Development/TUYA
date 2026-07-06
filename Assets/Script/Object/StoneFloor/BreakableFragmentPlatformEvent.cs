@@ -7,110 +7,95 @@ public class BreakableFragmentPlatformEvent : MonoBehaviour
     [Header("Trigger")]
     public string playerTag = "Player";
     public bool activateOnlyOnce = true;
-    public bool triggerOnPlayerEnter = false;
-
-    [Header("Core Impact Trigger")]
-    public CoreActivationController[] coreActivationSources;
-    public bool autoCollectCoreActivationSources = true;
-    public Transform coreImpactTransform;
-    public bool playCoreImpactDrop = true;
-    public float coreImpactDelay = 0f;
-    public float coreDropDistance = 1.4f;
-    public float coreDropDuration = 0.35f;
-    public float coreImpactHoldTime = 0.15f;
-    public AudioSource coreImpactAudio;
-    public ParticleSystem coreImpactParticle;
-    public bool startCollapseAfterCoreImpact = true;
-    public bool skipWarningAfterCoreImpact = true;
 
     [Header("Player")]
     public PlayerController playerController;
     public Rigidbody2D playerRigidbody;
 
-    [Tooltip("PlayerController는 끄지 않고 입력만 잠급니다.")]
+    [Tooltip("PlayerController�� ���� �ʰ� �Է¸� ��޴ϴ�.")]
     public bool usePlayerControllerInputLock = true;
 
-    [Tooltip("도착 순간 속도를 0으로 멈춥니다.")]
+    [Tooltip("���� ���� �ӵ��� 0���� ����ϴ�.")]
     public bool stopPlayerVelocityOnStart = true;
 
-    [Tooltip("바닥 Collider가 꺼진 뒤 PlayerController.OnFall()을 한 번 호출합니다.")]
+    [Tooltip("�ٴ� Collider�� ���� �� PlayerController.OnFall()�� �� �� ȣ���մϴ�.")]
     public bool callFallOnceAfterPlatformBreak = true;
 
-    [Tooltip("Collider OFF 후 몇 번의 FixedUpdate를 기다린 뒤 OnFall을 호출할지")]
+    [Tooltip("Collider OFF �� �� ���� FixedUpdate�� ��ٸ� �� OnFall�� ȣ������")]
     public int fixedFramesBeforeCallFall = 2;
 
-    [Tooltip("OnFall 호출 직전에 아래 방향 속도를 살짝 줍니다.")]
+    [Tooltip("OnFall ȣ�� ������ �Ʒ� ���� �ӵ��� ��¦ �ݴϴ�.")]
     public float fallStartDownVelocity = -0.35f;
 
-    [Tooltip("최종 쿵 이후 입력 잠금을 조금 더 유지하는 시간")]
+    [Tooltip("���� �� ���� �Է� ����� ���� �� �����ϴ� �ð�")]
     public float extraInputLockAfterFinalImpact = 0.25f;
 
     [Header("Cinematic Fall Speed Curve")]
-    [Tooltip("파편 구간 낙하 속도를 연출용으로 조절합니다.")]
+    [Tooltip("���� ���� ���� �ӵ��� ��������� �����մϴ�.")]
     public bool useCinematicFallSpeed = true;
 
-    [Tooltip("파편 낙하에서 사용할 원래 중력값. Player Rigidbody2D의 기본 Gravity Scale 값을 직접 넣으세요.")]
+    [Tooltip("���� ���Ͽ��� ����� ���� �߷°�. Player Rigidbody2D�� �⺻ Gravity Scale ���� ���� ��������.")]
     public float normalFallGravityScale = 1f;
 
-    [Tooltip("처음 떨어질 때 툭 떨어지는 느낌을 주는 시작 속도")]
+    [Tooltip("ó�� ������ �� �� �������� ������ �ִ� ���� �ӵ�")]
     public float initialNormalFallVelocity = -2.2f;
 
-    [Tooltip("낙하가 끝나는 바닥 위치를 알려주는 빈 오브젝트. 최종 도착 바닥 근처에 두세요.")]
+    [Tooltip("���ϰ� ������ �ٴ� ��ġ�� �˷��ִ� �� ������Ʈ. ���� ���� �ٴ� ��ó�� �μ���.")]
     public Transform fallEndPoint;
 
-    [Tooltip("Fall End Point가 없을 때 사용할 도착 Y값")]
+    [Tooltip("Fall End Point�� ���� �� ����� ���� Y��")]
     public float fallEndY = -10f;
 
-    [Tooltip("처음 이 비율만큼은 원래 속도로 떨어집니다.")]
+    [Tooltip("ó�� �� ������ŭ�� ���� �ӵ��� �������ϴ�.")]
     [Range(0f, 0.45f)]
     public float topNormalPercent = 0.2f;
 
-    [Tooltip("마지막 이 비율만큼은 원래 속도로 떨어집니다.")]
+    [Tooltip("������ �� ������ŭ�� ���� �ӵ��� �������ϴ�.")]
     [Range(0f, 0.45f)]
     public float bottomNormalPercent = 0.22f;
 
-    [Tooltip("느린 구간으로 부드럽게 들어가고 나오는 폭")]
+    [Tooltip("���� �������� �ε巴�� ���� ������ ��")]
     [Range(0.01f, 0.3f)]
     public float slowBlendPercent = 0.08f;
 
-    [Tooltip("중간 구간 중력. 낮을수록 천천히 떨어집니다.")]
+    [Tooltip("�߰� ���� �߷�. �������� õõ�� �������ϴ�.")]
     public float middleGravityScale = 0.35f;
 
-    [Tooltip("중간 구간 최대 낙하 속도. 0에 가까울수록 천천히 떨어집니다.")]
+    [Tooltip("�߰� ���� �ִ� ���� �ӵ�. 0�� �������� õõ�� �������ϴ�.")]
     public float middleMaxFallSpeed = -2.4f;
 
-    [Tooltip("처음/끝 구간 최대 낙하 속도. 보통 크게 둡니다.")]
+    [Tooltip("ó��/�� ���� �ִ� ���� �ӵ�. ���� ũ�� �Ӵϴ�.")]
     public float normalMaxFallSpeed = -20f;
 
-    [Tooltip("낙하 시작 후 이 시간 전에는 착지 판정을 보지 않습니다.")]
+    [Tooltip("���� ���� �� �� �ð� ������ ���� ������ ���� �ʽ��ϴ�.")]
     public float minCinematicFallTime = 0.25f;
 
-    [Tooltip("복구 안전장치 시간")]
+    [Tooltip("���� ������ġ �ð�")]
     public float maxCinematicFallTime = 8f;
 
     [Header("Cinematic Fall Camera Lag")]
-    [Tooltip("파편 낙하 중 카메라가 캐릭터를 살짝 늦게 따라가게 합니다.")]
+    [Tooltip("���� ���� �� ī�޶� ĳ���͸� ��¦ �ʰ� ���󰡰� �մϴ�.")]
     public bool useFallCameraLag = true;
 
-    [Tooltip("비워두면 Main Camera를 사용합니다. 가능하면 Camera Root/Rig를 넣는 게 좋습니다.")]
+    [Tooltip("����θ� Main Camera�� ����մϴ�. �����ϸ� Camera Root/Rig�� �ִ� �� �����ϴ�.")]
     public Transform fallCameraTarget;
 
-    [Tooltip("카메라가 캐릭터보다 위를 보게 하는 값. 클수록 캐릭터가 화면 아래쪽에 보입니다.")]
+    [Tooltip("ī�޶� ĳ���ͺ��� ���� ���� �ϴ� ��. Ŭ���� ĳ���Ͱ� ȭ�� �Ʒ��ʿ� ���Դϴ�.")]
     public float fallCameraYOffset = 2.3f;
 
-    [Tooltip("카메라 따라가는 느림 정도. 클수록 늦게 따라갑니다.")]
+    [Tooltip("ī�޶� ���󰡴� ���� ����. Ŭ���� �ʰ� ���󰩴ϴ�.")]
     public float fallCameraSmoothTime = 0.9f;
 
-    [Tooltip("착지 직전에는 카메라가 조금 더 빨리 따라오게 할지")]
+    [Tooltip("���� �������� ī�޶� ���� �� ���� ������� ����")]
     public bool fasterCameraNearBottom = true;
 
-    [Tooltip("착지 직전 카메라 Smooth Time")]
+    [Tooltip("���� ���� ī�޶� Smooth Time")]
     public float bottomCameraSmoothTime = 0.45f;
 
-    [Tooltip("카메라 최대 이동 속도")]
+    [Tooltip("ī�޶� �ִ� �̵� �ӵ�")]
     public float fallCameraMaxSpeed = 30f;
 
-    [Tooltip("낙하 시작 후 카메라가 따라가기 시작하기까지 딜레이")]
+    [Tooltip("���� ���� �� ī�޶� ���󰡱� �����ϱ���� �����")]
     public float fallCameraStartDelay = 0.08f;
 
     [Header("Platform Collider")]
@@ -174,7 +159,7 @@ public class BreakableFragmentPlatformEvent : MonoBehaviour
     public float crackDownOffset = 0.04f;
     public float crackVerticalJitter = 0.05f;
 
-    [Tooltip("대지 포함 파편이면 0 유지 추천")]
+    [Tooltip("���� ���� �����̸� 0 ���� ��õ")]
     public float crackMaxSpinAngle = 0f;
 
     [Header("Final Collapse")]
@@ -189,7 +174,7 @@ public class BreakableFragmentPlatformEvent : MonoBehaviour
 
     public float fallGravity = 5.5f;
 
-    [Tooltip("대지 포함 파편이면 0 유지 추천")]
+    [Tooltip("���� ���� �����̸� 0 ���� ��õ")]
     public float maxSpinSpeed = 0f;
 
     public bool fadeOutFragments = true;
@@ -200,7 +185,7 @@ public class BreakableFragmentPlatformEvent : MonoBehaviour
     [Header("Camera On Final Impact")]
     public bool releaseCameraEventOnFinalImpact = true;
 
-    [Tooltip("FallZoomCameraArea가 낙하 카메라를 담당하면 꺼두세요.")]
+    [Tooltip("FallZoomCameraArea�� ���� ī�޶� ����ϸ� ���μ���.")]
     public bool enableCameraFollowYOnFinalImpact = false;
 
     [Header("State")]
@@ -221,8 +206,6 @@ public class BreakableFragmentPlatformEvent : MonoBehaviour
     private Coroutine eventCoroutine;
     private Coroutine cameraShakeCoroutine;
     private Coroutine callFallCoroutine;
-    private Coroutine coreImpactCoroutine;
-    private bool skipWarningForNextCollapse;
 
     private float originalGravityScale;
     private bool hasOriginalGravityScale;
@@ -237,7 +220,6 @@ public class BreakableFragmentPlatformEvent : MonoBehaviour
     {
         triggerCollider = GetComponent<Collider2D>();
 
-        CollectCoreActivationSources();
         CollectPlatformColliders();
         CollectFragments();
         CacheFragmentOriginalState();
@@ -247,12 +229,6 @@ public class BreakableFragmentPlatformEvent : MonoBehaviour
         StopParticle(dustOnThirdRumble);
         StopParticle(dustOnCrack);
         StopParticle(dustOnFinalImpact);
-        StopParticle(coreImpactParticle);
-    }
-
-    private void OnEnable()
-    {
-        SubscribeCoreActivationSources();
     }
 
     private void FixedUpdate()
@@ -268,15 +244,18 @@ public class BreakableFragmentPlatformEvent : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        if (!triggerOnPlayerEnter)
+        if (!collision.CompareTag(playerTag))
             return;
 
-        if (!collision.CompareTag(playerTag))
+        if (activateOnlyOnce && hasActivated)
+            return;
+
+        if (isRunning)
             return;
 
         FindPlayerReferences(collision);
 
-        StartCollapseEvent();
+        eventCoroutine = StartCoroutine(CollapseEventRoutine());
     }
 
     private void FindPlayerReferences(Collider2D collision)
@@ -288,178 +267,20 @@ public class BreakableFragmentPlatformEvent : MonoBehaviour
             playerRigidbody = collision.GetComponentInParent<Rigidbody2D>();
     }
 
-    private void CollectCoreActivationSources()
-    {
-        if (!autoCollectCoreActivationSources)
-            return;
-
-        if (coreActivationSources != null && coreActivationSources.Length > 0)
-            return;
-
-        coreActivationSources = GetComponentsInParent<CoreActivationController>(true);
-
-        if (coreActivationSources == null || coreActivationSources.Length == 0)
-            coreActivationSources = GetComponentsInChildren<CoreActivationController>(true);
-    }
-
-    private void SubscribeCoreActivationSources()
-    {
-        if (coreActivationSources == null)
-            return;
-
-        for (int i = 0; i < coreActivationSources.Length; i++)
-        {
-            if (coreActivationSources[i] != null)
-            {
-                coreActivationSources[i].onActivated -= HandleCoreActivated;
-                coreActivationSources[i].onActivated += HandleCoreActivated;
-            }
-        }
-    }
-
-    private void UnsubscribeCoreActivationSources()
-    {
-        if (coreActivationSources == null)
-            return;
-
-        for (int i = 0; i < coreActivationSources.Length; i++)
-        {
-            if (coreActivationSources[i] != null)
-                coreActivationSources[i].onActivated -= HandleCoreActivated;
-        }
-    }
-
-    private void HandleCoreActivated()
-    {
-        TriggerByCoreImpact();
-    }
-
-    public void OnCoreEvent()
-    {
-        TriggerByCoreImpact();
-    }
-
-    public void TriggerByCoreImpact()
-    {
-        if (activateOnlyOnce && hasActivated)
-            return;
-
-        if (isRunning || coreImpactCoroutine != null)
-            return;
-
-        ResolvePlayerReferences();
-        coreImpactCoroutine = StartCoroutine(CoreImpactRoutine());
-    }
-
-    public void StartCollapseEvent()
-    {
-        if (activateOnlyOnce && hasActivated)
-            return;
-
-        if (isRunning)
-            return;
-
-        ResolvePlayerReferences();
-        eventCoroutine = StartCoroutine(CollapseEventRoutine());
-    }
-
-    private void ResolvePlayerReferences()
-    {
-        if (playerController == null)
-            playerController = FindObjectOfType<PlayerController>();
-
-        if (playerRigidbody == null && playerController != null)
-            playerRigidbody = playerController.GetComponent<Rigidbody2D>();
-
-        if (playerRigidbody == null)
-            playerRigidbody = FindObjectOfType<Rigidbody2D>();
-    }
-
-    private IEnumerator CoreImpactRoutine()
-    {
-        if (coreImpactDelay > 0f)
-            yield return new WaitForSeconds(coreImpactDelay);
-
-        Transform impactTarget = GetCoreImpactTransform();
-
-        if (playCoreImpactDrop && impactTarget != null)
-            yield return StartCoroutine(CoreDropRoutine(impactTarget));
-
-        PlayAudio(coreImpactAudio);
-        PlayParticle(coreImpactParticle);
-        StartCameraShake(finalImpactShakeTime, finalImpactShakePower);
-
-        if (coreImpactHoldTime > 0f)
-            yield return new WaitForSeconds(coreImpactHoldTime);
-
-        coreImpactCoroutine = null;
-
-        if (startCollapseAfterCoreImpact)
-        {
-            skipWarningForNextCollapse = skipWarningAfterCoreImpact;
-            StartCollapseEvent();
-        }
-    }
-
-    private Transform GetCoreImpactTransform()
-    {
-        if (coreImpactTransform != null)
-            return coreImpactTransform;
-
-        if (coreActivationSources == null)
-            return null;
-
-        for (int i = 0; i < coreActivationSources.Length; i++)
-        {
-            if (coreActivationSources[i] != null)
-                return coreActivationSources[i].transform;
-        }
-
-        return null;
-    }
-
-    private IEnumerator CoreDropRoutine(Transform impactTarget)
-    {
-        Vector3 startPosition = impactTarget.position;
-        Vector3 targetPosition = startPosition + Vector3.down * coreDropDistance;
-
-        if (coreDropDuration <= 0f)
-        {
-            impactTarget.position = targetPosition;
-            yield break;
-        }
-
-        float timer = 0f;
-
-        while (timer < coreDropDuration)
-        {
-            timer += Time.deltaTime;
-            float t = Mathf.Clamp01(timer / coreDropDuration);
-            t = EaseInCubic(t);
-            impactTarget.position = Vector3.Lerp(startPosition, targetPosition, t);
-            yield return null;
-        }
-
-        impactTarget.position = targetPosition;
-    }
-
     private IEnumerator CollapseEventRoutine()
     {
         isRunning = true;
         hasActivated = true;
-        bool skipWarning = skipWarningForNextCollapse;
-        skipWarningForNextCollapse = false;
 
         LockInputOnly();
 
-        if (!skipWarning && warningLoopAudio != null)
+        if (warningLoopAudio != null)
         {
             warningLoopAudio.Stop();
             warningLoopAudio.Play();
         }
 
-        if (!skipWarning)
-            yield return StartCoroutine(WarningRoutine());
+        yield return StartCoroutine(WarningRoutine());
 
         if (warningLoopAudio != null)
             warningLoopAudio.Stop();
@@ -1037,7 +858,7 @@ public class BreakableFragmentPlatformEvent : MonoBehaviour
     {
         if (platformCollidersToDisable == null || platformCollidersToDisable.Length == 0)
         {
-            Debug.LogWarning($"{gameObject.name} : Platform Colliders To Disable이 비어있습니다. 실제 발판 Collider를 넣어주세요.");
+            Debug.LogWarning($"{gameObject.name} : Platform Colliders To Disable�� ����ֽ��ϴ�. ���� ���� Collider�� �־��ּ���.");
             return;
         }
 
@@ -1185,16 +1006,8 @@ public class BreakableFragmentPlatformEvent : MonoBehaviour
         return 1f - Mathf.Pow(1f - t, 3f);
     }
 
-    private float EaseInCubic(float t)
-    {
-        t = Mathf.Clamp01(t);
-        return t * t * t;
-    }
-
     private void OnDisable()
     {
-        UnsubscribeCoreActivationSources();
-
         if (warningLoopAudio != null)
             warningLoopAudio.Stop();
 

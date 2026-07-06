@@ -1,4 +1,4 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 
 public class BacklightAreaTrigger : MonoBehaviour
 {
@@ -9,18 +9,25 @@ public class BacklightAreaTrigger : MonoBehaviour
     [Range(0f, 1f)]
     public float maxSilhouetteAmount = 1f;
 
-    [Tooltip("¿ÏÀü °ËÁ¤ ´ë½Å ¾à°£ º¸¶ùºû/Çª¸¥ºû ½Ç·ç¿§µµ °¡´É")]
+    [Tooltip("ì™„ì „ ê²€ì • ëŒ€ì‹  ì•½ê°„ ë³´ëë¹›/í‘¸ë¥¸ë¹› ì‹¤ë£¨ì—£ë„ ê°€ëŠ¥")]
     public Color silhouetteColorInArea = Color.black;
 
     [Header("X Distance Fade")]
-    [Tooltip("Äİ¶óÀÌ´õ ÁÂ¿ì ³¡¿¡¼­ ÀÌ °Å¸®¸¸Å­ ÀÌµ¿ÇÏ¸é¼­ Á¡Á¡ °ËÁ¤ÀÌ µË´Ï´Ù.")]
+    [Tooltip("ì½œë¼ì´ë” ì¢Œìš° ëì—ì„œ ì´ ê±°ë¦¬ë§Œí¼ ì´ë™í•˜ë©´ì„œ ì ì  ê²€ì •ì´ ë©ë‹ˆë‹¤.")]
     public float fadeDistanceX = 6f;
 
-    [Tooltip("Äİ¶óÀÌ´õ Áß¾ÓºÎ¿¡¼­ °ËÁ¤ÀÌ À¯ÁöµË´Ï´Ù.")]
+    [Tooltip("ì½œë¼ì´ë” ì¤‘ì•™ë¶€ì—ì„œ ê²€ì •ì´ ìœ ì§€ë©ë‹ˆë‹¤.")]
     public bool keepBlackInMiddle = true;
 
-    [Tooltip("X À§Ä¡ ±âÁØÀ¸·Î¸¸ °è»êÇÕ´Ï´Ù.")]
+    [Tooltip("X ìœ„ì¹˜ ê¸°ì¤€ìœ¼ë¡œë§Œ ê³„ì‚°í•©ë‹ˆë‹¤.")]
     public bool useOnlyX = true;
+
+    [Header("Additional Silhouette Targets")]
+    [Tooltip("í”Œë ˆì´ì–´ì™€ ê°™ì€ ë°©ì‹ìœ¼ë¡œ í•¨ê»˜ ì–´ë‘ì›Œì§ˆ ìŠ¤í”„ë¼ì´íŠ¸ ê·¸ë£¹ì…ë‹ˆë‹¤. ê° ì˜¤ë¸Œì íŠ¸ì— PlayerSilhouetteControllerë¥¼ ë¶™ì—¬ì„œ ë„£ìœ¼ì„¸ìš”.")]
+    public PlayerSilhouetteController[] additionalSilhouetteTargets;
+
+    [Tooltip("ì¶”ê°€ íƒ€ê²Ÿë„ í”Œë ˆì´ì–´ ìœ„ì¹˜ ê¸°ì¤€ fade ê°’ì„ ê·¸ëŒ€ë¡œ ë”°ë¼ê°‘ë‹ˆë‹¤.")]
+    public bool applyPlayerAmountToAdditionalTargets = true;
 
     [Header("Debug")]
     public bool showDebugLog = false;
@@ -47,6 +54,7 @@ public class BacklightAreaTrigger : MonoBehaviour
 
         float amount = CalculateAmount(collision.transform.position);
         currentSilhouette.SetSilhouetteInstant(amount);
+        ApplyAdditionalSilhouettes(amount);
 
         if (showDebugLog)
             Debug.Log("Backlight Enter Amount : " + amount);
@@ -66,6 +74,7 @@ public class BacklightAreaTrigger : MonoBehaviour
         float amount = CalculateAmount(collision.transform.position);
         currentSilhouette.SetSilhouetteColor(silhouetteColorInArea);
         currentSilhouette.SetSilhouetteInstant(amount);
+        ApplyAdditionalSilhouettes(amount);
     }
 
     private void OnTriggerExit2D(Collider2D collision)
@@ -77,6 +86,8 @@ public class BacklightAreaTrigger : MonoBehaviour
 
         if (silhouette != null)
             silhouette.SetSilhouetteInstant(0f);
+
+        ApplyAdditionalSilhouettes(0f);
 
         if (currentSilhouette == silhouette)
             currentSilhouette = null;
@@ -122,6 +133,26 @@ public class BacklightAreaTrigger : MonoBehaviour
         }
 
         return Mathf.Clamp01(amount * maxSilhouetteAmount);
+    }
+
+    private void ApplyAdditionalSilhouettes(float amount)
+    {
+        if (!applyPlayerAmountToAdditionalTargets)
+            return;
+
+        if (additionalSilhouetteTargets == null)
+            return;
+
+        for (int i = 0; i < additionalSilhouetteTargets.Length; i++)
+        {
+            PlayerSilhouetteController silhouette = additionalSilhouetteTargets[i];
+
+            if (silhouette == null)
+                continue;
+
+            silhouette.SetSilhouetteColor(silhouetteColorInArea);
+            silhouette.SetSilhouetteInstant(amount);
+        }
     }
 
     private PlayerSilhouetteController FindSilhouetteController(Collider2D collision)
