@@ -15,6 +15,6 @@ public class MusicPuzzlePropellerHitProxy : MonoBehaviour, IArrowHit
             owner = GetComponentInParent<HangingMusicPuzzleNoteObject>();
 
         if (owner != null)
-            owner.HandlePropellerHit(gameObject);
+            owner.HandlePropellerHit();
     }
 }

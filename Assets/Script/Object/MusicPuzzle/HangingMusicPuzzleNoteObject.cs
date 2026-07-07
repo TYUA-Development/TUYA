@@ -103,12 +103,9 @@ public class HangingMusicPuzzleNoteObject : MonoBehaviour
         UpdateDots();
     }
 
-    public void HandlePropellerHit(GameObject hitObject)
+    public void HandlePropellerHit()
     {
         if (hitLocked)
-            return;
-
-        if (hitObject != null && !IsArrowObject(hitObject))
             return;
 
         StartCoroutine(PropellerHitRoutine());
