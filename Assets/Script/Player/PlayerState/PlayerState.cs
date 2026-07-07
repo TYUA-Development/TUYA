@@ -247,6 +247,8 @@ public class PlayerJumpState : PlayerState
         controller.Rigidbody2D.AddForce(Vector2.up * jumpPower, ForceMode2D.Impulse);
         //controller.isGround = false;
 
+        controller.PlayJumpSound();
+
         Debug.Log("점프 활성화 " + jumpPower);
 
         controller.isGround = false;

@@ -53,6 +53,11 @@ public class PlayerController : MonoBehaviour
 
     private float footstepTimer;
 
+    [Header("Jump SFX")]
+    public AudioClip[] jumpSounds;
+    public float jumpVolume = 0.5f;
+
+    [Header("etc.")]
     public BowSFXRandomizer bowSFX;
 
     private float defaultGravityScale;
@@ -640,6 +645,21 @@ public class PlayerController : MonoBehaviour
 
             footstepTimer = 0f;
         }
+    }
+
+    public void PlayJumpSound()
+    {
+        if (footstepSource == null)
+            return;
+
+        if (jumpSounds == null || jumpSounds.Length == 0)
+            return;
+
+        int randomIndex = UnityEngine.Random.Range(0, jumpSounds.Length);
+        AudioClip clipToPlay = jumpSounds[randomIndex];
+
+        if (clipToPlay != null)
+            footstepSource.PlayOneShot(clipToPlay, jumpVolume);
     }
 
     private void HandleGroundCollision(Collision2D collision)
