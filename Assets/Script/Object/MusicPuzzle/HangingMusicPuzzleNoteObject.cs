@@ -103,15 +103,12 @@ public class HangingMusicPuzzleNoteObject : MonoBehaviour
         UpdateDots();
     }
 
-    public void HandlePropellerHit(GameObject hitObject)
+    public void HandlePropellerHit(Vector2 hitPoint, Vector2 arrowDirection)
     {
         if (hitLocked)
             return;
 
-        if (hitObject != null && !IsArrowObject(hitObject))
-            return;
-
-        StartCoroutine(PropellerHitRoutine());
+        StartCoroutine(PropellerHitRoutine(hitPoint, arrowDirection));
     }
 
     public void SetNoteIndex(int noteIndex, bool playNote)
@@ -209,7 +206,7 @@ public class HangingMusicPuzzleNoteObject : MonoBehaviour
         bodyRigidbody = body;
     }
 
-    private IEnumerator PropellerHitRoutine()
+    private IEnumerator PropellerHitRoutine(Vector2 hitPoint, Vector2 arrowDirection)
     {
         hitLocked = true;
 
@@ -221,10 +218,21 @@ public class HangingMusicPuzzleNoteObject : MonoBehaviour
         PlayDelayed(chainSwingClip, chainSwingVolume, chainSwingDelay);
         PlayCurrentNote();
         ApplyBodyImpulse();
-        SpinPropeller();
+        SpinPropeller(GetSpinDirection(hitPoint, arrowDirection));
 
         yield return new WaitForSeconds(Mathf.Max(0.05f, propellerSpinTime));
         hitLocked = false;
+    }
+
+    private float GetSpinDirection(Vector2 hitPoint, Vector2 arrowDirection)
+    {
+        if (propellerRoot == null)
+            return 1f;
+
+        Vector2 offset = hitPoint - (Vector2)propellerRoot.position;
+        float torque = offset.x * arrowDirection.y - offset.y * arrowDirection.x;
+
+        return torque >= 0f ? -1f : 1f;
     }
 
     private void PlayCurrentNote()
@@ -242,7 +250,7 @@ public class HangingMusicPuzzleNoteObject : MonoBehaviour
         bodyRigidbody.AddTorque(hitTorque, hitForceMode);
     }
 
-    private void SpinPropeller()
+    private void SpinPropeller(float direction)
     {
         if (propellerRoot == null)
             return;
@@ -250,13 +258,13 @@ public class HangingMusicPuzzleNoteObject : MonoBehaviour
         if (propellerSpinCoroutine != null)
             StopCoroutine(propellerSpinCoroutine);
 
-        propellerSpinCoroutine = StartCoroutine(SpinPropellerRoutine());
+        propellerSpinCoroutine = StartCoroutine(SpinPropellerRoutine(direction));
     }
 
-    private IEnumerator SpinPropellerRoutine()
+    private IEnumerator SpinPropellerRoutine(float direction)
     {
         Quaternion startRotation = propellerRoot.localRotation;
-        Quaternion endRotation = startRotation * Quaternion.Euler(0f, 0f, propellerSpinDegrees);
+        Quaternion endRotation = startRotation * Quaternion.Euler(0f, 0f, propellerSpinDegrees * direction);
         float timer = 0f;
 
         if (propellerSpinTime <= 0f)

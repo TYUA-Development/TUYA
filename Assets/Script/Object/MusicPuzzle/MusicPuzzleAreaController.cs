@@ -13,7 +13,6 @@ public class MusicPuzzleAreaController : MonoBehaviour
     }
 
     [Header("Puzzle")]
-    [SerializeField] private bool startOnlyOnce = true;
     [SerializeField] private MusicPuzzleCoreBridge questionCore;
     [SerializeField] private MusicPuzzleCoreBridge answerCore;
     [SerializeField] private HangingMusicPuzzleNoteObject[] noteObjects = new HangingMusicPuzzleNoteObject[4];
@@ -76,6 +75,7 @@ public class MusicPuzzleAreaController : MonoBehaviour
     [SerializeField] private bool puzzleSolved;
 
     private bool sequenceRunning;
+    private bool hasPlayedIntro;
     private Coroutine startRoutine;
     private Coroutine submitRoutine;
 
@@ -108,17 +108,17 @@ public class MusicPuzzleAreaController : MonoBehaviour
 
     public void StartMusicPuzzle()
     {
-        BeginPuzzleInternal();
+        BeginPuzzleFromAreaEntry();
     }
 
     public void ActivatePuzzle()
     {
-        BeginPuzzleInternal();
+        BeginPuzzleFromAreaEntry();
     }
 
     public void BeginPuzzleFromArea()
     {
-        BeginPuzzleInternal();
+        BeginPuzzleFromAreaEntry();
     }
 
     public void NotifyQuestionCoreActivated(MusicPuzzleCoreBridge source)
@@ -152,14 +152,20 @@ public class MusicPuzzleAreaController : MonoBehaviour
         return indexes;
     }
 
+    private void BeginPuzzleFromAreaEntry()
+    {
+        if (hasPlayedIntro)
+            return;
+
+        hasPlayedIntro = true;
+        BeginPuzzleInternal();
+    }
+
     private void BeginPuzzleInternal()
     {
         BindNoteObjects();
 
         if (puzzleSolved)
-            return;
-
-        if (startOnlyOnce && puzzleStarted)
             return;
 
         if (sequenceRunning)
@@ -300,6 +306,7 @@ public class MusicPuzzleAreaController : MonoBehaviour
                 if (guideParticles[i] == null)
                     continue;
 
+                guideParticles[i].gameObject.SetActive(true);
                 guideParticles[i].Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
                 guideParticles[i].Play();
             }
@@ -340,8 +347,11 @@ public class MusicPuzzleAreaController : MonoBehaviour
         {
             for (int i = 0; i < guideParticles.Length; i++)
             {
-                if (guideParticles[i] != null)
-                    guideParticles[i].Stop();
+                if (guideParticles[i] == null)
+                    continue;
+
+                guideParticles[i].Stop();
+                guideParticles[i].gameObject.SetActive(false);
             }
         }
     }

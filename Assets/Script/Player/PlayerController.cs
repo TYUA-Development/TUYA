@@ -10,6 +10,7 @@ public class PlayerController : MonoBehaviour
     public SpriteRenderer charactorSprite;
 
     public bool isGround;
+    public Vector2 groundNormal = Vector2.up;
     [HideInInspector] public bool isDash;
     [HideInInspector] public bool isOnRunway;
 
@@ -667,11 +668,15 @@ public class PlayerController : MonoBehaviour
         Collider2D col = collision.collider;
 
         bool isTopContact = false;
+        Vector2 topNormal = Vector2.up;
+
         for (int i = 0; i < collision.contactCount; i++)
         {
-            if (collision.GetContact(i).normal.y > 0.5f)
+            Vector2 normal = collision.GetContact(i).normal;
+            if (normal.y > 0.5f)
             {
                 isTopContact = true;
+                topNormal = normal;
                 break;
             }
         }
@@ -682,6 +687,7 @@ public class PlayerController : MonoBehaviour
         if (col.CompareTag("Floor") || col.CompareTag("Runway"))
         {
             isGround = true;
+            groundNormal = topNormal;
 
             if (CameraMovement.Instance != null)
                 CameraMovement.Instance.SetCameraPosY(transform.position.y);

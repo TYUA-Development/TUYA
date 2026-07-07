@@ -95,11 +95,15 @@ public class PlayerMoveState : PlayerState
     private float sensorX;
     private float sensorDistance;
     private bool wasGrounded;
+
+    private float groundLostTimer;
+    private const float FallGracePeriod = 0.2f;
+
     public PlayerMoveState(PlayerController controller) : base(controller)
     {
         moveSpeed = controller.moveSpeed;
         col = controller.GetComponent<CapsuleCollider2D>();
-        groundLayer = LayerMask.GetMask("Floor") | LayerMask.GetMask("Default");
+        groundLayer = LayerMask.GetMask("Floor") | LayerMask.GetMask("Default") | LayerMask.GetMask("Runway");
         sensorDistance = 1.0f;
         sensorX = 3.0f;
     }
@@ -107,6 +111,7 @@ public class PlayerMoveState : PlayerState
     public override void Enter()
     {
         controller.animator.SetBool("IsMove", true);
+        groundLostTimer = 0f;
     }
 
     public override void Exit()
@@ -127,7 +132,16 @@ public class PlayerMoveState : PlayerState
             return;
         }
 
-        if (CheckFall() && !controller.isGround)
+        if (controller.isGround)
+        {
+            groundLostTimer = 0f;
+        }
+        else if (CheckFall())
+        {
+            groundLostTimer += Time.deltaTime;
+        }
+
+        if (groundLostTimer >= FallGracePeriod)
         {
             controller.OnFall(grantCoyote: true);
             return;
@@ -160,22 +174,40 @@ public class PlayerMoveState : PlayerState
 
         float moveDirect = InputData.moveAxis.x;
 
-        Vector2 velocity = controller.Rigidbody2D.velocity;
-
         if (moveDirect == 0)
         {
-            //velocity.x = Mathf.MoveTowards(controller.Rigidbody2D.velocity.x, 0f, 2000.0f * Time.deltaTime);
-            velocity.x = 0f;
-            controller.Rigidbody2D.velocity = velocity;
+            Vector2 stopVelocity = controller.Rigidbody2D.velocity;
+            stopVelocity.x = 0f;
+            controller.Rigidbody2D.velocity = stopVelocity;
             return;
         }
 
-        velocity.x = moveDirect * moveSpeed;
-
         if (controller.isGround)
-            velocity.y = Mathf.Min(velocity.y, 0f);
+        {
+            Vector2 normal = controller.groundNormal;
+            Vector2 tangent = new Vector2(normal.y, -normal.x);
 
-        controller.Rigidbody2D.velocity = velocity;
+            if (tangent.x < 0f)
+                tangent = -tangent;
+
+            float horizontalSpeed = moveDirect * moveSpeed;
+
+            if (Mathf.Abs(tangent.x) > 0.0001f)
+            {
+                float scale = horizontalSpeed / tangent.x;
+                controller.Rigidbody2D.velocity = tangent * scale;
+            }
+            else
+            {
+                controller.Rigidbody2D.velocity = new Vector2(horizontalSpeed, controller.Rigidbody2D.velocity.y);
+            }
+        }
+        else
+        {
+            Vector2 velocity = controller.Rigidbody2D.velocity;
+            velocity.x = moveDirect * moveSpeed;
+            controller.Rigidbody2D.velocity = velocity;
+        }
 
         if (controller.ChangeDirection(moveDirect))
         {
@@ -188,11 +220,19 @@ public class PlayerMoveState : PlayerState
 
     private bool CheckFall()
     {
-        Vector2 origin = new Vector2(col.bounds.center.x, col.bounds.min.y);
+        Vector2 checkPos = new Vector2(
+            col.bounds.center.x,
+            col.bounds.min.y - 0.05f
+        );
 
-        RaycastHit2D hit = Physics2D.Raycast(origin, Vector2.down, 0.1f, groundLayer);
+        Vector2 checkSize = new Vector2(
+            col.bounds.size.x * 0.9f,
+            0.5f
+        );
 
-        return hit.collider == null || hit.collider.isTrigger;
+        Collider2D hit = Physics2D.OverlapBox(checkPos, checkSize, 0f, groundLayer);
+
+        return hit == null || hit.isTrigger;
     }
 
     private bool CheckRunWayFromFront()
