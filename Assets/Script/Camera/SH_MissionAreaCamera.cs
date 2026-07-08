@@ -117,6 +117,10 @@ public class SH_MissionAreaCamera : MonoBehaviour
     [Tooltip("영역 퇴장 시 리셋할 CircleHitObject (프로펠러 재타격 가능하게)")]
     public CircleHitObject circleHitObjectToReset;
 
+    [Header("Exit Hysteresis")]
+    [Tooltip("Trigger Exit 후 이 시간 안에 다시 Enter하면 이탈로 취급하지 않습니다. 경계선에서 콜라이더가 미세하게 들락거릴 때 카메라가 흔들리는 것을 방지합니다.")]
+    public float exitGraceTime = 0.2f;
+
     private static SH_MissionAreaCamera activeArea;
     private static SH_MissionAreaCamera exitFollowArea;
 
@@ -133,6 +137,7 @@ public class SH_MissionAreaCamera : MonoBehaviour
     private PassThroughExitCameraZoom passThroughExitZoom;
 
     private Coroutine exitTransitionCoroutine;
+    private Coroutine pendingExitCoroutine;
 
     private Vector3 enterCameraPos;
     private Vector3 exitCameraPos;
@@ -536,6 +541,15 @@ public class SH_MissionAreaCamera : MonoBehaviour
         if (cameraRig == null || targetCamera == null)
             return;
 
+        if (pendingExitCoroutine != null)
+        {
+            StopCoroutine(pendingExitCoroutine);
+            pendingExitCoroutine = null;
+
+            if (logExitCameraYDebug)
+                Debug.Log($"{gameObject.name} Exit Cancelled By Re-enter (within grace time)");
+        }
+
         if (controlState == CameraControlState.Exiting)
             StopExitTransition(true);
 
@@ -618,7 +632,30 @@ public class SH_MissionAreaCamera : MonoBehaviour
         if (activeArea != this)
             return;
 
-        if (!CanUseExitCenterFeature() || ShouldUseNormalCameraOnExit(collision.transform))
+        if (pendingExitCoroutine != null)
+            StopCoroutine(pendingExitCoroutine);
+
+        pendingExitCoroutine = StartCoroutine(PendingExitRoutine(collision.transform));
+    }
+
+    // 경계선에서 콜라이더가 미세하게 들락거려도 바로 카메라 상태를 바꾸지 않고,
+    // exitGraceTime 동안 재진입이 없을 때만 실제 이탈로 확정한다.
+    private IEnumerator PendingExitRoutine(Transform exitingTransform)
+    {
+        if (exitGraceTime > 0f)
+            yield return new WaitForSeconds(exitGraceTime);
+
+        pendingExitCoroutine = null;
+
+        if (activeArea != this)
+            yield break;
+
+        CommitExit(exitingTransform);
+    }
+
+    private void CommitExit(Transform exitingTransform)
+    {
+        if (!CanUseExitCenterFeature() || ShouldUseNormalCameraOnExit(exitingTransform))
         {
             StopExitTransition(false);
             exitingPlayer = null;
@@ -639,7 +676,7 @@ public class SH_MissionAreaCamera : MonoBehaviour
             return;
         }
 
-        exitingPlayer = collision.transform;
+        exitingPlayer = exitingTransform;
         isCameraControl = false;
         isReturning = false;
         controlState = CameraControlState.Exiting;

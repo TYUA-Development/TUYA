@@ -89,6 +89,11 @@ public class CoreActivationController : MonoBehaviour, IArrowHit, ICoreEvent
 
     private void Awake()
     {
+        if(playerController == null)
+            playerController = FindObjectOfType<PlayerController>();
+        if(playerCutsceneLocker == null)
+            playerCutsceneLocker = playerController.gameObject.GetComponent<PlayerCutsceneLocker2D>();
+
         SetRendererAlpha(hitFlashRenderer, 0f);
         SetRendererAlpha(activateGlowRenderer, 0f);
         SetRendererAlpha(stableGlowRenderer, 0f);
