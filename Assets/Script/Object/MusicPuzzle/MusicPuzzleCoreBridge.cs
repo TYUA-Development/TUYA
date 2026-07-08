@@ -74,6 +74,9 @@ public class MusicPuzzleCoreBridge : MonoBehaviour, IArrowHit
 
     public void SignalPuzzle()
     {
+        if (puzzleController != null && puzzleController.IsPuzzleSolved)
+            return;
+
         ActivateCoreVisuals();
 
         if (puzzleController == null)
@@ -86,6 +89,18 @@ public class MusicPuzzleCoreBridge : MonoBehaviour, IArrowHit
             puzzleController.NotifyQuestionCoreActivated(this);
         else
             puzzleController.SubmitAnswerFromCore(this);
+    }
+
+    public void SetExternalActivationLocked(bool locked)
+    {
+        if (existingCore != null)
+            existingCore.activationLocked = locked;
+    }
+
+    public void FadeInCoreGlow()
+    {
+        if (existingCore != null)
+            existingCore.FadeInActivateGlow();
     }
 
     public void OnHit()
