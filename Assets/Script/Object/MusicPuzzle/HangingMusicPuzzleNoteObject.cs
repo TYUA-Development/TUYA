@@ -16,6 +16,7 @@ public class HangingMusicPuzzleNoteObject : MonoBehaviour
     [Header("Dots")]
     [SerializeField] private SpriteRenderer[] dotBaseRenderers = new SpriteRenderer[4];
     [SerializeField] private SpriteRenderer[] dotActiveRenderers = new SpriteRenderer[4];
+    [SerializeField] private float dotActiveFadeTime = 0.2f;
 
     [Header("Propeller")]
     [SerializeField] private Transform propellerRoot;
@@ -70,6 +71,7 @@ public class HangingMusicPuzzleNoteObject : MonoBehaviour
     [SerializeField] private HingeJoint2D[] chainJoints;
 
     private Coroutine propellerSpinCoroutine;
+    private Coroutine[] dotActiveFadeCoroutines;
     private bool hitLocked;
 
     public int CurrentNoteIndex => currentNoteIndex;
@@ -88,7 +90,7 @@ public class HangingMusicPuzzleNoteObject : MonoBehaviour
     private void Awake()
     {
         WirePropellerHitProxy();
-        UpdateDots();
+        UpdateDots(true);
     }
 
     private void OnValidate()
@@ -100,7 +102,7 @@ public class HangingMusicPuzzleNoteObject : MonoBehaviour
         chainLinkCount = Mathf.Max(1, chainLinkCount);
         chainLinkSpacing = Mathf.Max(0.01f, chainLinkSpacing);
         hingeLimitAngle = Mathf.Clamp(hingeLimitAngle, 0f, 179f);
-        UpdateDots();
+        UpdateDots(true);
     }
 
     public void HandlePropellerHit(Vector2 hitPoint, Vector2 arrowDirection)
@@ -286,7 +288,7 @@ public class HangingMusicPuzzleNoteObject : MonoBehaviour
         propellerSpinCoroutine = null;
     }
 
-    private void UpdateDots()
+    private void UpdateDots(bool instant = false)
     {
         if (dotBaseRenderers != null)
         {
@@ -297,14 +299,70 @@ public class HangingMusicPuzzleNoteObject : MonoBehaviour
             }
         }
 
-        if (dotActiveRenderers != null)
+        if (dotActiveRenderers == null)
+            return;
+
+        EnsureDotFadeArray();
+
+        for (int i = 0; i < dotActiveRenderers.Length; i++)
         {
-            for (int i = 0; i < dotActiveRenderers.Length; i++)
+            SpriteRenderer renderer = dotActiveRenderers[i];
+            if (renderer == null)
+                continue;
+
+            bool active = i == currentNoteIndex;
+
+            if (instant || !Application.isPlaying)
             {
-                if (dotActiveRenderers[i] != null)
-                    dotActiveRenderers[i].enabled = i == currentNoteIndex;
+                SetDotAlpha(renderer, active ? 1f : 0f);
+                renderer.enabled = active;
+                continue;
             }
+
+            StartDotFade(i, renderer, active);
         }
+    }
+
+    private void EnsureDotFadeArray()
+    {
+        if (dotActiveFadeCoroutines == null || dotActiveFadeCoroutines.Length != dotActiveRenderers.Length)
+            dotActiveFadeCoroutines = new Coroutine[dotActiveRenderers.Length];
+    }
+
+    private void StartDotFade(int index, SpriteRenderer renderer, bool active)
+    {
+        if (dotActiveFadeCoroutines[index] != null)
+            StopCoroutine(dotActiveFadeCoroutines[index]);
+
+        dotActiveFadeCoroutines[index] = StartCoroutine(DotFadeRoutine(index, renderer, active));
+    }
+
+    private IEnumerator DotFadeRoutine(int index, SpriteRenderer renderer, bool active)
+    {
+        renderer.enabled = true;
+
+        float startAlpha = renderer.color.a;
+        float targetAlpha = active ? 1f : 0f;
+        float duration = Mathf.Max(0.001f, dotActiveFadeTime);
+        float timer = 0f;
+
+        while (timer < duration)
+        {
+            timer += Time.deltaTime;
+            SetDotAlpha(renderer, Mathf.Lerp(startAlpha, targetAlpha, Mathf.Clamp01(timer / duration)));
+            yield return null;
+        }
+
+        SetDotAlpha(renderer, targetAlpha);
+        renderer.enabled = active;
+        dotActiveFadeCoroutines[index] = null;
+    }
+
+    private static void SetDotAlpha(SpriteRenderer renderer, float alpha)
+    {
+        Color color = renderer.color;
+        color.a = alpha;
+        renderer.color = color;
     }
 
     private void PlayDelayed(AudioClip clip, float volume, float delay)

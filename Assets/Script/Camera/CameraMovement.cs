@@ -12,7 +12,7 @@ public class CameraMovement : MonoBehaviour
     [Tooltip("ī�޶� ���󰡴� ���� 0.1 ~ 0.5")]
     public float followSmoothTime = 0.2f;
 
-    [HideInInspector] public bool isMovingEvent;
+    public bool isMovingEvent;
     private float cameraSpeedUp = 3.0f;
     private Vector3 velocity;
     [SerializeField] private float CameraPosY;
