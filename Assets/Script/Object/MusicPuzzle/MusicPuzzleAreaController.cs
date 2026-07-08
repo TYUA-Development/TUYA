@@ -22,9 +22,7 @@ public class MusicPuzzleAreaController : MonoBehaviour
     [SerializeField] private AudioSource noteAudioSource;
     [SerializeField] private AudioClip[] noteClips = new AudioClip[4];
     [SerializeField] private float[] noteVolumes = new float[4] { 1f, 1f, 1f, 1f };
-    [SerializeField] private float questionNoteInterval = 0.55f;
-    [SerializeField] private float submissionNoteInterval = 0.45f;
-    [SerializeField] private float successNoteInterval = 0.6f;
+    [SerializeField] private float noteInterval = 0.5f;
     [SerializeField] private float successNoteVolumeMultiplier = 1.2f;
 
     [Header("Core Audio")]
@@ -197,7 +195,7 @@ public class MusicPuzzleAreaController : MonoBehaviour
         if (questionMelodyDelay > 0f)
             yield return new WaitForSeconds(questionMelodyDelay);
 
-        yield return StartCoroutine(PlayNoteSequence(expectedNoteIndexes, questionNoteInterval, 1f));
+        yield return StartCoroutine(PlayNoteSequence(expectedNoteIndexes, noteInterval, 1f));
 
         sequenceRunning = false;
         startRoutine = null;
@@ -214,7 +212,7 @@ public class MusicPuzzleAreaController : MonoBehaviour
             yield return new WaitForSeconds(answerMelodyDelay);
 
         int[] currentIndexes = GetCurrentNoteIndexes();
-        yield return StartCoroutine(PlayNoteSequence(currentIndexes, submissionNoteInterval, 1f));
+        yield return StartCoroutine(PlayNoteSequence(currentIndexes, noteInterval, 1f));
 
         if (MatchesExpected(currentIndexes))
             yield return StartCoroutine(SuccessRoutine());
@@ -230,7 +228,7 @@ public class MusicPuzzleAreaController : MonoBehaviour
         puzzleSolved = true;
 
         if (wallToDeactivateOnComplete != null)
-            wallToDeactivateOnComplete.SetActive(false);
+            StartCoroutine(DeactivateWallAfterAudio(wallToDeactivateOnComplete));
 
         if (questionCore != null)
         {
@@ -246,7 +244,7 @@ public class MusicPuzzleAreaController : MonoBehaviour
         if (successSequenceDelay > 0f)
             yield return new WaitForSeconds(successSequenceDelay);
 
-        yield return StartCoroutine(PlayNoteSequence(expectedNoteIndexes, successNoteInterval, successNoteVolumeMultiplier));
+        yield return StartCoroutine(PlayNoteSequence(expectedNoteIndexes, noteInterval, successNoteVolumeMultiplier));
 
         if (successResonanceDelay > 0f)
             yield return new WaitForSeconds(successResonanceDelay);
@@ -255,6 +253,19 @@ public class MusicPuzzleAreaController : MonoBehaviour
 
         yield return StartCoroutine(OpenPathRoutine());
         StartCoroutine(GuideRoutine());
+    }
+
+    private IEnumerator DeactivateWallAfterAudio(GameObject wall)
+    {
+        AudioSource wallAudioSource = wall.GetComponentInChildren<AudioSource>();
+
+        if (wallAudioSource != null && wallAudioSource.clip != null)
+        {
+            wallAudioSource.Play();
+            yield return new WaitForSeconds(wallAudioSource.clip.length);
+        }
+
+        wall.SetActive(false);
     }
 
     private IEnumerator FailRoutine()
