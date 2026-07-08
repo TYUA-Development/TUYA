@@ -82,6 +82,10 @@ public class CoreActivationController : MonoBehaviour, IArrowHit, ICoreEvent
     [Header("State")]
     public bool isActivated;
 
+    [Header("Reset After Activation")]
+    [Tooltip("활성화 시퀀스가 끝난 뒤 Awake()가 설정한 초기 비주얼(글로우/플래시 알파, 파티클, 힌트 링)로 되돌릴지")]
+    public bool resetVisualsAfterActivation = false;
+
     public event System.Action onActivated;
 
     private bool isRunning;
@@ -258,8 +262,25 @@ public class CoreActivationController : MonoBehaviour, IArrowHit, ICoreEvent
 
         ShowAfterLetterboxTutorial();
 
+        if (resetVisualsAfterActivation)
+            ResetVisualsToInitialState();
+
         isRunning = false;
         activationCoroutine = null;
+    }
+
+    private void ResetVisualsToInitialState()
+    {
+        SetRendererAlpha(hitFlashRenderer, 0f);
+        SetRendererAlpha(activateGlowRenderer, 0f);
+        SetRendererAlpha(stableGlowRenderer, 0f);
+
+        StopParticle(hitParticle);
+        StopParticle(activateParticle);
+        StopParticle(completeParticle);
+
+        if (hideHintRingOnAwake && coreHintRing != null)
+            coreHintRing.SetActive(false);
     }
 
     private void ShowAfterLetterboxTutorial()
