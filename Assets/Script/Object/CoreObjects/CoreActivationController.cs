@@ -270,11 +270,19 @@ public class CoreActivationController : MonoBehaviour, IArrowHit, ICoreEvent
 
         ShowAfterLetterboxTutorial();
 
-        if (resetVisualsAfterActivation)
+        if (resetVisualsAfterActivation && !activationLocked)
             yield return StartCoroutine(ResetVisualsRoutine());
 
         isRunning = false;
         activationCoroutine = null;
+    }
+
+    public void FadeInActivateGlow()
+    {
+        if (activateGlowRenderer == null)
+            return;
+
+        StartCoroutine(FadeRendererAlpha(activateGlowRenderer, activateGlowRenderer.color.a, activateGlowAlpha, activateGlowTime));
     }
 
     private IEnumerator ResetVisualsRoutine()

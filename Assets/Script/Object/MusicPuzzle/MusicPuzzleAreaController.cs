@@ -71,6 +71,9 @@ public class MusicPuzzleAreaController : MonoBehaviour
     [SerializeField] private bool keepGuideAfterSuccess = true;
     [SerializeField] private float guideHideDelay = 4f;
 
+    [Header("Completion")]
+    [SerializeField] private GameObject wallToDeactivateOnComplete;
+
     [Header("State")]
     [SerializeField] private bool puzzleStarted;
     [SerializeField] private bool puzzleSolved;
@@ -226,10 +229,19 @@ public class MusicPuzzleAreaController : MonoBehaviour
     {
         puzzleSolved = true;
 
+        if (wallToDeactivateOnComplete != null)
+            wallToDeactivateOnComplete.SetActive(false);
+
         if (questionCore != null)
+        {
             questionCore.SetExternalActivationLocked(true);
+            questionCore.FadeInCoreGlow();
+        }
         if (answerCore != null)
+        {
             answerCore.SetExternalActivationLocked(true);
+            answerCore.FadeInCoreGlow();
+        }
 
         if (successSequenceDelay > 0f)
             yield return new WaitForSeconds(successSequenceDelay);

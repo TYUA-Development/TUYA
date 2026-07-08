@@ -97,6 +97,12 @@ public class MusicPuzzleCoreBridge : MonoBehaviour, IArrowHit
             existingCore.activationLocked = locked;
     }
 
+    public void FadeInCoreGlow()
+    {
+        if (existingCore != null)
+            existingCore.FadeInActivateGlow();
+    }
+
     public void OnHit()
     {
         if (!fallbackArrowHitWhenNoExistingCore && existingCore != null)
