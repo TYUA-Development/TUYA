@@ -226,6 +226,11 @@ public class MusicPuzzleAreaController : MonoBehaviour
     {
         puzzleSolved = true;
 
+        if (questionCore != null)
+            questionCore.SetExternalActivationLocked(true);
+        if (answerCore != null)
+            answerCore.SetExternalActivationLocked(true);
+
         if (successSequenceDelay > 0f)
             yield return new WaitForSeconds(successSequenceDelay);
 

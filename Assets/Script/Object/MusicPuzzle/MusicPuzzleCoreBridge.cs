@@ -91,6 +91,12 @@ public class MusicPuzzleCoreBridge : MonoBehaviour, IArrowHit
             puzzleController.SubmitAnswerFromCore(this);
     }
 
+    public void SetExternalActivationLocked(bool locked)
+    {
+        if (existingCore != null)
+            existingCore.activationLocked = locked;
+    }
+
     public void OnHit()
     {
         if (!fallbackArrowHitWhenNoExistingCore && existingCore != null)

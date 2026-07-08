@@ -81,6 +81,7 @@ public class CoreActivationController : MonoBehaviour, IArrowHit, ICoreEvent
 
     [Header("State")]
     public bool isActivated;
+    public bool activationLocked = false;
 
     [Header("Reset After Activation")]
     [Tooltip("활성화 시퀀스가 끝난 뒤 Awake()가 설정한 초기 비주얼(글로우/플래시 알파, 파티클, 힌트 링)로 되돌릴지")]
@@ -144,6 +145,9 @@ public class CoreActivationController : MonoBehaviour, IArrowHit, ICoreEvent
         if (hitObject == null)
             return;
 
+        if (activationLocked)
+            return;
+
         if (activateOnlyOnce && isActivated)
             return;
 
@@ -169,6 +173,9 @@ public class CoreActivationController : MonoBehaviour, IArrowHit, ICoreEvent
 
     public void StartActivation()
     {
+        if (activationLocked)
+            return;
+
         if (isRunning)
             return;
 
