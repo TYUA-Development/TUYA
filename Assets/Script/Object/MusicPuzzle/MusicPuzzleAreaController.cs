@@ -47,6 +47,7 @@ public class MusicPuzzleAreaController : MonoBehaviour
 
     [Header("Delays")]
     [SerializeField] private float questionMelodyDelay = 0.3f;
+    [SerializeField] private float answerMelodyDelay = 0.3f;
     [SerializeField] private float successSequenceDelay = 0.35f;
     [SerializeField] private float successResonanceDelay = 0.25f;
     [SerializeField] private float failSoundDelay = 0.2f;
@@ -203,6 +204,9 @@ public class MusicPuzzleAreaController : MonoBehaviour
 
         if (answerCore != null)
             answerCore.ActivateCoreVisuals();
+
+        if (answerMelodyDelay > 0f)
+            yield return new WaitForSeconds(answerMelodyDelay);
 
         int[] currentIndexes = GetCurrentNoteIndexes();
         yield return StartCoroutine(PlayNoteSequence(currentIndexes, submissionNoteInterval, 1f));

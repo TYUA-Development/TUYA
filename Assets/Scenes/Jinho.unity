@@ -333,6 +333,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 2077939878}
+  stairs: 0
 --- !u!1 &8533545
 GameObject:
   m_ObjectHideFlags: 0
@@ -2894,6 +2895,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 21160074}
+  stairs: 0
 --- !u!1 &71908826
 GameObject:
   m_ObjectHideFlags: 0
@@ -2985,6 +2987,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 68191129}
+  stairs: 0
 --- !u!1 &72683785
 GameObject:
   m_ObjectHideFlags: 0
@@ -3244,6 +3247,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 387852011}
+  stairs: 0
 --- !u!1 &84222802
 GameObject:
   m_ObjectHideFlags: 0
@@ -3802,6 +3806,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 818487213}
+  stairs: 0
 --- !u!1 &102092353
 GameObject:
   m_ObjectHideFlags: 0
@@ -3869,8 +3874,8 @@ MonoBehaviour:
   m_ShadowVolumeIntensityEnabled: 0
   m_ShadowVolumeIntensity: 0.75
   m_LocalBounds:
-    m_Center: {x: 0, y: -5.21, z: 0}
-    m_Extent: {x: 35.69, y: 9.19, z: 0}
+    m_Center: {x: 0, y: 0, z: 0}
+    m_Extent: {x: 35.239998, y: 9.188555, z: 0}
   m_PointLightInnerAngle: 360
   m_PointLightOuterAngle: 360
   m_PointLightInnerRadius: 0
@@ -4532,6 +4537,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 2061124726}
+  stairs: 0
 --- !u!1 &124413778
 GameObject:
   m_ObjectHideFlags: 0
@@ -5152,6 +5158,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 398063643}
+  stairs: 0
 --- !u!1 &136670218
 GameObject:
   m_ObjectHideFlags: 0
@@ -11019,6 +11026,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 1193332975}
+  stairs: 0
 --- !u!1 &162051872
 GameObject:
   m_ObjectHideFlags: 0
@@ -11110,6 +11118,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 536367167}
+  stairs: 0
 --- !u!1 &163535223
 GameObject:
   m_ObjectHideFlags: 0
@@ -11500,6 +11509,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 1327930426}
+  stairs: 0
 --- !u!1 &175883320
 GameObject:
   m_ObjectHideFlags: 0
@@ -11591,6 +11601,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 523598664}
+  stairs: 0
 --- !u!1 &176888151
 GameObject:
   m_ObjectHideFlags: 0
@@ -12989,6 +13000,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 1119093052}
+  stairs: 0
 --- !u!1 &220817357
 GameObject:
   m_ObjectHideFlags: 0
@@ -13752,6 +13764,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 935747277}
+  stairs: 0
 --- !u!1 &235185913
 GameObject:
   m_ObjectHideFlags: 0
@@ -14752,6 +14765,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 1939874191}
+  stairs: 0
 --- !u!1 &263105725
 GameObject:
   m_ObjectHideFlags: 0
@@ -16016,8 +16030,8 @@ MonoBehaviour:
   m_ShadowVolumeIntensityEnabled: 0
   m_ShadowVolumeIntensity: 0.75
   m_LocalBounds:
-    m_Center: {x: 0, y: -5.21, z: 0}
-    m_Extent: {x: 35.69, y: 9.19, z: 0}
+    m_Center: {x: 0, y: 0, z: 0}
+    m_Extent: {x: 35.239998, y: 9.188555, z: 0}
   m_PointLightInnerAngle: 360
   m_PointLightOuterAngle: 360
   m_PointLightInnerRadius: 0
@@ -16427,6 +16441,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 662850129}
+  stairs: 0
 --- !u!1 &318873773
 GameObject:
   m_ObjectHideFlags: 0
@@ -16755,6 +16770,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9a5dac98b789cdf4a98d92827f3aa8f3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  coreObjects: []
   floors:
   - Floor: {fileID: 233735470}
     nextPos: {x: 5, y: -6.6, z: 0}
@@ -16763,6 +16779,10 @@ MonoBehaviour:
     nextPos: {x: 16, y: -8, z: 0}
     prevPos: {x: 0, y: 0, z: 0}
   moveSpeed: 10
+  winds: []
+  windObjectSpeed: 1
+  propellers: []
+  propellerRampTime: 1
 --- !u!212 &321933690
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -18338,8 +18358,8 @@ MonoBehaviour:
   m_ShadowVolumeIntensityEnabled: 0
   m_ShadowVolumeIntensity: 0.75
   m_LocalBounds:
-    m_Center: {x: 0, y: -5.21, z: 0}
-    m_Extent: {x: 35.69, y: 9.19, z: 0}
+    m_Center: {x: 0, y: 0, z: 0}
+    m_Extent: {x: 35.239998, y: 9.188555, z: 0}
   m_PointLightInnerAngle: 360
   m_PointLightOuterAngle: 360
   m_PointLightInnerRadius: 0
@@ -23664,6 +23684,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 1541215482}
+  stairs: 0
 --- !u!1 &375631734
 GameObject:
   m_ObjectHideFlags: 0
@@ -24007,6 +24028,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 424689739}
+  stairs: 0
 --- !u!1 &384367415
 GameObject:
   m_ObjectHideFlags: 0
@@ -25322,13 +25344,27 @@ MonoBehaviour:
   Rigidbody2D: {fileID: 416787744}
   charactorSprite: {fileID: 1496434780}
   isGround: 0
+  groundNormal: {x: 0, y: 1}
   isDash: 0
+  isOnRunway: 0
+  isOnGrass: 0
+  isOnStone: 0
   setSpeed: 10
   moveSpeed: 9
   jumpPower: 30
   dashPower: 10
   attackCoolTime: 2
   attackTimer: 0
+  coyoteTime: 0.15
+  footstepSource: {fileID: 0}
+  grassFootsteps: []
+  stoneFootsteps: []
+  grassFootstepVolume: 0.3
+  stoneFootstepVolume: 0.4
+  footstepInterval: 0.35
+  jumpSounds: []
+  jumpVolume: 0.5
+  bowSFX: {fileID: 0}
   animator: {fileID: 1496434781}
   upperAnimator: {fileID: 1931330200}
   upperBody: {fileID: 1931330197}
@@ -25336,6 +25372,16 @@ MonoBehaviour:
   upperBodyMinAngle: 20
   aimingTime: 0.55
   arrowObject: {fileID: 169023388951930978, guid: a3e5c6ea49829d840828a0f2b6f92a9e, type: 3}
+  heldArrowVisual: {fileID: 0}
+  bowPoint: {fileID: 0}
+  firePoint: {fileID: 0}
+  arrowGatherFXTemplate: {fileID: 0}
+  arrowReleaseFXTemplate: {fileID: 0}
+  heldArrowFadeTime: 1
+  trajectoryDotPrefab: {fileID: 0}
+  trajectoryPointCount: 40
+  trajectoryMaxTime: 3
+  trajectoryFadeStart: 0.6
 --- !u!114 &416787746
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -25654,6 +25700,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 1401669143}
+  stairs: 0
 --- !u!1 &426065434
 GameObject:
   m_ObjectHideFlags: 0
@@ -26089,8 +26136,18 @@ MonoBehaviour:
     noise: {fileID: 0}
     delayTime: 0
   activateTemple: 0
+  templeStartDelay: 1
+  templeRiseStartAudio: {fileID: 0}
+  templeRiseLoopAudio: {fileID: 0}
+  templeDebrisAudio: {fileID: 0}
+  templeCompleteAudio: {fileID: 0}
+  useTempleRiseAudio: 1
+  templeRiseLoopFadeOutLeadTime: 1.5
   includePlayerIndex: -1
   controller: {fileID: 0}
+  coreRiseUp: 0
+  risePosY: 0
+  riseSpeed: 2
 --- !u!212 &440888515
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -26570,6 +26627,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 2115075729}
+  stairs: 0
 --- !u!1 &455420721
 GameObject:
   m_ObjectHideFlags: 0
@@ -27282,6 +27340,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   windPower: 100
+  blockPlayer: 0
 --- !u!212 &468829527
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -27440,6 +27499,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 190753956}
+  stairs: 0
 --- !u!1 &476850811
 GameObject:
   m_ObjectHideFlags: 0
@@ -27783,6 +27843,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 254493383}
+  stairs: 0
 --- !u!1 &489320135
 GameObject:
   m_ObjectHideFlags: 0
@@ -28098,9 +28159,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   shakeCamera: {fileID: 1259205821}
   Charactor: {fileID: 0}
-  cameraHeight: 14
   followSmoothTime: 0.2
   isMovingEvent: 0
+  CameraPosY: 0
 --- !u!4 &495805691
 Transform:
   m_ObjectHideFlags: 0
@@ -29263,6 +29324,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 304756628}
+  stairs: 0
 --- !u!1 &531672566
 GameObject:
   m_ObjectHideFlags: 0
@@ -29582,8 +29644,8 @@ MonoBehaviour:
   m_ShadowVolumeIntensityEnabled: 0
   m_ShadowVolumeIntensity: 0.75
   m_LocalBounds:
-    m_Center: {x: 0, y: -5.21, z: 0}
-    m_Extent: {x: 35.69, y: 9.19, z: 0}
+    m_Center: {x: 0, y: 0, z: 0}
+    m_Extent: {x: 35.239998, y: 9.188555, z: 0}
   m_PointLightInnerAngle: 360
   m_PointLightOuterAngle: 360
   m_PointLightInnerRadius: 0
@@ -31049,6 +31111,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 328144642}
+  stairs: 0
 --- !u!1 &554969199
 GameObject:
   m_ObjectHideFlags: 0
@@ -36366,6 +36429,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 279101673}
+  stairs: 0
 --- !u!1 &595989025
 GameObject:
   m_ObjectHideFlags: 0
@@ -36457,6 +36521,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 703232276}
+  stairs: 0
 --- !u!1 &596303463
 GameObject:
   m_ObjectHideFlags: 0
@@ -37658,6 +37723,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 1049509202}
+  stairs: 0
 --- !u!1 &634066882
 GameObject:
   m_ObjectHideFlags: 0
@@ -38046,6 +38112,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 8533547}
+  stairs: 0
 --- !u!1 &647886331
 GameObject:
   m_ObjectHideFlags: 0
@@ -38221,6 +38288,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 774056868}
+  stairs: 0
 --- !u!1 &656402459
 GameObject:
   m_ObjectHideFlags: 0
@@ -43777,6 +43845,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 461533778}
+  stairs: 0
 --- !u!1 &676538913
 GameObject:
   m_ObjectHideFlags: 0
@@ -44923,6 +44992,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 1279064931}
+  stairs: 0
 --- !u!1 &712498655
 GameObject:
   m_ObjectHideFlags: 0
@@ -45397,6 +45467,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 2018095222}
+  stairs: 0
 --- !u!1 &723936001
 GameObject:
   m_ObjectHideFlags: 0
@@ -46376,6 +46447,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 1277929308}
+  stairs: 0
 --- !u!1 &755225579
 GameObject:
   m_ObjectHideFlags: 0
@@ -48254,6 +48326,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 634066884}
+  stairs: 0
 --- !u!1 &812518399
 GameObject:
   m_ObjectHideFlags: 0
@@ -49873,6 +49946,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 1711662214}
+  stairs: 0
 --- !u!1 &863070609
 GameObject:
   m_ObjectHideFlags: 0
@@ -50486,6 +50560,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 1448644481}
+  stairs: 0
 --- !u!1 &873127676
 GameObject:
   m_ObjectHideFlags: 0
@@ -52974,6 +53049,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 399350270}
+  stairs: 0
 --- !u!1 &940820563
 GameObject:
   m_ObjectHideFlags: 0
@@ -53233,6 +53309,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 330160747}
+  stairs: 0
 --- !u!1 &947330280
 GameObject:
   m_ObjectHideFlags: 0
@@ -53492,6 +53569,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 1040595001}
+  stairs: 0
 --- !u!1 &952592175
 GameObject:
   m_ObjectHideFlags: 0
@@ -53828,6 +53906,198 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!1 &963350345
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 963350350}
+  - component: {fileID: 963350349}
+  - component: {fileID: 963350348}
+  - component: {fileID: 963350347}
+  - component: {fileID: 963350346}
+  m_Layer: 0
+  m_Name: ArrowBlocker
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!68 &963350346
+EdgeCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 963350345}
+  m_Enabled: 1
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 1
+  m_UsedByEffector: 0
+  m_UsedByComposite: 0
+  m_Offset: {x: 0, y: 0}
+  m_EdgeRadius: 0
+  m_Points:
+  - {x: -0.056497008, y: 0.548514}
+  - {x: 0.79838336, y: 0.76813}
+  - {x: 1.3909807, y: 1.0120479}
+  - {x: 1.9333627, y: 1.395203}
+  - {x: 2.4522283, y: 1.8715432}
+  - {x: 2.8670423, y: 2.4528008}
+  - {x: 3.1021636, y: 2.9739912}
+  - {x: 3.2887006, y: 3.480009}
+  - {x: 3.4292798, y: 4.3755927}
+  - {x: 3.8760855, y: 3.8161626}
+  - {x: 3.7191522, y: 3.1220815}
+  - {x: 3.3011153, y: 2.1263552}
+  - {x: 2.482509, y: 1.0851438}
+  - {x: 1.6352137, y: 0.53743875}
+  - {x: 0.41782874, y: 0.18317544}
+  - {x: -0.13417816, y: 0.4662094}
+  m_AdjacentStartPoint: {x: 0, y: 0}
+  m_AdjacentEndPoint: {x: 0, y: 0}
+  m_UseAdjacentStartPoint: 0
+  m_UseAdjacentEndPoint: 0
+--- !u!61 &963350347
+BoxCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 963350345}
+  m_Enabled: 1
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 1
+  m_UsedByEffector: 0
+  m_UsedByComposite: 0
+  m_Offset: {x: 7.8325567, y: 4.19762}
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0, y: 0}
+    oldSize: {x: 0, y: 0}
+    newSize: {x: 0, y: 0}
+    adaptiveTilingThreshold: 0
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  serializedVersion: 2
+  m_Size: {x: 8.652485, y: 0.4823315}
+  m_EdgeRadius: 0
+--- !u!61 &963350348
+BoxCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 963350345}
+  m_Enabled: 1
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 1
+  m_UsedByEffector: 0
+  m_UsedByComposite: 0
+  m_Offset: {x: 0, y: -1.0240841}
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0, y: 0}
+    oldSize: {x: 0, y: 0}
+    newSize: {x: 0, y: 0}
+    adaptiveTilingThreshold: 0
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  serializedVersion: 2
+  m_Size: {x: 1, y: 3.0481677}
+  m_EdgeRadius: 0
+--- !u!114 &963350349
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 963350345}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: afca11d06b425e146a532d0243a15f7c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!4 &963350350
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 963350345}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 805.66736, y: 10.055771, z: 0}
+  m_LocalScale: {x: 1.5339199, y: 1.5339199, z: 1.5339199}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &964339466
 GameObject:
   m_ObjectHideFlags: 0
@@ -54003,6 +54273,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 1001331062}
+  stairs: 0
 --- !u!1 &967479330
 GameObject:
   m_ObjectHideFlags: 0
@@ -56925,6 +57196,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 731805270}
+  stairs: 0
 --- !u!1 &1051899434
 GameObject:
   m_ObjectHideFlags: 0
@@ -58024,6 +58296,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 754531455}
+  stairs: 0
 --- !u!1 &1091942430
 GameObject:
   m_ObjectHideFlags: 0
@@ -66135,171 +66408,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 124975789}
---- !u!43 &1174154758
-Mesh:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: 
-  serializedVersion: 11
-  m_SubMeshes:
-  - serializedVersion: 2
-    firstByte: 0
-    indexCount: 126
-    topology: 0
-    baseVertex: 0
-    firstVertex: 0
-    vertexCount: 44
-    localAABB:
-      m_Center: {x: -0.36054587, y: -0.20331025, z: 0}
-      m_Extent: {x: 3.1272857, y: 4.587634, z: 0}
-  m_Shapes:
-    vertices: []
-    shapes: []
-    channels: []
-    fullWeights: []
-  m_BindPose: []
-  m_BoneNameHashes: 
-  m_RootBoneNameHash: 0
-  m_BonesAABB: []
-  m_VariableBoneCountWeights:
-    m_Data: 
-  m_MeshCompression: 0
-  m_IsReadable: 1
-  m_KeepVertices: 1
-  m_KeepIndices: 1
-  m_IndexFormat: 0
-  m_IndexBuffer: 0000010002000000030001000400030000000400050003000500040006000700080009000a00080007000b0008000a000b000c0008000d000c000b000d000e000c000d000f000e0010000f000d00100011000f0012001100100013001100120000001100130002001100000014001100020011001400150000001600040013001700000001001800020003001900010002001a00140005001b00030004001c00060006001d00050009001e00070007001f000a000800200009000c00210008000a0022000b000b0023000d000e0024000c000d00250010000f0026000e00110027000f0010002800120015002900110012002a00130014002b001500
-  m_VertexData:
-    serializedVersion: 3
-    m_VertexCount: 44
-    m_Channels:
-    - stream: 0
-      offset: 0
-      format: 0
-      dimension: 3
-    - stream: 0
-      offset: 0
-      format: 0
-      dimension: 0
-    - stream: 0
-      offset: 12
-      format: 0
-      dimension: 4
-    - stream: 0
-      offset: 28
-      format: 0
-      dimension: 4
-    - stream: 0
-      offset: 0
-      format: 0
-      dimension: 0
-    - stream: 0
-      offset: 0
-      format: 0
-      dimension: 0
-    - stream: 0
-      offset: 0
-      format: 0
-      dimension: 0
-    - stream: 0
-      offset: 0
-      format: 0
-      dimension: 0
-    - stream: 0
-      offset: 0
-      format: 0
-      dimension: 0
-    - stream: 0
-      offset: 0
-      format: 0
-      dimension: 0
-    - stream: 0
-      offset: 0
-      format: 0
-      dimension: 0
-    - stream: 0
-      offset: 0
-      format: 0
-      dimension: 0
-    - stream: 0
-      offset: 0
-      format: 0
-      dimension: 0
-    - stream: 0
-      offset: 0
-      format: 0
-      dimension: 0
-    m_DataSize: 1936
-    _typelessdata: bc7a0bc0c1213ec00000000030c77fbf90842abd0000000000000080bc7a0bc0c1213ec0bc7a0bc0c1213ec09bb514c0d411154000000000e9977ebf0665d63d00000080000000800b5319c05d74d23f2b1810c079e940402b1810c079e9404000000000e8977ebf0865d63d00000080000000802b1810c079e940402b1810c079e940400b5319c05d74d23f00000000c1f578bf277e6e3e00000080000000800b5319c05d74d23f0b5319c05d74d23faf5935c09e613cc0000000007f182bbdcdc67fbf0000000000000080bc7a0bc0c1213ec0a2385fc07ca13ac0d6453cc09bce22bf00000000c1f578bf2e7e6e3e0000008000000080a2385fc07ca13ac00b5319c05d74d23fa2385fc07ca13ac0000000001d182bbdcdc67fbf0000000000000080a2385fc07ca13ac0a2385fc07ca13ac0f4c5b23f3a365bc000000000d1bb343ff84d35bf0000008000000080441231409fcd03c0dbd7d93c6b4f99c0664b983f6ee395be00000000f1fb3e3f18792a3f0000008000000080ee36c6be87a9bc3f441231409fcd03c0441231409fcd03c000000000f1fb3e3f18792a3f0000008000000080441231409fcd03c0441231409fcd03c0dbd7d93c6b4f99c000000000d1bb343ff74d35bf0000008000000080dbd7d93c6b4f99c0dbd7d93c6b4f99c04fe9b5be056b85c0000000007d205abf9e0006bf0000000000000080dbd7d93c6b4f99c00eb83cbf3e0d63c0ee36c6be87a9bc3f000000005637773f01f8843e0000008000000080ee36c6be87a9bc3fee36c6be87a9bc3f0eb83cbf3e0d63c0000000007d205abf9e0006bf00000000000000800eb83cbf3e0d63c00eb83cbf3e0d63c0fe4a47bfc4763b40000000005637773f00f8843e000000800000008042bd95bf624c8c40ee36c6be87a9bc3f42bd95bf624c8c4000000000bbd248be55077b3f000000800000008042bd95bf624c8c4042bd95bf624c8c40520bb6bf5efc83c00000000015e6243f38d143bf00000080000000800eb83cbf3e0d63c04edd06c01c7296c0ccf6dabf4ed688400000000084d248be58077b3f00000080000000802b1810c03b60854042bd95bf624c8c404edd06c01c7296c00000000011e6243f3cd143bf00000080000000804edd06c01c7296c04edd06c01c7296c0052c09c0fc8275c00000000030c77fbf8d842abd00000000000000804edd06c01c7296c0bc7a0bc0c1213ec02b1810c0f8d4654000000000000080bf0000008000000080000000802b1810c079e940402b1810c03b6085402b1810c03b60854000000000000080bf0000008000000080000000802b1810c03b6085402b1810c03b608540bc7a0bc0c1213ec0000000007f182bbdcdc67fbf0000000000000080bc7a0bc0c1213ec0bc7a0bc0c1213ec0052c09c0fc8275c00000000030c77fbf90842abd00000000000000804edd06c01c7296c0bc7a0bc0c1213ec09bb514c0d411154000000000e8977ebf0865d63d00000080000000800b5319c05d74d23f2b1810c079e940400b5319c05d74d23f00000000e9977ebf0665d63d00000080000000800b5319c05d74d23f0b5319c05d74d23f2b1810c079e9404000000000000080bf0000008000000080000000802b1810c079e940402b1810c079e94040d6453cc09bce22bf00000000c1f578bf277e6e3e0000008000000080a2385fc07ca13ac00b5319c05d74d23faf5935c09e613cc0000000001d182bbdcdc67fbf0000000000000080bc7a0bc0c1213ec0a2385fc07ca13ac0a2385fc07ca13ac000000000c1f578bf2e7e6e3e0000008000000080a2385fc07ca13ac0a2385fc07ca13ac0441231409fcd03c000000000d1bb343ff84d35bf0000008000000080441231409fcd03c0441231409fcd03c0f4c5b23f3a365bc000000000d1bb343ff74d35bf0000008000000080441231409fcd03c0dbd7d93c6b4f99c0664b983f6ee395be00000000f1fb3e3f18792a3f0000008000000080ee36c6be87a9bc3f441231409fcd03c0ee36c6be87a9bc3f00000000f1fb3e3f18792a3f0000008000000080ee36c6be87a9bc3fee36c6be87a9bc3fdbd7d93c6b4f99c0000000007d205abf9e0006bf0000000000000080dbd7d93c6b4f99c0dbd7d93c6b4f99c04fe9b5be056b85c0000000007d205abf9e0006bf0000000000000080dbd7d93c6b4f99c00eb83cbf3e0d63c0fe4a47bfc4763b40000000005637773f01f8843e000000800000008042bd95bf624c8c40ee36c6be87a9bc3f0eb83cbf3e0d63c00000000015e6243f38d143bf00000080000000800eb83cbf3e0d63c00eb83cbf3e0d63c042bd95bf624c8c40000000005637773f00f8843e000000800000008042bd95bf624c8c4042bd95bf624c8c40ccf6dabf4ed6884000000000bbd248be55077b3f00000080000000802b1810c03b60854042bd95bf624c8c40520bb6bf5efc83c00000000011e6243f3cd143bf00000080000000800eb83cbf3e0d63c04edd06c01c7296c02b1810c03b6085400000000084d248be58077b3f00000080000000802b1810c03b6085402b1810c03b6085404edd06c01c7296c00000000030c77fbf8d842abd00000000000000804edd06c01c7296c04edd06c01c7296c02b1810c0f8d4654000000000000080bf0000008000000080000000802b1810c079e940402b1810c03b608540
-  m_CompressedMesh:
-    m_Vertices:
-      m_NumItems: 0
-      m_Range: 0
-      m_Start: 0
-      m_Data: 
-      m_BitSize: 0
-    m_UV:
-      m_NumItems: 0
-      m_Range: 0
-      m_Start: 0
-      m_Data: 
-      m_BitSize: 0
-    m_Normals:
-      m_NumItems: 0
-      m_Range: 0
-      m_Start: 0
-      m_Data: 
-      m_BitSize: 0
-    m_Tangents:
-      m_NumItems: 0
-      m_Range: 0
-      m_Start: 0
-      m_Data: 
-      m_BitSize: 0
-    m_Weights:
-      m_NumItems: 0
-      m_Data: 
-      m_BitSize: 0
-    m_NormalSigns:
-      m_NumItems: 0
-      m_Data: 
-      m_BitSize: 0
-    m_TangentSigns:
-      m_NumItems: 0
-      m_Data: 
-      m_BitSize: 0
-    m_FloatColors:
-      m_NumItems: 0
-      m_Range: 0
-      m_Start: 0
-      m_Data: 
-      m_BitSize: 0
-    m_BoneIndices:
-      m_NumItems: 0
-      m_Data: 
-      m_BitSize: 0
-    m_Triangles:
-      m_NumItems: 0
-      m_Data: 
-      m_BitSize: 0
-    m_UVInfo: 0
-  m_LocalAABB:
-    m_Center: {x: -0.36054587, y: -0.20331025, z: 0}
-    m_Extent: {x: 3.1272857, y: 4.587634, z: 0}
-  m_MeshUsageFlags: 0
-  m_CookingOptions: 30
-  m_BakedConvexCollisionMesh: 
-  m_BakedTriangleCollisionMesh: 
-  m_MeshMetrics[0]: 1
-  m_MeshMetrics[1]: 1
-  m_MeshOptimizationFlags: 1
-  m_StreamData:
-    serializedVersion: 2
-    offset: 0
-    size: 0
-    path: 
+  stairs: 0
 --- !u!1 &1178939917
 GameObject:
   m_ObjectHideFlags: 0
@@ -66367,8 +66476,8 @@ MonoBehaviour:
   m_ShadowVolumeIntensityEnabled: 0
   m_ShadowVolumeIntensity: 0.75
   m_LocalBounds:
-    m_Center: {x: 0, y: -5.21, z: 0}
-    m_Extent: {x: 35.69, y: 9.19, z: 0}
+    m_Center: {x: 0, y: 0, z: 0}
+    m_Extent: {x: 35.239998, y: 9.188555, z: 0}
   m_PointLightInnerAngle: 360
   m_PointLightOuterAngle: 360
   m_PointLightInnerRadius: 0
@@ -66526,6 +66635,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 88027958}
+  stairs: 0
 --- !u!1 &1182752990
 GameObject:
   m_ObjectHideFlags: 0
@@ -66953,6 +67063,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 1475495302}
+  stairs: 0
 --- !u!1 &1188581476
 GameObject:
   m_ObjectHideFlags: 0
@@ -67044,6 +67155,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 1105779112}
+  stairs: 0
 --- !u!1 &1193332973
 GameObject:
   m_ObjectHideFlags: 0
@@ -67266,6 +67378,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 1945647819}
+  stairs: 0
 --- !u!1 &1195591741
 GameObject:
   m_ObjectHideFlags: 0
@@ -68164,6 +68277,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 759795775}
+  stairs: 0
 --- !u!1 &1229609378
 GameObject:
   m_ObjectHideFlags: 0
@@ -68676,6 +68790,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 554098247}
+  stairs: 0
 --- !u!1 &1249611479
 GameObject:
   m_ObjectHideFlags: 0
@@ -70532,6 +70647,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 61760643}
+  stairs: 0
 --- !u!1 &1290716712
 GameObject:
   m_ObjectHideFlags: 0
@@ -70707,6 +70823,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 1427609583}
+  stairs: 0
 --- !u!1 &1294258344
 GameObject:
   m_ObjectHideFlags: 0
@@ -72040,6 +72157,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 2015536375}
+  stairs: 0
 --- !u!1 &1347237594
 GameObject:
   m_ObjectHideFlags: 0
@@ -72346,6 +72464,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 1523185281}
+  stairs: 0
 --- !u!1 &1356526216
 GameObject:
   m_ObjectHideFlags: 0
@@ -73536,8 +73655,18 @@ MonoBehaviour:
     noise: {fileID: 0}
     delayTime: 0.5
   activateTemple: 0
+  templeStartDelay: 1
+  templeRiseStartAudio: {fileID: 0}
+  templeRiseLoopAudio: {fileID: 0}
+  templeDebrisAudio: {fileID: 0}
+  templeCompleteAudio: {fileID: 0}
+  useTempleRiseAudio: 1
+  templeRiseLoopFadeOutLeadTime: 1.5
   includePlayerIndex: -1
   controller: {fileID: 0}
+  coreRiseUp: 0
+  risePosY: 0
+  riseSpeed: 2
 --- !u!212 &1389196409
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -78894,6 +79023,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 1370421348}
+  stairs: 0
 --- !u!1 &1414627240
 GameObject:
   m_ObjectHideFlags: 0
@@ -84822,6 +84952,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 1347237596}
+  stairs: 0
 --- !u!1 &1440763074
 GameObject:
   m_ObjectHideFlags: 0
@@ -87312,8 +87443,8 @@ MonoBehaviour:
   - {x: -2.1072574, y: -4.7014294, z: 0}
   - {x: -2.179366, y: -2.9708102, z: 0}
   m_ShapePathHash: -1366313693
-  m_Mesh: {fileID: 1174154758}
-  m_InstanceId: 1467188
+  m_Mesh: {fileID: 2129590636}
+  m_InstanceId: 1073286
   m_LocalBounds:
     m_Center: {x: -0.36054587, y: -0.20331049, z: 0}
     m_Extent: {x: 3.1272857, y: 4.587634, z: 0}
@@ -87456,6 +87587,25 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 26972d2d8a688df4c8cc9292cafd2a46, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  manager: {fileID: 0}
+  activationController: {fileID: 0}
+  activateOnlyOnce: 1
+  hitFlashRenderer: {fileID: 0}
+  activateGlowRenderer: {fileID: 0}
+  stableGlowRenderer: {fileID: 0}
+  hitFlashAlpha: 1
+  activateGlowAlpha: 0.85
+  stableGlowAlpha: 0.45
+  hitFlashTime: 0.25
+  delayBeforeActivateEffect: 0.25
+  activateGlowTime: 1
+  delayBeforeCompleteEffect: 0.6
+  hitParticle: {fileID: 0}
+  activateParticle: {fileID: 0}
+  completeParticle: {fileID: 0}
+  hitAudio: {fileID: 0}
+  activateAudio: {fileID: 0}
+  completeAudio: {fileID: 0}
 --- !u!212 &1496886584
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -87866,6 +88016,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 1905164584}
+  stairs: 0
 --- !u!1 &1503124682
 GameObject:
   m_ObjectHideFlags: 0
@@ -88588,8 +88739,8 @@ MonoBehaviour:
   m_ShadowVolumeIntensityEnabled: 0
   m_ShadowVolumeIntensity: 0.75
   m_LocalBounds:
-    m_Center: {x: 0, y: -5.21, z: 0}
-    m_Extent: {x: 35.69, y: 9.19, z: 0}
+    m_Center: {x: 0, y: 0, z: 0}
+    m_Extent: {x: 35.239998, y: 9.188555, z: 0}
   m_PointLightInnerAngle: 360
   m_PointLightOuterAngle: 360
   m_PointLightInnerRadius: 0
@@ -89201,6 +89352,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 325931284}
+  stairs: 0
 --- !u!1 &1530800260
 GameObject:
   m_ObjectHideFlags: 0
@@ -89376,6 +89528,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 1987292051}
+  stairs: 0
 --- !u!1 &1533613465
 GameObject:
   m_ObjectHideFlags: 0
@@ -89994,8 +90147,8 @@ MonoBehaviour:
   m_ShadowVolumeIntensityEnabled: 0
   m_ShadowVolumeIntensity: 0.75
   m_LocalBounds:
-    m_Center: {x: 0, y: -5.21, z: 0}
-    m_Extent: {x: 35.69, y: 9.19, z: 0}
+    m_Center: {x: 0, y: 0, z: 0}
+    m_Extent: {x: 35.239998, y: 9.188555, z: 0}
   m_PointLightInnerAngle: 360
   m_PointLightOuterAngle: 360
   m_PointLightInnerRadius: 0
@@ -96060,6 +96213,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 552763375}
+  stairs: 0
 --- !u!1 &1584841761
 GameObject:
   m_ObjectHideFlags: 0
@@ -102001,6 +102155,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 1969159896}
+  stairs: 0
 --- !u!1 &1616799593
 GameObject:
   m_ObjectHideFlags: 0
@@ -102428,6 +102583,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 333163167}
+  stairs: 0
 --- !u!1 &1638783333
 GameObject:
   m_ObjectHideFlags: 0
@@ -102626,8 +102782,8 @@ MonoBehaviour:
   m_ShadowVolumeIntensityEnabled: 0
   m_ShadowVolumeIntensity: 0.75
   m_LocalBounds:
-    m_Center: {x: 0, y: -5.21, z: 0}
-    m_Extent: {x: 35.69, y: 9.19, z: 0}
+    m_Center: {x: 0, y: 0, z: 0}
+    m_Extent: {x: 35.239998, y: 9.188555, z: 0}
   m_PointLightInnerAngle: 360
   m_PointLightOuterAngle: 360
   m_PointLightInnerRadius: 0
@@ -102869,6 +103025,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 169872120}
+  stairs: 0
 --- !u!1 &1642362139
 GameObject:
   m_ObjectHideFlags: 0
@@ -114388,6 +114545,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 1638783335}
+  stairs: 0
 --- !u!1 &1709881865
 GameObject:
   m_ObjectHideFlags: 0
@@ -115327,6 +115485,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 712498657}
+  stairs: 0
 --- !u!1 &1739788894
 GameObject:
   m_ObjectHideFlags: 0
@@ -116473,6 +116632,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 289590961}
+  stairs: 0
 --- !u!1 &1773754192
 GameObject:
   m_ObjectHideFlags: 0
@@ -116648,6 +116808,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 1762365821}
+  stairs: 0
 --- !u!1 &1779891733
 GameObject:
   m_ObjectHideFlags: 0
@@ -122997,6 +123158,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 1201164764}
+  stairs: 0
 --- !u!1 &1828157443
 GameObject:
   m_ObjectHideFlags: 0
@@ -123397,6 +123559,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 2137408808}
+  stairs: 0
 --- !u!1 &1838468259
 GameObject:
   m_ObjectHideFlags: 0
@@ -124076,6 +124239,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 270370206}
+  stairs: 0
 --- !u!1 &1853427891
 GameObject:
   m_ObjectHideFlags: 0
@@ -125861,6 +126025,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 1670119655}
+  stairs: 0
 --- !u!1 &1922974067
 GameObject:
   m_ObjectHideFlags: 0
@@ -126641,6 +126806,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 1728748481}
+  stairs: 0
 --- !u!1 &1939874189
 GameObject:
   m_ObjectHideFlags: 0
@@ -126839,8 +127005,8 @@ MonoBehaviour:
   m_ShadowVolumeIntensityEnabled: 0
   m_ShadowVolumeIntensity: 0.75
   m_LocalBounds:
-    m_Center: {x: 0, y: -5.21, z: 0}
-    m_Extent: {x: 35.69, y: 9.19, z: 0}
+    m_Center: {x: 0, y: 0, z: 0}
+    m_Extent: {x: 35.239998, y: 9.188555, z: 0}
   m_PointLightInnerAngle: 360
   m_PointLightOuterAngle: 360
   m_PointLightInnerRadius: 0
@@ -128728,6 +128894,25 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 26972d2d8a688df4c8cc9292cafd2a46, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  manager: {fileID: 0}
+  activationController: {fileID: 0}
+  activateOnlyOnce: 1
+  hitFlashRenderer: {fileID: 0}
+  activateGlowRenderer: {fileID: 0}
+  stableGlowRenderer: {fileID: 0}
+  hitFlashAlpha: 1
+  activateGlowAlpha: 0.85
+  stableGlowAlpha: 0.45
+  hitFlashTime: 0.25
+  delayBeforeActivateEffect: 0.25
+  activateGlowTime: 1
+  delayBeforeCompleteEffect: 0.6
+  hitParticle: {fileID: 0}
+  activateParticle: {fileID: 0}
+  completeParticle: {fileID: 0}
+  hitAudio: {fileID: 0}
+  activateAudio: {fileID: 0}
+  completeAudio: {fileID: 0}
 --- !u!212 &1981417806
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -131590,8 +131775,8 @@ MonoBehaviour:
   m_ShadowVolumeIntensityEnabled: 0
   m_ShadowVolumeIntensity: 0.75
   m_LocalBounds:
-    m_Center: {x: 0, y: -5.21, z: 0}
-    m_Extent: {x: 35.69, y: 9.19, z: 0}
+    m_Center: {x: 0, y: 0, z: 0}
+    m_Extent: {x: 35.239998, y: 9.188555, z: 0}
   m_PointLightInnerAngle: 360
   m_PointLightOuterAngle: 360
   m_PointLightInnerRadius: 0
@@ -132353,8 +132538,8 @@ MonoBehaviour:
   m_ShadowVolumeIntensityEnabled: 0
   m_ShadowVolumeIntensity: 0.75
   m_LocalBounds:
-    m_Center: {x: 0, y: -5.21, z: 0}
-    m_Extent: {x: 35.69, y: 9.19, z: 0}
+    m_Center: {x: 0, y: 0, z: 0}
+    m_Extent: {x: 35.239998, y: 9.188555, z: 0}
   m_PointLightInnerAngle: 360
   m_PointLightOuterAngle: 360
   m_PointLightInnerRadius: 0
@@ -143194,6 +143379,171 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!43 &2129590636
+Mesh:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: 
+  serializedVersion: 11
+  m_SubMeshes:
+  - serializedVersion: 2
+    firstByte: 0
+    indexCount: 126
+    topology: 0
+    baseVertex: 0
+    firstVertex: 0
+    vertexCount: 44
+    localAABB:
+      m_Center: {x: -0.36054587, y: -0.20331025, z: 0}
+      m_Extent: {x: 3.1272857, y: 4.587634, z: 0}
+  m_Shapes:
+    vertices: []
+    shapes: []
+    channels: []
+    fullWeights: []
+  m_BindPose: []
+  m_BoneNameHashes: 
+  m_RootBoneNameHash: 0
+  m_BonesAABB: []
+  m_VariableBoneCountWeights:
+    m_Data: 
+  m_MeshCompression: 0
+  m_IsReadable: 1
+  m_KeepVertices: 1
+  m_KeepIndices: 1
+  m_IndexFormat: 0
+  m_IndexBuffer: 0000010002000000030001000400030000000400050003000500040006000700080009000a00080007000b0008000a000b000c0008000d000c000b000d000e000c000d000f000e0010000f000d00100011000f0012001100100013001100120000001100130002001100000014001100020011001400150000001600040013001700000001001800020003001900010002001a00140005001b00030004001c00060006001d00050009001e00070007001f000a000800200009000c00210008000a0022000b000b0023000d000e0024000c000d00250010000f0026000e00110027000f0010002800120015002900110012002a00130014002b001500
+  m_VertexData:
+    serializedVersion: 3
+    m_VertexCount: 44
+    m_Channels:
+    - stream: 0
+      offset: 0
+      format: 0
+      dimension: 3
+    - stream: 0
+      offset: 0
+      format: 0
+      dimension: 0
+    - stream: 0
+      offset: 12
+      format: 0
+      dimension: 4
+    - stream: 0
+      offset: 28
+      format: 0
+      dimension: 4
+    - stream: 0
+      offset: 0
+      format: 0
+      dimension: 0
+    - stream: 0
+      offset: 0
+      format: 0
+      dimension: 0
+    - stream: 0
+      offset: 0
+      format: 0
+      dimension: 0
+    - stream: 0
+      offset: 0
+      format: 0
+      dimension: 0
+    - stream: 0
+      offset: 0
+      format: 0
+      dimension: 0
+    - stream: 0
+      offset: 0
+      format: 0
+      dimension: 0
+    - stream: 0
+      offset: 0
+      format: 0
+      dimension: 0
+    - stream: 0
+      offset: 0
+      format: 0
+      dimension: 0
+    - stream: 0
+      offset: 0
+      format: 0
+      dimension: 0
+    - stream: 0
+      offset: 0
+      format: 0
+      dimension: 0
+    m_DataSize: 1936
+    _typelessdata: bc7a0bc0c1213ec00000000030c77fbf90842abd0000000000000080bc7a0bc0c1213ec0bc7a0bc0c1213ec09bb514c0d411154000000000e9977ebf0665d63d00000080000000800b5319c05d74d23f2b1810c079e940402b1810c079e9404000000000e8977ebf0865d63d00000080000000802b1810c079e940402b1810c079e940400b5319c05d74d23f00000000c1f578bf277e6e3e00000080000000800b5319c05d74d23f0b5319c05d74d23faf5935c09e613cc0000000007f182bbdcdc67fbf0000000000000080bc7a0bc0c1213ec0a2385fc07ca13ac0d6453cc09bce22bf00000000c1f578bf2e7e6e3e0000008000000080a2385fc07ca13ac00b5319c05d74d23fa2385fc07ca13ac0000000001d182bbdcdc67fbf0000000000000080a2385fc07ca13ac0a2385fc07ca13ac0f4c5b23f3a365bc000000000d1bb343ff84d35bf0000008000000080441231409fcd03c0dbd7d93c6b4f99c0664b983f6ee395be00000000f1fb3e3f18792a3f0000008000000080ee36c6be87a9bc3f441231409fcd03c0441231409fcd03c000000000f1fb3e3f18792a3f0000008000000080441231409fcd03c0441231409fcd03c0dbd7d93c6b4f99c000000000d1bb343ff74d35bf0000008000000080dbd7d93c6b4f99c0dbd7d93c6b4f99c04fe9b5be056b85c0000000007d205abf9e0006bf0000000000000080dbd7d93c6b4f99c00eb83cbf3e0d63c0ee36c6be87a9bc3f000000005637773f01f8843e0000008000000080ee36c6be87a9bc3fee36c6be87a9bc3f0eb83cbf3e0d63c0000000007d205abf9e0006bf00000000000000800eb83cbf3e0d63c00eb83cbf3e0d63c0fe4a47bfc4763b40000000005637773f00f8843e000000800000008042bd95bf624c8c40ee36c6be87a9bc3f42bd95bf624c8c4000000000bbd248be55077b3f000000800000008042bd95bf624c8c4042bd95bf624c8c40520bb6bf5efc83c00000000015e6243f38d143bf00000080000000800eb83cbf3e0d63c04edd06c01c7296c0ccf6dabf4ed688400000000084d248be58077b3f00000080000000802b1810c03b60854042bd95bf624c8c404edd06c01c7296c00000000011e6243f3cd143bf00000080000000804edd06c01c7296c04edd06c01c7296c0052c09c0fc8275c00000000030c77fbf8d842abd00000000000000804edd06c01c7296c0bc7a0bc0c1213ec02b1810c0f8d4654000000000000080bf0000008000000080000000802b1810c079e940402b1810c03b6085402b1810c03b60854000000000000080bf0000008000000080000000802b1810c03b6085402b1810c03b608540bc7a0bc0c1213ec0000000007f182bbdcdc67fbf0000000000000080bc7a0bc0c1213ec0bc7a0bc0c1213ec0052c09c0fc8275c00000000030c77fbf90842abd00000000000000804edd06c01c7296c0bc7a0bc0c1213ec09bb514c0d411154000000000e8977ebf0865d63d00000080000000800b5319c05d74d23f2b1810c079e940400b5319c05d74d23f00000000e9977ebf0665d63d00000080000000800b5319c05d74d23f0b5319c05d74d23f2b1810c079e9404000000000000080bf0000008000000080000000802b1810c079e940402b1810c079e94040d6453cc09bce22bf00000000c1f578bf277e6e3e0000008000000080a2385fc07ca13ac00b5319c05d74d23faf5935c09e613cc0000000001d182bbdcdc67fbf0000000000000080bc7a0bc0c1213ec0a2385fc07ca13ac0a2385fc07ca13ac000000000c1f578bf2e7e6e3e0000008000000080a2385fc07ca13ac0a2385fc07ca13ac0441231409fcd03c000000000d1bb343ff84d35bf0000008000000080441231409fcd03c0441231409fcd03c0f4c5b23f3a365bc000000000d1bb343ff74d35bf0000008000000080441231409fcd03c0dbd7d93c6b4f99c0664b983f6ee395be00000000f1fb3e3f18792a3f0000008000000080ee36c6be87a9bc3f441231409fcd03c0ee36c6be87a9bc3f00000000f1fb3e3f18792a3f0000008000000080ee36c6be87a9bc3fee36c6be87a9bc3fdbd7d93c6b4f99c0000000007d205abf9e0006bf0000000000000080dbd7d93c6b4f99c0dbd7d93c6b4f99c04fe9b5be056b85c0000000007d205abf9e0006bf0000000000000080dbd7d93c6b4f99c00eb83cbf3e0d63c0fe4a47bfc4763b40000000005637773f01f8843e000000800000008042bd95bf624c8c40ee36c6be87a9bc3f0eb83cbf3e0d63c00000000015e6243f38d143bf00000080000000800eb83cbf3e0d63c00eb83cbf3e0d63c042bd95bf624c8c40000000005637773f00f8843e000000800000008042bd95bf624c8c4042bd95bf624c8c40ccf6dabf4ed6884000000000bbd248be55077b3f00000080000000802b1810c03b60854042bd95bf624c8c40520bb6bf5efc83c00000000011e6243f3cd143bf00000080000000800eb83cbf3e0d63c04edd06c01c7296c02b1810c03b6085400000000084d248be58077b3f00000080000000802b1810c03b6085402b1810c03b6085404edd06c01c7296c00000000030c77fbf8d842abd00000000000000804edd06c01c7296c04edd06c01c7296c02b1810c0f8d4654000000000000080bf0000008000000080000000802b1810c079e940402b1810c03b608540
+  m_CompressedMesh:
+    m_Vertices:
+      m_NumItems: 0
+      m_Range: 0
+      m_Start: 0
+      m_Data: 
+      m_BitSize: 0
+    m_UV:
+      m_NumItems: 0
+      m_Range: 0
+      m_Start: 0
+      m_Data: 
+      m_BitSize: 0
+    m_Normals:
+      m_NumItems: 0
+      m_Range: 0
+      m_Start: 0
+      m_Data: 
+      m_BitSize: 0
+    m_Tangents:
+      m_NumItems: 0
+      m_Range: 0
+      m_Start: 0
+      m_Data: 
+      m_BitSize: 0
+    m_Weights:
+      m_NumItems: 0
+      m_Data: 
+      m_BitSize: 0
+    m_NormalSigns:
+      m_NumItems: 0
+      m_Data: 
+      m_BitSize: 0
+    m_TangentSigns:
+      m_NumItems: 0
+      m_Data: 
+      m_BitSize: 0
+    m_FloatColors:
+      m_NumItems: 0
+      m_Range: 0
+      m_Start: 0
+      m_Data: 
+      m_BitSize: 0
+    m_BoneIndices:
+      m_NumItems: 0
+      m_Data: 
+      m_BitSize: 0
+    m_Triangles:
+      m_NumItems: 0
+      m_Data: 
+      m_BitSize: 0
+    m_UVInfo: 0
+  m_LocalAABB:
+    m_Center: {x: -0.36054587, y: -0.20331025, z: 0}
+    m_Extent: {x: 3.1272857, y: 4.587634, z: 0}
+  m_MeshUsageFlags: 0
+  m_CookingOptions: 30
+  m_BakedConvexCollisionMesh: 
+  m_BakedTriangleCollisionMesh: 
+  m_MeshMetrics[0]: 1
+  m_MeshMetrics[1]: 1
+  m_MeshOptimizationFlags: 1
+  m_StreamData:
+    serializedVersion: 2
+    offset: 0
+    size: 0
+    path: 
 --- !u!1 &2130230780
 GameObject:
   m_ObjectHideFlags: 0
@@ -143728,6 +144078,25 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 26972d2d8a688df4c8cc9292cafd2a46, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  manager: {fileID: 0}
+  activationController: {fileID: 0}
+  activateOnlyOnce: 1
+  hitFlashRenderer: {fileID: 0}
+  activateGlowRenderer: {fileID: 0}
+  stableGlowRenderer: {fileID: 0}
+  hitFlashAlpha: 1
+  activateGlowAlpha: 0.85
+  stableGlowAlpha: 0.45
+  hitFlashTime: 0.25
+  delayBeforeActivateEffect: 0.25
+  activateGlowTime: 1
+  delayBeforeCompleteEffect: 0.6
+  hitParticle: {fileID: 0}
+  activateParticle: {fileID: 0}
+  completeParticle: {fileID: 0}
+  hitAudio: {fileID: 0}
+  activateAudio: {fileID: 0}
+  completeAudio: {fileID: 0}
 --- !u!212 &2137555053
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -144135,6 +144504,7 @@ SpriteRenderer:
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
+  - {fileID: 963350350}
   - {fileID: 580777224}
   - {fileID: 1140899400}
   - {fileID: 336589815}
