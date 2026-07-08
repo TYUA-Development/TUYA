@@ -107,6 +107,8 @@ public class MusicPuzzleAreaController : MonoBehaviour
         BindNoteObjects();
     }
 
+    public bool IsPuzzleSolved => puzzleSolved;
+
     public void StartMusicPuzzle()
     {
         BeginPuzzleFromAreaEntry();

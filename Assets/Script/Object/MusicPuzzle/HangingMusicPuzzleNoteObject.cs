@@ -111,6 +111,9 @@ public class HangingMusicPuzzleNoteObject : MonoBehaviour
         if (hitLocked)
             return;
 
+        if (puzzleController != null && puzzleController.IsPuzzleSolved)
+            return;
+
         StartCoroutine(PropellerHitRoutine(hitPoint, arrowDirection));
     }
 
