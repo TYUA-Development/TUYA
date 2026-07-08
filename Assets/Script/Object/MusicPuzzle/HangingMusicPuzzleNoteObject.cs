@@ -20,9 +20,10 @@ public class HangingMusicPuzzleNoteObject : MonoBehaviour
 
     [Header("Propeller")]
     [SerializeField] private Transform propellerRoot;
-    [SerializeField] private float propellerSpinDegrees = 360f;
+    [SerializeField] private float propellerSpinSpeed = 360f;
+    [SerializeField] private float propellerDeceleration = 360f;
+    [Tooltip("애니메이션 길이가 아니라, 다음 피격을 막는 잠금 시간(초)")]
     [SerializeField] private float propellerSpinTime = 0.25f;
-    [SerializeField] private AnimationCurve propellerSpinEase = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
 
     [Header("Body Physics")]
     [SerializeField] private Rigidbody2D bodyRigidbody;
@@ -234,7 +235,7 @@ public class HangingMusicPuzzleNoteObject : MonoBehaviour
         Vector2 offset = hitPoint - (Vector2)propellerRoot.position;
         float torque = offset.x * arrowDirection.y - offset.y * arrowDirection.x;
 
-        return torque >= 0f ? -1f : 1f;
+        return torque >= 0f ? 1f : -1f;
     }
 
     private void PlayCurrentNote()
@@ -265,26 +266,15 @@ public class HangingMusicPuzzleNoteObject : MonoBehaviour
 
     private IEnumerator SpinPropellerRoutine(float direction)
     {
-        Quaternion startRotation = propellerRoot.localRotation;
-        Quaternion endRotation = startRotation * Quaternion.Euler(0f, 0f, propellerSpinDegrees * direction);
-        float timer = 0f;
+        float currentSpeed = propellerSpinSpeed * direction;
 
-        if (propellerSpinTime <= 0f)
+        while (Mathf.Abs(currentSpeed) > 0.01f)
         {
-            propellerRoot.localRotation = endRotation;
-            yield break;
-        }
-
-        while (timer < propellerSpinTime)
-        {
-            timer += Time.deltaTime;
-            float t = Mathf.Clamp01(timer / propellerSpinTime);
-            float eased = propellerSpinEase != null ? propellerSpinEase.Evaluate(t) : t;
-            propellerRoot.localRotation = Quaternion.LerpUnclamped(startRotation, endRotation, eased);
+            propellerRoot.Rotate(0f, 0f, currentSpeed * Time.deltaTime);
+            currentSpeed = Mathf.MoveTowards(currentSpeed, 0f, propellerDeceleration * Time.deltaTime);
             yield return null;
         }
 
-        propellerRoot.localRotation = endRotation;
         propellerSpinCoroutine = null;
     }
 
