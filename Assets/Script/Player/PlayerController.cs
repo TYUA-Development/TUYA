@@ -196,11 +196,12 @@ public class PlayerController : MonoBehaviour
     private void PreventSlide(bool onRunway, bool onGround)
     {
         bool shouldFreeze = onGround &&
-                            InputReader.InputData.moveAxis.x == 0 &&
-                            InputReader.InputData.moveAxis.y >= 0 &&
                             currentState != jumpState &&
                             currentState != fallState &&
-                            currentState != dashState;
+                            currentState != dashState &&
+                            (currentState == attackState ||
+                             (InputReader.InputData.moveAxis.x == 0 &&
+                              InputReader.InputData.moveAxis.y >= 0));
 
         if (shouldFreeze)
         {

@@ -22,6 +22,9 @@ public class StoneCircleManager : MonoBehaviour
 
     public float rotateDuration = 1.0f;
 
+    private readonly Dictionary<GameObject, Quaternion> currentTargetRotation = new Dictionary<GameObject, Quaternion>();
+    private readonly Dictionary<GameObject, Coroutine> circleRotateCoroutines = new Dictionary<GameObject, Coroutine>();
+
     private void Start()
     {
         for (int i = 0; i < circleTriggers.Count; i++)
@@ -38,18 +41,29 @@ public class StoneCircleManager : MonoBehaviour
 
         foreach (StoneCircleData data in target.connections)
         {
-            StartCoroutine(RotateCircleCoroutine(data.circle, data.addAngle));
+            GameObject circle = data.circle;
+
+            Quaternion startRot = currentTargetRotation.TryGetValue(circle, out Quaternion loggedRot)
+                ? loggedRot
+                : circle.transform.localRotation;
+
+            Quaternion targetRot = startRot * Quaternion.Euler(0f, 0f, data.addAngle);
+            currentTargetRotation[circle] = targetRot;
+
+            if (circleRotateCoroutines.TryGetValue(circle, out Coroutine running) && running != null)
+            {
+                StopCoroutine(running);
+            }
+
+            circleRotateCoroutines[circle] = StartCoroutine(RotateCircleCoroutine(circle, targetRot));
         }
     }
 
-    private IEnumerator RotateCircleCoroutine(GameObject target, float addAngle)
+    private IEnumerator RotateCircleCoroutine(GameObject target, Quaternion targetRot)
     {
         Transform circle = target.transform;
 
         Quaternion startRot = circle.localRotation;
-
-        Quaternion targetRot =
-            startRot * Quaternion.Euler(0f, 0f, addAngle);
 
         float time = 0f;
 
