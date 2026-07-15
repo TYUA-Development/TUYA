@@ -742,9 +742,13 @@ public class PlayerController : MonoBehaviour
         moveSpeed = setSpeed;
     }
 
+    private Coroutine lockInputCoroutine;
+
     public void LockPlayerInput(float time)
     {
-        StartCoroutine(LockPlayerInputHelper(time));
+        if (lockInputCoroutine != null)
+            StopCoroutine(lockInputCoroutine);
+        lockInputCoroutine = StartCoroutine(LockPlayerInputHelper(time));
     }
 
     public IEnumerator LockPlayerInputHelper(float time)
@@ -752,5 +756,16 @@ public class PlayerController : MonoBehaviour
         lockPlayerInput = true;
         yield return new WaitForSeconds(time);
         lockPlayerInput = false;
+        lockInputCoroutine = null;
+    }
+
+    public void SetInputLocked(bool locked)
+    {
+        if (lockInputCoroutine != null)
+        {
+            StopCoroutine(lockInputCoroutine);
+            lockInputCoroutine = null;
+        }
+        lockPlayerInput = locked;
     }
 }

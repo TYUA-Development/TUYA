@@ -82,6 +82,15 @@ public class HangingMusicPuzzleNoteObject : MonoBehaviour
         puzzleController = controller;
     }
 
+    public Transform GetActiveDotTransform()
+    {
+        if (dotActiveRenderers == null || currentNoteIndex < 0 || currentNoteIndex >= dotActiveRenderers.Length)
+            return null;
+
+        SpriteRenderer renderer = dotActiveRenderers[currentNoteIndex];
+        return renderer != null ? renderer.transform : null;
+    }
+
     private void Reset()
     {
         audioSource = GetComponent<AudioSource>();

@@ -77,6 +77,9 @@ public class MusicPuzzleCoreBridge : MonoBehaviour, IArrowHit
         if (puzzleController != null && puzzleController.IsPuzzleSolved)
             return;
 
+        if (puzzleController != null && puzzleController.IsSequenceRunning)
+            return;
+
         ActivateCoreVisuals();
 
         if (puzzleController == null)

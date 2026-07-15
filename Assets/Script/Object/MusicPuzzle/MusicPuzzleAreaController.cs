@@ -24,6 +24,9 @@ public class MusicPuzzleAreaController : MonoBehaviour
     [SerializeField] private float[] noteVolumes = new float[4] { 1f, 1f, 1f, 1f };
     [SerializeField] private float noteInterval = 0.5f;
 
+    [Header("Answer Playback FX")]
+    [SerializeField] private ParticleSystem dotSparkleEffect;
+
     [Header("Core Audio")]
     [SerializeField] private AudioSource puzzleAudioSource;
     [SerializeField] private AudioClip questionCoreLightClip;
@@ -108,6 +111,7 @@ public class MusicPuzzleAreaController : MonoBehaviour
     }
 
     public bool IsPuzzleSolved => puzzleSolved;
+    public bool IsSequenceRunning => sequenceRunning;
 
     public void StartMusicPuzzle()
     {
@@ -155,6 +159,15 @@ public class MusicPuzzleAreaController : MonoBehaviour
         return indexes;
     }
 
+    private void SetPuzzleCoresLocked(bool locked)
+    {
+        if (questionCore != null)
+            questionCore.SetExternalActivationLocked(locked);
+
+        if (answerCore != null)
+            answerCore.SetExternalActivationLocked(locked);
+    }
+
     private void BeginPuzzleFromAreaEntry()
     {
         if (hasPlayedIntro)
@@ -185,6 +198,7 @@ public class MusicPuzzleAreaController : MonoBehaviour
     private IEnumerator StartPuzzleRoutine()
     {
         sequenceRunning = true;
+        SetPuzzleCoresLocked(true);
 
         if (questionCore != null)
             questionCore.ActivateCoreVisuals();
@@ -196,6 +210,9 @@ public class MusicPuzzleAreaController : MonoBehaviour
 
         yield return StartCoroutine(PlayNoteSequence(expectedNoteIndexes, noteInterval, 1f));
 
+        if (!puzzleSolved)
+            SetPuzzleCoresLocked(false);
+
         sequenceRunning = false;
         startRoutine = null;
     }
@@ -203,6 +220,7 @@ public class MusicPuzzleAreaController : MonoBehaviour
     private IEnumerator SubmitRoutine()
     {
         sequenceRunning = true;
+        SetPuzzleCoresLocked(true);
 
         if (answerCore != null)
             answerCore.ActivateCoreVisuals();
@@ -211,12 +229,15 @@ public class MusicPuzzleAreaController : MonoBehaviour
             yield return new WaitForSeconds(answerMelodyDelay);
 
         int[] currentIndexes = GetCurrentNoteIndexes();
-        yield return StartCoroutine(PlayNoteSequence(currentIndexes, noteInterval, 1f));
+        yield return StartCoroutine(PlayAnswerNoteSequence(currentIndexes, noteInterval, 1f));
 
         if (MatchesExpected(currentIndexes))
             yield return StartCoroutine(SuccessRoutine());
         else
             yield return StartCoroutine(FailRoutine());
+
+        if (!puzzleSolved)
+            SetPuzzleCoresLocked(false);
 
         sequenceRunning = false;
         submitRoutine = null;
@@ -387,6 +408,42 @@ public class MusicPuzzleAreaController : MonoBehaviour
             if (interval > 0f && i < indexes.Length - 1)
                 yield return new WaitForSeconds(interval);
         }
+    }
+
+    private IEnumerator PlayAnswerNoteSequence(int[] indexes, float interval, float volumeMultiplier)
+    {
+        if (indexes == null)
+            yield break;
+
+        for (int i = 0; i < indexes.Length; i++)
+        {
+            PlayNote(indexes[i], volumeMultiplier);
+            PlayDotSparkle(i);
+
+            if (interval > 0f && i < indexes.Length - 1)
+                yield return new WaitForSeconds(interval);
+        }
+    }
+
+    private void PlayDotSparkle(int noteObjectIndex)
+    {
+        if (dotSparkleEffect == null)
+            return;
+
+        if (noteObjects == null || noteObjectIndex < 0 || noteObjectIndex >= noteObjects.Length)
+            return;
+
+        HangingMusicPuzzleNoteObject noteObject = noteObjects[noteObjectIndex];
+        if (noteObject == null)
+            return;
+
+        Transform dotTransform = noteObject.GetActiveDotTransform();
+        if (dotTransform == null)
+            return;
+
+        dotSparkleEffect.transform.position = dotTransform.position;
+        dotSparkleEffect.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+        dotSparkleEffect.Play();
     }
 
     private IEnumerator PlayNoteDelayed(int noteIndex, float volumeMultiplier, float delay)
