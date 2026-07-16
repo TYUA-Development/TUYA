@@ -322,7 +322,7 @@ public class PlayerJumpState : PlayerState
 
     public override void PhysicsUpdate()
     {
-        if (controller.Rigidbody2D.velocity.y <= 0.01f)
+        if (controller.isGround || controller.Rigidbody2D.velocity.y <= 0.01f)
         {
             controller.OnFall();
             return;
