@@ -86,12 +86,13 @@ Assets/
 +-- sounds/              BGM, SFX, ambient audio, audio helper scripts
 +-- TextMesh Pro/        TMP default resources
 +-- Texture/             Character, background, object, environment, UI, and effect art
++-- LeafShaderGraph.mat   Root-level material (new; leaf shader graph instance)
 +-- NewAudioMixer.mixer   Legacy/root-level mixer asset (see Audio/ for the current one)
 +-- URP_*.asset          URP pipeline/renderer assets
-+-- *.renderTexture      Render textures
++-- *.renderTexture      Render textures (`BaseRT.renderTexture`, `New Render Texture.renderTexture`)
 ```
 
-Note: the `Assets/Prefab/` folder named in earlier notes has been renamed to `Assets/Prefabs/` (plural) and gained a `Prefabs/UI/` subfolder. `Assets/Physics/` is a new, currently empty folder. `Assets/Audio/` is new and holds `GameAudioMixer.mixer`; a second, likely legacy, `NewAudioMixer.mixer` still sits at the `Assets/` root.
+Note: the `Assets/Prefab/` folder named in earlier notes has been renamed to `Assets/Prefabs/` (plural) and gained a `Prefabs/UI/` subfolder. `Assets/Physics/` is still a new, currently empty folder — no physics materials/settings live there yet. `Assets/Audio/` holds `GameAudioMixer.mixer`; a second, likely legacy, `NewAudioMixer.mixer` still sits at the `Assets/` root.
 
 ## Main Script Layout
 
@@ -99,17 +100,19 @@ Note: the `Assets/Prefab/` folder named in earlier notes has been renamed to `As
 
 ```text
 Assets/Script/
-+-- Arrow/              Arrow interfaces, small utilities, and arrow prefabs/materials
-+-- Camera/             Camera follow, zoom, parallax, trigger areas, title camera logic
++-- Arrow/              Arrow interfaces, small utilities, arrow prefabs/materials, ArrowBlocker (new)
++-- Camera/             Camera follow, zoom, parallax, trigger areas, title camera logic (incl. CameraEndingAreaTrigger.cs, new)
 +-- Object/             Puzzle and interactive objects
 |   +-- CoreObjects/    Core activation, temple, bridge, floor movement, rising objects
+|   +-- MusicPuzzle/    Sound/note puzzle: hanging note objects, area controller, core bridges
 |   +-- Stone Pillar/   Pillar and windmill objects
 |   +-- StoneCircle/    Circle rotation, propeller, wind machine, passage looper
 |   +-- StoneFloor/     Breakable platform events
-|   +-- Wind/           Wind force objects
+|   +-- Wind/           Wind force objects (incl. particle-affecting wind)
+|   +-- Magnetic.cs      Loose script directly under Object/ (new, not in a subfolder)
 +-- Particle/           Custom particle/object-pool system
 +-- Player/             Player controller, input, state machine, attack, animations
-|   +-- Animation/       Player .anim clips and Animator controllers (new)
+|   +-- Animation/       Player .anim clips and Animator controllers
 |   +-- Attack/          Arrow.cs
 |   +-- PlayerState/     PlayerState.cs (all state classes live in this one file)
 +-- Scene/              Scene-specific intro/cutscene controllers
@@ -118,27 +121,30 @@ Assets/Script/
 +-- Sky/                Sky/background manager, zone particle activator
 +-- UI/                 Title, fade, menu UI, tutorial prompts
 +-- Utils/              Shared interfaces, noise, generic Pair
++-- TestJumpForce.cs     Loose debug/test script at Script root (new, not in any subfolder)
 ```
 
-Approximate C# file counts (90 total under `Assets/Script`):
+Approximate C# file counts (99 total under `Assets/Script`):
 
-- `Camera` (incl. `Parallax`, `DistanceParallax`): 20
-- `Object` (incl. `CoreObjects`, `Stone Pillar`, `StoneCircle`, `StoneFloor`, `Wind`): 24
+- `Object` (incl. `CoreObjects`, `MusicPuzzle`, `Stone Pillar`, `StoneCircle`, `StoneFloor`, `Wind`, loose `Magnetic.cs`): 31
+- `Camera` (incl. `Parallax`, `DistanceParallax`, new `CameraEndingAreaTrigger.cs`): 21
 - `UI`: 11
 - `Settings`: 9
-- `Player` (incl. `PlayerState`, `Attack`): 7
 - `Particle` (incl. `ParticleComponent`): 9
+- `Player` (incl. `PlayerState`, `Attack`): 7
+- `Arrow`: 3
 - `Utils`: 3
-- `Arrow`: 2
 - `Sky`: 2
 - `Scene`: 1
 - `Shader`: 1
+- Script root (loose): 1 (`TestJumpForce.cs`)
 
-Additional related script files outside `Assets/Script`:
+Additional related script files outside `Assets/Script` (105 total `.cs` files project-wide):
 
 - `Assets/ParticleSystemOption.cs` (Assets root)
 - `Assets/sounds/BGM/BGMFadeIn.cs`, `Assets/sounds/SFX/Bow/BowSFXRandomizer.cs`, `Assets/sounds/SteppeZoneTrigger.cs`
 - `Assets/Editor/ReplaceSelectedWithPrefab.cs`
+- `Assets/Texture/artwork/Propeller/RotateObject.cs` (new — generic continuous-rotation script, colocated with art rather than `Script/`)
 
 ## Runtime Architecture
 
@@ -181,6 +187,9 @@ Notes:
 - Do not transition into `PlayerTurnState` until it is implemented.
 - `PlayerController.ChangeDirection(float dir)` flips `transform.localScale.x`.
 - Footsteps depend on `isGround`, `isOnGrass`, horizontal Rigidbody2D velocity, and `grassFootsteps`.
+- `PlayerController.PreventSlide` now also freezes the player while `currentState == attackState` (previously it only froze when there was no horizontal/negative-vertical move input), so aiming/shooting on a slope no longer slides the player.
+- Input locking has two entry points now: `LockPlayerInput(float time)` (timer-based, via `lockInputCoroutine`) and the new `SetInputLocked(bool locked)` (open-ended, cancels any running timer-based lock first). Callers that need to unlock based on a runtime condition (e.g. "player has landed") rather than a fixed duration should use `SetInputLocked` — see `BreakableFragmentPlatformEvent` below.
+- `PlayerJumpState.PhysicsUpdate` and `PlayerFallState`'s ground probe now also check `controller.isGround` directly (not just Rigidbody2D vertical velocity / a small overlap box), reducing missed jump-to-fall / fall-to-ground transitions.
 - Several source comments have mojibake/encoding damage. Prefer actual code flow over comments.
 - `PlayerSilhouetteController` lerps SpriteRenderer colors toward a silhouette color using `transitionSpeed`. Call `SetSilhouette(float)` to trigger.
 - `PlayerBloomAreaTrigger` enables/disables a bloom effect when the player enters or exits a trigger zone.
@@ -227,8 +236,10 @@ Most puzzle interactions are connected through the `IArrowHit.OnHit()` contract.
 
 Arrow-related prefabs/materials live in `Assets/Script/Arrow/`:
 
-- `Arrow.prefab`, `ArrowHitFX.prefab`, `ArrowTrajectoryPrefab.prefab` (new — likely a trajectory/aim-preview prefab)
+- `Arrow.prefab`, `ArrowHitFX.prefab`, `ArrowTrajectoryPrefab.prefab` (likely a trajectory/aim-preview prefab)
 - `M_Tuya_ArrowTrail.mat`, `M_Tuya_DustParticle.mat`
+
+`Assets/Script/Arrow/ArrowBlocker.cs` (new) is a minimal `IArrowHit` implementer with an empty `OnHit()` body — its only purpose is to make `Arrow.OnTriggerEnter2D` recognize the object as a valid hit target so the arrow sticks to it via the existing `Stick()` logic, without triggering any puzzle/game logic of its own. Use it on decorative or blocking geometry that should simply catch arrows.
 
 ### Camera
 
@@ -250,6 +261,7 @@ Important files:
 - `Assets/Script/Camera/CameraRestoreAreaTrigger.cs`
 - `Assets/Script/Camera/FallZoomCameraArea.cs`
 - `Assets/Script/Camera/DemoEndFadeToTitle.cs`
+- `Assets/Script/Camera/CameraEndingAreaTrigger.cs` (new)
 - `Assets/Script/Camera/Parallax/ParallaxManager.cs`
 - `Assets/Script/Camera/Parallax/ParallaxImage.cs`
 - `Assets/Script/Camera/DistanceParallax/DistanceParallaxManager.cs`
@@ -264,7 +276,8 @@ Additional camera area scripts:
 - `PlayerCutsceneLocker2D`: locks player input/movement during cutscene sequences; released by timeout or explicit call.
 - `BacklightAreaTrigger`: toggles backlight/bloom camera effects on player enter/exit.
 - `CameraYLockZoomArea`: locks camera Y axis and adjusts zoom while player is inside the trigger.
-- `CameraRestoreAreaTrigger`: restores camera to default follow state when player re-enters a zone.
+- `CameraRestoreAreaTrigger`: restores camera to default follow state when player re-enters a zone. Its Y-target and finalize logic now live in `protected virtual` methods (`GetTargetCameraY`, `FinalizeCameraY`) specifically so subclasses can override them (see `CameraEndingAreaTrigger` below).
+- `CameraEndingAreaTrigger` (new): subclasses `CameraRestoreAreaTrigger` and overrides `GetTargetCameraY`/`FinalizeCameraY` to lock the camera rig to a fixed `fixedCameraY` instead of following the player's Y offset — used for the ending sequence. As of this snapshot it exists as a script but is not yet attached to any GameObject in a scene or prefab.
 - `FallZoomCameraArea`: adjusts camera zoom during fall zones.
 - `DemoEndFadeToTitle`: fades screen and loads the title scene when the player reaches the demo end.
 
@@ -274,6 +287,7 @@ Important folders:
 
 - `Assets/Script/Object/`
 - `Assets/Script/Object/CoreObjects/`
+- `Assets/Script/Object/MusicPuzzle/` (new)
 - `Assets/Script/Object/Stone Pillar/`
 - `Assets/Script/Object/StoneCircle/`
 - `Assets/Script/Object/StoneFloor/`
@@ -299,19 +313,37 @@ Key files:
 - `RisingObjectController.cs`: moves a set of objects upward on activation.
 - `TimedRisingObjectController.cs`: same as `RisingObjectController` but with configurable per-object delay.
 - `StoneBridge.cs`: moves bridge pieces, raises core, and triggers camera movement/noise.
-- `StonePillarManager.cs`: creates stone pillars and windmills; windmill hits move connected pillars by step.
+- `StonePillarManager.cs`: creates stone pillars and windmills; windmill hits move connected pillars by step. Each pillar's next target position is now tracked in a `currentTargetPosition` list (updated from the *target*, not read back from the possibly-still-moving `transform.position`), and each pillar's move coroutine is tracked/stopped-and-restarted per index (`pillarMoveCoroutines`) — fixes drift/desync when a pillar is re-triggered while still mid-move.
 - `WindMillObject.cs`: `IArrowHit` adapter that calls `StonePillarManager.PillarMove`.
-- `StoneCircleManager.cs`: rotates connected circles for a trigger id.
+- `StoneCircleManager.cs`: rotates connected circles for a trigger id. Same fix pattern as `StonePillarManager`: target rotation per circle is tracked in a `currentTargetRotation` dictionary and compounded from there (not from `transform.localRotation`), and the running rotate coroutine per circle is tracked/stopped in `circleRotateCoroutines` before starting a new one, so rapid re-triggers don't desync the rotation.
 - `CircleHitObject.cs`: `IArrowHit` adapter that calls `StoneCircleManager.RotateCircles`.
 - `PropellerSpinner.cs`: spins a propeller object continuously or on activation.
 - `RotatingPassageLooper.cs`: loops a passage object's rotation for ambient motion.
 - `WindMachineActivationController.cs`: activates the wind machine sequence on core event.
 - `PassThroughExitCameraZoom.cs`: adjusts camera zoom when the player exits a pass-through area.
 - `Object_Wind.cs`: applies directional wind force to Rigidbody2D objects inside its trigger.
+- `Object_Wind_Particle.cs` (`Wind/`, new): pushes particles of assigned `ParticleSystem`s that are inside its collider by directly rewriting `ParticleSystem.Particle.velocity` via `GetParticles`/`SetParticles` (bypasses Rigidbody2D physics, so it works on non-physical particle-based foliage/dust). Optionally kills particles instantly on overlap with a `killOnCollisionLayer` (e.g. Floor).
 - `WindSystemManager.cs`: mostly empty placeholder at the time of writing.
-- `BreakableFragmentPlatformEvent.cs` (`StoneFloor/`): on player contact, disables the platform collider and triggers a fall sequence via `PlayerController.OnFall()` after a configurable FixedUpdate delay.
+- `BreakableFragmentPlatformEvent.cs` (`StoneFloor/`): on player contact, disables the platform collider and triggers a fall sequence via `PlayerController.OnFall()` after a configurable FixedUpdate delay. Player input is now re-locked/unlocked via `PlayerController.SetInputLocked(bool)` instead of a fixed-duration `LockPlayerInput(time)` call — `UnlockInputAfterLandingRoutine()` waits for the player to actually leave and then re-touch the ground (`playerController.isGround`) before unlocking, plus an optional `extraInputLockAfterFinalImpact` grace period, rather than assuming a fixed fall duration.
+- `Magnetic.cs` (`Object/`, new, loose file not in a subfolder): tracks its own per-`FixedUpdate` position delta and, for each `GameObject` in its `attachedObjects` list that is currently touching its collider, applies the same delta to that object (via `Rigidbody2D.MovePosition` if it has one, otherwise directly to `transform.position`). Used to carry riders/objects along with a moving platform-like object without a physics joint. Caches colliders per attached object in a `Dictionary`. As of this snapshot it exists as a script but is not yet attached to any GameObject in a scene or prefab.
 
 When changing puzzles, check Inspector-serialized lists and scene/prefab references. Many connections depend on list index order.
+
+### Music/Sound Puzzle (new)
+
+Key files, all under `Assets/Script/Object/MusicPuzzle/`:
+
+- `MusicPuzzleAreaController.cs`: the puzzle's central coordinator. Holds a "question" melody (`expectedNoteIndexes`) and drives a play sequence: question core lights up and plays its expected note sequence, the player sets note dots on hanging note objects, an "answer" core submits the current note sequence, and the controller compares it against the expected sequence to trigger `SuccessRoutine` (opens a path by lerping `pathMoveTargets` positions, deactivates walls/colliders, plays a guide line/particle effect toward the exit) or `FailRoutine` (fail SFX only). All timings/audio are coroutine-driven and fully Inspector-configurable (per-step delays, clips, volumes). While a question/answer sequence is playing, `SetPuzzleCoresLocked(true)` locks both cores via `MusicPuzzleCoreBridge.SetExternalActivationLocked` (unlocked again afterward unless the puzzle is already solved), preventing re-triggering mid-sequence; `IsSequenceRunning` exposes this state. Answer playback now runs through a dedicated `PlayAnswerNoteSequence` (distinct from the question's `PlayNoteSequence`) that also fires a `dotSparkleEffect` particle at each hit note's active-dot position via `HangingMusicPuzzleNoteObject.GetActiveDotTransform()`.
+- `HangingMusicPuzzleNoteObject.cs`: a single hanging chime/note object. Arrow hits on its propeller collider (routed through `MusicPuzzlePropellerHitProxy`) cycle its `currentNoteIndex`, spin the propeller sprite, apply a physics impulse to the hanging body, and fade dot sprites to show the active note. `GetActiveDotTransform()` (new) returns the transform of the currently active dot sprite, used by the area controller to position answer-playback sparkle FX. Also contains editor-only `[ContextMenu]` builders (`WirePropellerHitProxy`, `BuildChainFromSettings`) that procedurally generate a `HingeJoint2D` chain of link GameObjects between an anchor and the body — a level-building convenience, not runtime logic.
+- `MusicPuzzleCoreBridge.cs`: adapts a puzzle core (question or answer, via `MusicPuzzleCoreRole`) to the puzzle controller. Implements `IArrowHit` and can optionally wrap an existing `CoreActivationController` (subscribing to its `onActivated` event, and using `activationLocked` / `FadeInActivateGlow()` to reuse its visuals) so puzzle cores can piggyback on the existing core-activation system instead of duplicating visuals. `OnHit()` now also no-ops while `puzzleController.IsSequenceRunning` is true, in addition to the existing solved-puzzle check.
+- `MusicPuzzlePropellerHitProxy.cs`: a small `IArrowHit` proxy placed on a propeller's trigger collider; on `OnTriggerEnter2D` with an `Arrow`, it computes the hit point and forwards to the owning `HangingMusicPuzzleNoteObject.HandlePropellerHit()`.
+- `MusicPuzzleAreaTriggerBridge.cs`: a trigger volume that calls one of `MusicPuzzleAreaController.StartMusicPuzzle/ActivatePuzzle/BeginPuzzleFromArea` when the player enters (`startOnPlayerEnter`, `startOnlyOnce`), plus a `UnityEvent onPuzzleStart` for extra scene wiring.
+
+Related non-script assets:
+
+- Art: `Assets/Texture/artwork/Sound_Puzzle/` (`Body.png`, `Chain_Link_A/B.png`, `Dot_Active.png`, `Dot_Base.png`, `Propeller.png`).
+- Audio: `Assets/sounds/SFX/MusicPuzzle/` (`Note_0`-`Note_3.wav`, `Sound1`-`Sound4.wav`, `fail.mp3`).
+- `Assets/Texture/artwork/Propeller/RotateObject.cs`: a generic, puzzle-agnostic continuous-rotation script (`transform.Rotate` per frame) colocated with propeller art — distinct from the coroutine-based decelerating spin in `HangingMusicPuzzleNoteObject`.
 
 ### Scene Controllers
 
@@ -342,9 +374,12 @@ Important files:
 - `Assets/Script/Particle/ParticleComponent/ParticlePulse.cs`
 - `Assets/Script/Particle/ParticleComponent/ParticleFade.cs`
 - `Assets/Script/Particle/ParticleComponent/ParticleMovement.cs`
+- `Assets/Script/Particle/ParticleFreezeAfterSeconds.cs` (new)
 - `Assets/ParticleSystemOption.cs` (Assets root, not under `Script/`)
 
 `ParticleManager` implements a custom ScriptableObject-driven particle system with object pooling. `ParticleScriptable` assets are created through `Create > Custom > Particle Preset`.
+
+Note: `ParticleFreezeAfterSeconds.cs` actually declares class `ParticleSimulationSoftStopper` (filename/class name mismatch — search by class name, not filename, if `ParticleFreezeAfterSeconds` doesn't resolve). It ramps a target `ParticleSystem`'s `simulationSpeed` down to near-zero over `slowDownSeconds` before `stopAfterSeconds` elapses, then optionally pauses it — a soft alternative to instantly stopping emission. Its source comments are mojibake-damaged (non-UTF8 Korean), consistent with other files in this codebase.
 
 Important constraint:
 
@@ -412,7 +447,7 @@ Important folders:
 
 - `Assets/Audio/` — project AudioMixer asset (`GameAudioMixer.mixer`)
 - `Assets/sounds/BGM/`
-- `Assets/sounds/SFX/Bow/`, `Assets/sounds/SFX/step/`, `Assets/sounds/SFX/stone_shaker/`
+- `Assets/sounds/SFX/Bow/`, `Assets/sounds/SFX/step/`, `Assets/sounds/SFX/stone_shaker/`, `Assets/sounds/SFX/cloak/` (new), `Assets/sounds/SFX/MusicPuzzle/` (new)
 - `Assets/sounds/ambient/`
 
 Important scripts:
@@ -427,10 +462,12 @@ Audio content by folder:
 - `SFX/Bow/`: bow pull/shoot/hit variants (`bow_pull_1/2`, `bow_shoot_1/2`, `bow_hit_1/2/3`).
 - `SFX/step/`: `step_grass_1`-`6`, `step_stone_1`-`5` (footstep variants by surface).
 - `SFX/stone_shaker/`: `stone_shaker_1` through `6` (with a `stone_shaker_2_1` variant).
-- `SFX/` root: `core.wav`, `windmill.wav`, `windmill_drum.wav`, plus one CC-licensed crumbling-wall SFX (`829103__squirrel_404__...`).
+- `SFX/cloak/` (new): `cloak_1` through `cloak_4.wav`. No script under `Assets/Script` currently references "cloak" — likely wired directly onto an AudioSource/animation event in a scene or prefab, or reserved for an unimplemented feature.
+- `SFX/MusicPuzzle/` (new): `Note_0`-`Note_3.wav` (the four playable notes), `Sound1`-`Sound4.wav`, `fail.mp3` — consumed by `MusicPuzzleAreaController`/`HangingMusicPuzzleNoteObject`.
+- `SFX/` root: `core.wav`, `windmill.wav`, `windmill_drum.wav`, `Chain_SFX_1/2.mp3` (new), `temple2_core.mp3` (new), plus one CC-licensed crumbling-wall SFX (`829103__squirrel_404__...`).
 - `ambient/`: `forest_ambient.mp3`, `Forest_Bird.mp3`, `steppe_ambient.mp3`, `sky_temple_ambient.wav`, `Temple2_ambient.wav`.
 
-This is a larger and more organized audio set than earlier notes suggested (footstep and stone-shaker SFX are now split into dedicated per-surface subfolders).
+This is a larger and more organized audio set than earlier notes suggested (footstep and stone-shaker SFX are split into dedicated per-surface subfolders, and the music puzzle/cloak systems each got their own SFX subfolder).
 
 ### Shader, Wind, Sky
 
@@ -475,8 +512,9 @@ Important `Assets/Texture/artwork` folders:
 - `Leaf`
 - `light`
 - `Mountain`
-- `Propeller`
+- `Propeller` (now also holds `RotateObject.cs`, a loose rotation script)
 - `Sky`
+- `Sound_Puzzle` (new — sprites for the hanging music/note puzzle: body, chain links, active/base dots, propeller)
 - `stone`
 - `temple`
 - `temple2`
@@ -509,11 +547,13 @@ Approximate asset counts:
 
 - `.prefab`: 22
 - `.asset`: 29
-- `.mat`: 15
+- `.mat`: 18 (up from 15; new: `Assets/LeafShaderGraph.mat` at the Assets root, `Camera/PinLightBlend.mat`, `CoreObjects/CoreMaterial.mat`, `Texture/Object/M_Wind_Streak.mat`, `Texture/Object/New Material.mat`)
 - `.shader`: 14 (1 gameplay shader in `Script/Shader/`, the remaining 13 are TextMesh Pro built-ins)
 - `.shadergraph`: 3
-- `.renderTexture`: 2
+- `.renderTexture`: 2 (`BaseRT.renderTexture`, `New Render Texture.renderTexture`)
 - `.mixer`: 2 (`Assets/Audio/GameAudioMixer.mixer`, `Assets/NewAudioMixer.mixer`)
+
+The MusicPuzzle system (see below) does not add new prefabs — its GameObjects (note objects, cores, chain links) appear to be built/wired directly in scenes and via the `[ContextMenu]` builder on `HangingMusicPuzzleNoteObject`, not shared prefabs.
 
 ## Editor Tools
 
@@ -535,6 +575,12 @@ Approximate asset counts:
 - `Assets/Prefab/` was renamed to `Assets/Prefabs/` at some point after the last structure snapshot; if you find stale references or docs mentioning `Assets/Prefab/`, treat `Assets/Prefabs/` as authoritative.
 - `Assets/Physics/` currently contains no assets — do not assume physics materials/settings live there yet.
 - Two AudioMixer assets exist (`Assets/Audio/GameAudioMixer.mixer` and `Assets/NewAudioMixer.mixer`); confirm which one scene/audio scripts actually reference before editing mixer routing.
+- `Assets/Script/Particle/ParticleFreezeAfterSeconds.cs` declares class `ParticleSimulationSoftStopper`, not `ParticleFreezeAfterSeconds` — grep by class name when searching for it.
+- `MusicPuzzleCoreBridge` can wrap an existing `CoreActivationController` (subscribing to `onActivated`, toggling `activationLocked`); when editing either script, check whether the other is still consistent with its public API (`onActivated`, `activationLocked`, `FadeInActivateGlow()`).
+- `Assets/Script/TestJumpForce.cs`, `Assets/Texture/artwork/Propeller/RotateObject.cs`, and now `Assets/Script/Object/Magnetic.cs` are loose debug/utility scripts living outside the normal `Script/<System>/` organization — treat as informal/leftover rather than part of the designed architecture.
+- `CameraEndingAreaTrigger.cs` and `Magnetic.cs` are new scripts that are not yet attached to any GameObject in a tracked scene or prefab — confirm they are actually wired up in-editor before assuming they affect current gameplay.
+- Prefer `PlayerController.SetInputLocked(bool)` over `LockPlayerInput(float time)` when the unlock condition is a runtime event (e.g. landing) rather than a fixed duration; both share the same `lockInputCoroutine` bookkeeping so calling one cancels a pending call to the other.
+- `StonePillarManager` and `StoneCircleManager` now track each pillar's/circle's in-flight *target* position/rotation (`currentTargetPosition`, `currentTargetRotation`) rather than reading the live `transform`, and stop/replace the previous move coroutine before starting a new one — if you add similar step-move/rotate logic elsewhere, follow this pattern to avoid drift on rapid re-triggers.
 
 ## Recommended AI Inspection Order
 
@@ -553,7 +599,13 @@ Approximate asset counts:
 - Player animation: `Script/Player/Animation/PlayerAnimation.controller`, `PlayerUpperAnimation.controller`
 - Aiming and arrow shooting: `PlayerAttackState`, `PlayerController.ShootArrow`, `Arrow.cs`
 - Arrow-hit puzzles: `IArrowHit`, `CoreActivationController`, `CoreObject*`, `StoneBridge`, `StoneCircleManager`, `StonePillarManager`
+- Arrow blocking (no hit logic, just catches arrows): `ArrowBlocker.cs`
+- Music/sound note puzzle: `MusicPuzzleAreaController.cs`, `HangingMusicPuzzleNoteObject.cs`, `MusicPuzzleCoreBridge.cs`, `MusicPuzzlePropellerHitProxy.cs`, `MusicPuzzleAreaTriggerBridge.cs`
+- Particle-affecting wind: `Object_Wind_Particle.cs`
+- Particle soft-stop: `ParticleFreezeAfterSeconds.cs` (class `ParticleSimulationSoftStopper`)
 - Camera follow/staging: `CameraMovement.cs`, `MissionAreaCamera.cs`, `FakeZZoomManager.cs`
+- Camera restore/ending: `CameraRestoreAreaTrigger.cs`, `CameraEndingAreaTrigger.cs`
+- Rider/carry-along movement: `Magnetic.cs`
 - Parallax/background depth: `ParallaxManager.cs`, `ParallaxImage.cs`, `DistanceParallaxManager.cs`
 - Particles: `ParticleManager.cs`, `ParticleScriptable.cs`
 - Settings persistence: `SettingsData.cs`, `SettingsManager.cs`
@@ -570,4 +622,15 @@ Approximate asset counts:
 
 Before creating the original version of this document, `.codex/` was already untracked. It appears to be local Codex configuration and is unrelated to project source structure.
 
-This revision was generated by re-scanning `Assets/`, `Packages/manifest.json`, and `ProjectSettings/` directly; see the "Change Safety Notes" and inline notes above for what has moved or been added since the previous snapshot.
+This revision (as of commit `9d27468` "각종 오류 개선(7.16)") was generated by diffing against the previous snapshot's commit (`5697f20` "맵디자인") and re-scanning `Assets/Script`; see the "Change Safety Notes" and inline notes above for what has moved or been added since. This update spans three bugfix commits (`69e82fe`, `34dd7cb`, `9d27468`, all "각종 오류 개선" / "various error fixes") and is mostly behavior fixes rather than new systems:
+
+- New scripts: `Assets/Script/Camera/CameraEndingAreaTrigger.cs` and `Assets/Script/Object/Magnetic.cs` — both exist but are not yet wired into any tracked scene/prefab.
+- `CameraRestoreAreaTrigger`'s Y-target/finalize logic was refactored into `protected virtual` methods to support `CameraEndingAreaTrigger` overriding them for a fixed ending-camera height.
+- `PlayerController` gained `SetInputLocked(bool)` alongside the existing timer-based `LockPlayerInput(float)`, and `PreventSlide` now also freezes the player during `attackState`.
+- `PlayerJumpState`/`PlayerFallState` ground checks now also consult `controller.isGround` directly.
+- `BreakableFragmentPlatformEvent` switched from a fixed-duration input lock to `SetInputLocked` plus a landing-detection coroutine (`UnlockInputAfterLandingRoutine`).
+- `StonePillarManager` and `StoneCircleManager` both got a drift fix: they now track in-flight target position/rotation and stop/replace the previous move coroutine instead of re-reading a possibly-still-animating `transform`.
+- `MusicPuzzleAreaController`/`MusicPuzzleCoreBridge` now lock both puzzle cores while a note sequence is playing (`SetPuzzleCoresLocked` / `IsSequenceRunning`), and answer playback fires a dot-sparkle particle effect (`PlayAnswerNoteSequence`, `HangingMusicPuzzleNoteObject.GetActiveDotTransform()`).
+- `Assets/Scenes/InGameScene/Forest.unity` and `SeungHyun2_Restore.unity` both received large scene-data edits in this range (level content/wiring), not reflected line-by-line in this document.
+
+Unity version, enabled build scenes, and package dependencies are unchanged from the previous snapshot.

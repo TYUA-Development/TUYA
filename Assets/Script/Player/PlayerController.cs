@@ -196,11 +196,12 @@ public class PlayerController : MonoBehaviour
     private void PreventSlide(bool onRunway, bool onGround)
     {
         bool shouldFreeze = onGround &&
-                            InputReader.InputData.moveAxis.x == 0 &&
-                            InputReader.InputData.moveAxis.y >= 0 &&
                             currentState != jumpState &&
                             currentState != fallState &&
-                            currentState != dashState;
+                            currentState != dashState &&
+                            (currentState == attackState ||
+                             (InputReader.InputData.moveAxis.x == 0 &&
+                              InputReader.InputData.moveAxis.y >= 0));
 
         if (shouldFreeze)
         {
@@ -741,9 +742,13 @@ public class PlayerController : MonoBehaviour
         moveSpeed = setSpeed;
     }
 
+    private Coroutine lockInputCoroutine;
+
     public void LockPlayerInput(float time)
     {
-        StartCoroutine(LockPlayerInputHelper(time));
+        if (lockInputCoroutine != null)
+            StopCoroutine(lockInputCoroutine);
+        lockInputCoroutine = StartCoroutine(LockPlayerInputHelper(time));
     }
 
     public IEnumerator LockPlayerInputHelper(float time)
@@ -751,5 +756,16 @@ public class PlayerController : MonoBehaviour
         lockPlayerInput = true;
         yield return new WaitForSeconds(time);
         lockPlayerInput = false;
+        lockInputCoroutine = null;
+    }
+
+    public void SetInputLocked(bool locked)
+    {
+        if (lockInputCoroutine != null)
+        {
+            StopCoroutine(lockInputCoroutine);
+            lockInputCoroutine = null;
+        }
+        lockPlayerInput = locked;
     }
 }

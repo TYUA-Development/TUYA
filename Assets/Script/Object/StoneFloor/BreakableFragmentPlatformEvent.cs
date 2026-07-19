@@ -206,6 +206,7 @@ public class BreakableFragmentPlatformEvent : MonoBehaviour
     private Coroutine eventCoroutine;
     private Coroutine cameraShakeCoroutine;
     private Coroutine callFallCoroutine;
+    private Coroutine unlockInputCoroutine;
 
     private float originalGravityScale;
     private bool hasOriginalGravityScale;
@@ -304,6 +305,11 @@ public class BreakableFragmentPlatformEvent : MonoBehaviour
 
         StartCinematicFall();
 
+        if (unlockInputCoroutine != null)
+            StopCoroutine(unlockInputCoroutine);
+
+        unlockInputCoroutine = StartCoroutine(UnlockInputAfterLandingRoutine());
+
         if (callFallCoroutine != null)
             StopCoroutine(callFallCoroutine);
 
@@ -320,13 +326,6 @@ public class BreakableFragmentPlatformEvent : MonoBehaviour
         if (playerController == null)
             return;
 
-        float lockTime =
-            warningDuration +
-            crackBurstDuration +
-            crackRandomPieceDelay +
-            delayAfterCrackBeforeFinalImpact +
-            extraInputLockAfterFinalImpact;
-
         if (playerRigidbody != null && stopPlayerVelocityOnStart)
         {
             playerRigidbody.velocity = Vector2.zero;
@@ -335,8 +334,38 @@ public class BreakableFragmentPlatformEvent : MonoBehaviour
 
         if (usePlayerControllerInputLock)
         {
-            playerController.LockPlayerInput(lockTime);
+            playerController.SetInputLocked(true);
         }
+    }
+
+    private IEnumerator UnlockInputAfterLandingRoutine()
+    {
+        if (!usePlayerControllerInputLock || playerController == null)
+            yield break;
+
+        float elapsed = 0f;
+
+        // 발판이 사라진 직후 아직 isGround가 true로 남아있는 프레임을 착지로 오인하지 않도록,
+        // 일단 공중에 뜬 상태가 될 때까지 기다린다.
+        while (playerController.isGround && elapsed < maxCinematicFallTime)
+        {
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        elapsed = 0f;
+
+        while (!playerController.isGround && elapsed < maxCinematicFallTime)
+        {
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        if (extraInputLockAfterFinalImpact > 0f)
+            yield return new WaitForSeconds(extraInputLockAfterFinalImpact);
+
+        playerController.SetInputLocked(false);
+        unlockInputCoroutine = null;
     }
 
     private IEnumerator CallFallOnceAfterPlatformBreakRoutine()
@@ -1018,5 +1047,14 @@ public class BreakableFragmentPlatformEvent : MonoBehaviour
             StopCoroutine(callFallCoroutine);
             callFallCoroutine = null;
         }
+
+        if (unlockInputCoroutine != null)
+        {
+            StopCoroutine(unlockInputCoroutine);
+            unlockInputCoroutine = null;
+        }
+
+        if (usePlayerControllerInputLock && playerController != null)
+            playerController.SetInputLocked(false);
     }
 }

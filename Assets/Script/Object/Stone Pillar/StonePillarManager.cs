@@ -56,6 +56,8 @@ public class StonePillarManager : BasicObject
 
     private List<GameObject> stonePillarObject;
     private List<GameObject> windMillObject;
+    private List<Vector3> currentTargetPosition;
+    private Coroutine[] pillarMoveCoroutines;
     public Action[] OnMoveStart;
     public Action[] OnMoveEnd;
 
@@ -70,6 +72,8 @@ public class StonePillarManager : BasicObject
     {
         OnMoveStart = new Action[pillars.Count];
         OnMoveEnd = new Action[pillars.Count];
+        currentTargetPosition = new List<Vector3>();
+        pillarMoveCoroutines = new Coroutine[pillars.Count];
 
         for(int i = 0; i < pillars.Count; i++)
         {
@@ -85,6 +89,7 @@ public class StonePillarManager : BasicObject
             //}
 
             stonePillarObject.Add(stonePillarOb);
+            currentTargetPosition.Add(pos);
         }
 
         for(int i = 0; i < windMills.Count; i++)
@@ -116,13 +121,21 @@ public class StonePillarManager : BasicObject
             StonePillar connectTarget = pillars[connectIndex];
             GameObject connectTargetPillar = stonePillarObject[connectIndex];
 
-            StartCoroutine(MovePillarCoroutine(connectTargetPillar, GetNextPosition(connectTarget, connectTargetPillar), moveDuration, connectIndex));
+            Vector3 nextPos = GetNextPosition(connectTarget, currentTargetPosition[connectIndex]);
+            currentTargetPosition[connectIndex] = nextPos;
+
+            if (pillarMoveCoroutines[connectIndex] != null)
+            {
+                StopCoroutine(pillarMoveCoroutines[connectIndex]);
+            }
+
+            pillarMoveCoroutines[connectIndex] = StartCoroutine(MovePillarCoroutine(connectTargetPillar, nextPos, moveDuration, connectIndex));
         }
     }
 
-    public Vector3 GetNextPosition(StonePillar target, GameObject targetPillar)
+    public Vector3 GetNextPosition(StonePillar target, Vector3 currentPosition)
     {
-        float ny = (int)target.moveDirection * stepHeight + targetPillar.transform.position.y;
+        float ny = (int)target.moveDirection * stepHeight + currentPosition.y;
 
         float minY = startPositionY + minStep * stepHeight;
         float maxY = startPositionY + maxStep * stepHeight;
@@ -132,7 +145,7 @@ public class StonePillarManager : BasicObject
         if (ny > maxY)
         {
             pos = new Vector3(
-                targetPillar.transform.position.x,
+                currentPosition.x,
                 minY,
                 0
             );
@@ -140,7 +153,7 @@ public class StonePillarManager : BasicObject
         else if (ny < minY)
         {
             pos = new Vector3(
-                targetPillar.transform.position.x,
+                currentPosition.x,
                 maxY,
                 0
             );
@@ -148,7 +161,7 @@ public class StonePillarManager : BasicObject
         else
         {
             pos = new Vector3(
-                targetPillar.transform.position.x,
+                currentPosition.x,
                 ny,
                 0
             );
@@ -185,7 +198,7 @@ public class StonePillarManager : BasicObject
         {
             float t = time / duration;
 
-            // ¼Óµµ¸¦ Á¡Á¡ °¨¼Ò
+            // ï¿½Óµï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
             currentSpeed = Mathf.Lerp(speed, windMillSpinMinSpeed, t);
 
             target.transform.Rotate(Vector3.forward * currentSpeed * Time.deltaTime);

@@ -322,7 +322,7 @@ public class PlayerJumpState : PlayerState
 
     public override void PhysicsUpdate()
     {
-        if (controller.Rigidbody2D.velocity.y <= 0.01f)
+        if (controller.isGround || controller.Rigidbody2D.velocity.y <= 0.01f)
         {
             controller.OnFall();
             return;
@@ -723,7 +723,7 @@ public class PlayerFallState : PlayerState
 
         Vector2 checkSize = new Vector2(
             col.bounds.size.x * 0.9f,
-            0.1f
+            0.5f
         );
 
         Collider2D hit = Physics2D.OverlapBox(
@@ -733,10 +733,10 @@ public class PlayerFallState : PlayerState
             groundLayer
         );
 
-        if (hit == null)
+        if (hit == null && !controller.isGround)
             return;
 
-        if (hit.CompareTag("Runway"))
+        if (hit != null && hit.CompareTag("Runway"))
         {
 
             RunwayObject runway = hit.GetComponent<RunwayObject>();

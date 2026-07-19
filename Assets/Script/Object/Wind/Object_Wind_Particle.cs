@@ -4,8 +4,24 @@ public class Object_Wind_Particle : MonoBehaviour
 {
     public float windPower;
 
+    [Tooltip("바람이 향하는 방향. windPower가 음수이면 이 방향의 반대로 힘이 작용합니다.")]
+    public WindDirection windDirection = WindDirection.Right;
+
     [Header("Particle Wind")]
     public ParticleSystem[] affectedParticleSystems;
+
+    [Header("Distance Falloff")]
+    [Range(0f, 10f)]
+    [Tooltip("이 오브젝트(transform.position)에서 멀어질수록 파티클을 미는 힘이 감소하는 정도. 0 = 감소 없음(거리와 무관하게 동일한 힘), 10 = 아주 빠르게 감소")]
+    public float distanceFalloff = 0f;
+
+    [Header("Stretch By Speed")]
+    [Tooltip("체크하면 동그란 파티클 하나를 Stretched Billboard로 렌더링해서, 파티클 속도(=밀려나는 세기)에 비례해 길쭉하게 늘어나 보이게 합니다. 별도의 길쭉한 파티클을 따로 둘 필요가 없습니다.")]
+    public bool stretchBySpeed = true;
+    [Tooltip("ParticleSystemRenderer.lengthScale - 파티클 기본 길이 배율")]
+    public float stretchLengthScale = 2f;
+    [Tooltip("ParticleSystemRenderer.velocityScale - 속도가 빠를수록 길이가 늘어나는 정도")]
+    public float stretchVelocityScale = 0.05f;
 
     [Header("Kill On Floor")]
     [Tooltip("이 레이어에 닿으면 파티클을 즉시 제거합니다 (예: Floor)")]
@@ -22,11 +38,32 @@ public class Object_Wind_Particle : MonoBehaviour
 
     public void Init()
     {
-        float angle = transform.rotation.eulerAngles.z * Mathf.Deg2Rad;
-        Vector2 direction = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle));
+        Vector2 direction = Object_Wind.GetDirectionVector(windDirection);
         power = direction * windPower;
 
         windCollider = GetComponent<Collider2D>();
+
+        ApplyStretchSettings();
+    }
+
+    private void ApplyStretchSettings()
+    {
+        if (!stretchBySpeed || affectedParticleSystems == null)
+            return;
+
+        foreach (var ps in affectedParticleSystems)
+        {
+            if (ps == null)
+                continue;
+
+            ParticleSystemRenderer psRenderer = ps.GetComponent<ParticleSystemRenderer>();
+            if (psRenderer == null)
+                continue;
+
+            psRenderer.renderMode = ParticleSystemRenderMode.Stretch;
+            psRenderer.lengthScale = stretchLengthScale;
+            psRenderer.velocityScale = stretchVelocityScale;
+        }
     }
 
     private void FixedUpdate()
@@ -67,9 +104,21 @@ public class Object_Wind_Particle : MonoBehaviour
             }
 
             if (windCollider != null && windCollider.OverlapPoint(worldPos))
-                particleBuffer[i].velocity += velocityDelta;
+            {
+                float falloff = GetFalloffMultiplier(worldPos);
+                particleBuffer[i].velocity += velocityDelta * falloff;
+            }
         }
 
         ps.SetParticles(particleBuffer, count);
+    }
+
+    private float GetFalloffMultiplier(Vector2 targetPosition)
+    {
+        if (distanceFalloff <= 0f)
+            return 1f;
+
+        float distance = Vector2.Distance(transform.position, targetPosition);
+        return 1f / (1f + distanceFalloff * distance);
     }
 }

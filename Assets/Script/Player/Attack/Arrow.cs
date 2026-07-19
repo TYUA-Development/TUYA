@@ -67,7 +67,7 @@ public class Arrow : MonoBehaviour
             transform.right = rb.velocity;
     }
 
-    public void OnTriggerEnter2D(Collider2D other)
+public void OnTriggerEnter2D(Collider2D other)
     {
         if (hasHit)
             return;
@@ -75,33 +75,40 @@ public class Arrow : MonoBehaviour
         if (shooter == other.transform)
             return;
 
+        if (other.TryGetComponent<IArrowPassThrough>(out IArrowPassThrough passThrough))
+        {
+            Vector2 passPoint = other.ClosestPoint(transform.position);
+            passThrough.OnArrowPass(passPoint, rb.velocity.normalized);
+            return;
+        }
+
         if (other.TryGetComponent<IArrowHit>(out IArrowHit target))
         {
             hasHit = true;
 
-            // ���� ���� ���
+            // 충돌 지점 계산
             Vector2 hitPoint = other.ClosestPoint(transform.position);
 
-            // ���ư��� �� �ڿ��� ������ ��ƼŬ/�ܻ� ����
+            // 날아가는 중 재생되던 파티클/궤적 정지
             StopFlightFX();
 
-            // ���� �� ���� ���
+            // 피격 시 사운드 재생
             BowSFXRandomizer bowSFX = FindObjectOfType<BowSFXRandomizer>();
 
             if (bowSFX != null)
                 bowSFX.PlayHit(transform.position);
 
-            // ���� �� ����Ʈ ����
+            // 피격 시 이펙트 생성
             SpawnHitFX(hitPoint);
 
-            // ���� ����/��ġ ���� ����
+            // 타겟 로직/피격 상태 갱신
             target.OnHit();
 
-            // ȭ�� ������
+            // 화살 박히기
             Stick(other.transform, hitPoint);
         }
 
-        // IArrowHit�� ���� ������Ʈ�� ����� ���� �������� ����
+        // IArrowHit도 IArrowPassThrough도 없는 콜라이더는 무시하고 지나감
     }
 
     void StartFlightFX()

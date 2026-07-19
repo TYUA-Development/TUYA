@@ -114,8 +114,7 @@ public class CameraRestoreAreaTrigger : MonoBehaviour
             if (restoreXToPlayer)
                 targetPosition.x = player.position.x;
 
-            if (restoreYToPlayerOffset)
-                targetPosition.y = player.position.y + defaultYOffset;
+            targetPosition.y = GetTargetCameraY(player, targetPosition.y);
 
             targetPosition.z = startPosition.z;
 
@@ -137,8 +136,7 @@ public class CameraRestoreAreaTrigger : MonoBehaviour
                 if (restoreXToPlayer)
                     finalPosition.x = player.position.x;
 
-                if (restoreYToPlayerOffset)
-                    finalPosition.y = player.position.y + defaultYOffset;
+                finalPosition.y = GetTargetCameraY(player, finalPosition.y);
 
                 cameraRig.position = finalPosition;
             }
@@ -146,16 +144,10 @@ public class CameraRestoreAreaTrigger : MonoBehaviour
             targetCamera.fieldOfView = defaultFieldOfView;
         }
 
-        if (CameraMovement.Instance != null)
-        {
-            if (player != null && restoreYToPlayerOffset)
-                CameraMovement.Instance.SetCameraPosY(player.position.y);
-            else
-                CameraMovement.Instance.SetCameraRigY(cameraRig.position.y);
+        FinalizeCameraY(player);
 
-            if (releaseCameraMovementAfterRestore)
-                CameraMovement.Instance.isMovingEvent = false;
-        }
+        if (CameraMovement.Instance != null && releaseCameraMovementAfterRestore)
+            CameraMovement.Instance.isMovingEvent = false;
 
         if (showDebugLog)
         {
@@ -165,6 +157,22 @@ public class CameraRestoreAreaTrigger : MonoBehaviour
         }
 
         restoreCoroutine = null;
+    }
+
+    protected virtual float GetTargetCameraY(Transform player, float currentY)
+    {
+        return restoreYToPlayerOffset ? player.position.y + defaultYOffset : currentY;
+    }
+
+    protected virtual void FinalizeCameraY(Transform player)
+    {
+        if (CameraMovement.Instance == null)
+            return;
+
+        if (player != null && restoreYToPlayerOffset)
+            CameraMovement.Instance.SetCameraPosY(player.position.y);
+        else
+            CameraMovement.Instance.SetCameraRigY(cameraRig.position.y);
     }
 
     private void OnDisable()
