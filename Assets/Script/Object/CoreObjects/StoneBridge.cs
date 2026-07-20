@@ -26,7 +26,7 @@ public class StoneBridge : MonoBehaviour, ICoreEvent, IArrowHit
         IsBridge = false;
     }
 
-    public void OnCoreEvent()
+    public void OnCoreEvent(bool isPressed = true)
     {
         //CameraMovement.Instance.MoveCamera(CameraPos, 5.0f);
         CameraMovement.Instance.MoveCamera(CameraPos, 5.0f, 1.0f, CameraSpeed, true);
@@ -67,7 +67,7 @@ public class StoneBridge : MonoBehaviour, ICoreEvent, IArrowHit
             yield return null;
         }
 
-        // Á¤È®ÇÑ À§Ä¡ º¸Á¤
+        // ï¿½ï¿½È®ï¿½ï¿½ ï¿½ï¿½Ä¡ ï¿½ï¿½ï¿½ï¿½
         transform.position = targetPos;
     }
 

@@ -4,5 +4,5 @@ using UnityEngine;
 
 public interface ICoreEvent
 {
-    public void OnCoreEvent();
+    public void OnCoreEvent(bool isPressed = true);
 }

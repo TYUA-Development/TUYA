@@ -27,6 +27,10 @@ public class Object_Wind_Particle : MonoBehaviour
     [Tooltip("이 레이어에 닿으면 파티클을 즉시 제거합니다 (예: Floor)")]
     public LayerMask killOnCollisionLayer;
 
+    [Header("Object Blocking")]
+    [Tooltip("이 레이어의 콜라이더가 바람 오브젝트와 파티클 사이를 가로막으면 그 파티클을 즉시 제거합니다. 예: Wall")]
+    public LayerMask blockingLayer;
+
     private Vector2 power;
     private Collider2D windCollider;
     private ParticleSystem.Particle[] particleBuffer = new ParticleSystem.Particle[0];
@@ -103,6 +107,12 @@ public class Object_Wind_Particle : MonoBehaviour
                 continue;
             }
 
+            if (IsBlocked(worldPos))
+            {
+                particleBuffer[i].remainingLifetime = 0f;
+                continue;
+            }
+
             if (windCollider != null && windCollider.OverlapPoint(worldPos))
             {
                 float falloff = GetFalloffMultiplier(worldPos);
@@ -120,5 +130,21 @@ public class Object_Wind_Particle : MonoBehaviour
 
         float distance = Vector2.Distance(transform.position, targetPosition);
         return 1f / (1f + distanceFalloff * distance);
+    }
+
+    private bool IsBlocked(Vector2 targetPosition)
+    {
+        if (blockingLayer.value == 0)
+            return false;
+
+        Vector2 origin = transform.position;
+        Vector2 toTarget = targetPosition - origin;
+        float distance = toTarget.magnitude;
+
+        if (distance <= 0.0001f)
+            return false;
+
+        Vector2 direction = toTarget / distance;
+        return Physics2D.Raycast(origin, direction, distance, blockingLayer);
     }
 }

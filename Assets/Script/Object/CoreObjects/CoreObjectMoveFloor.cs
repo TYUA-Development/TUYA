@@ -56,7 +56,7 @@ public class CoreObjectMoveFloor : MonoBehaviour, ICoreEvent, IArrowHit
         foreach (var core in coreObjects)
         {
             if (core != null)
-                core.onActivated += OnCoreEvent;
+                core.onActivated += HandleCoreActivated;
         }
 
         for (int i = 0; i < winds.Count; i++)
@@ -80,7 +80,7 @@ public class CoreObjectMoveFloor : MonoBehaviour, ICoreEvent, IArrowHit
         foreach (var core in coreObjects)
         {
             if (core != null)
-                core.onActivated -= OnCoreEvent;
+                core.onActivated -= HandleCoreActivated;
         }
     }
 
@@ -93,7 +93,12 @@ public class CoreObjectMoveFloor : MonoBehaviour, ICoreEvent, IArrowHit
         }
     }
 
-    public void OnCoreEvent()
+    private void HandleCoreActivated()
+    {
+        OnCoreEvent(true);
+    }
+
+    public void OnCoreEvent(bool isPressed = true)
     {
         if (isMoving != floors.Count) return;
 
