@@ -415,7 +415,7 @@ public class CoreActivationController : MonoBehaviour, IArrowHit, ICoreEvent
         OnCoreEvent();
     }
 
-    public void OnCoreEvent()
+    public void OnCoreEvent(bool isPressed = true)
     {
         StartActivation();
     }

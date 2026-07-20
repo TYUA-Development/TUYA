@@ -27,6 +27,10 @@ public class Object_Wind : MonoBehaviour, ICoreEvent
     [Tooltip("이 오브젝트(transform.position)에서 멀어질수록 바람 세기가 감소하는 정도. 0 = 감소 없음(거리와 무관하게 동일한 힘), 10 = 아주 빠르게 감소")]
     public float distanceFalloff = 0f;
 
+    [Header("Object Blocking")]
+    [Tooltip("이 레이어의 콜라이더가 바람 오브젝트와 대상 사이를 가로막으면(Box 형태로 경로 체크) 그 대상은 바람 영향을 받지 않습니다. 예: Wall, Floor")]
+    public LayerMask blockingLayer;
+
     private Vector2 direction;
     private Vector2 power;
 
@@ -62,8 +66,13 @@ public class Object_Wind : MonoBehaviour, ICoreEvent
 
     public void FixedUpdate()
     {
-        foreach (var rb in colliderList.Values)
+        foreach (var kvp in colliderList)
         {
+            Rigidbody2D rb = kvp.Value;
+
+            if (IsBlocked(kvp.Key, rb.position))
+                continue;
+
             float falloff = GetFalloffMultiplier(rb.position);
             rb.velocity += power * falloff * Time.deltaTime;
         }
@@ -76,6 +85,24 @@ public class Object_Wind : MonoBehaviour, ICoreEvent
 
         float distance = Vector2.Distance(transform.position, targetPosition);
         return 1f / (1f + distanceFalloff * distance);
+    }
+
+    private bool IsBlocked(Collider2D targetCollider, Vector2 targetPosition)
+    {
+        if (blockingLayer.value == 0)
+            return false;
+
+        Vector2 origin = transform.position;
+        Vector2 toTarget = targetPosition - origin;
+        float distance = toTarget.magnitude;
+
+        if (distance <= 0.0001f)
+            return false;
+
+        Vector2 direction = toTarget / distance;
+        Vector2 boxSize = targetCollider != null ? (Vector2)targetCollider.bounds.size : new Vector2(0.1f, 0.1f);
+
+        return Physics2D.BoxCast(origin, boxSize, 0f, direction, distance, blockingLayer);
     }
 
     private void OnTriggerEnter2D(Collider2D collision)
@@ -94,8 +121,8 @@ public class Object_Wind : MonoBehaviour, ICoreEvent
         colliderList.Remove(collision);
     }
 
-    public void OnCoreEvent()
+    public void OnCoreEvent(bool isPressed = true)
     {
-        
+
     }
 }

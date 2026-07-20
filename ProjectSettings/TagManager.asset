@@ -8,6 +8,7 @@ TagManager:
   - Runway
   - grass
   - Arrow
+  - Wall
   layers:
   - Default
   - TransparentFX
@@ -21,7 +22,7 @@ TagManager:
   - Wind
   - WindWall
   - WindBlocker
-  - 
+  - Wall
   - 
   - 
   - 

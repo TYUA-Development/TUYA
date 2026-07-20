@@ -71,7 +71,7 @@ public class CoreObjectTemple : MonoBehaviour, IArrowHit, ICoreEvent
         }
     }
 
-    public void OnCoreEvent()
+    public void OnCoreEvent(bool isPressed = true)
     {
         if (activateTemple)
             return;
