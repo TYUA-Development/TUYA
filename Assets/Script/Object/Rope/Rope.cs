@@ -1,4 +1,22 @@
+using System.Collections.Generic;
 using UnityEngine;
+
+// 로프에 매달 오브젝트 하나에 대한 설정. Build Rope 시 지정한 세그먼트에 HingeJoint2D로 연결된다.
+[System.Serializable]
+public class RopeHangingAttachment
+{
+    [Tooltip("밧줄에 매달 오브젝트. Rigidbody2D가 있어야 합니다.")]
+    public Rigidbody2D target;
+
+    [Tooltip("매달 세그먼트의 인덱스(0부터 시작). 음수면 맨 끝(마지막) 세그먼트에 매답니다.")]
+    public int segmentIndex = -1;
+
+    [Tooltip("세그먼트 쪽 로컬 연결점")]
+    public Vector2 segmentAnchor = Vector2.zero;
+
+    [Tooltip("매다는 오브젝트 쪽 로컬 연결점")]
+    public Vector2 targetAnchor = Vector2.zero;
+}
 
 // 밧줄 한 조각의 스프라이트와 전체 길이를 Inspector에서 입력받아,
 // HingeJoint2D로 서로 이어진 여러 개의 RopeSegment 오브젝트를 만들어 한 가닥의 밧줄처럼 보이게 한다.
@@ -19,6 +37,9 @@ public class Rope : MonoBehaviour
     [SerializeField] private bool useJointLimits;
     [SerializeField] private float jointLimitAngle = 40f;
 
+    [Header("Rendering")]
+    [SerializeField] private int segmentOrderInLayer = 0;
+
     [Header("Cut FX")]
     [SerializeField] private GameObject cutFXPrefab;
     [SerializeField] private AudioSource audioSource;
@@ -26,9 +47,14 @@ public class Rope : MonoBehaviour
     [Range(0f, 1f)]
     [SerializeField] private float cutVolume = 1f;
 
+    [Header("Hanging Objects")]
+    [SerializeField] private RopeHangingAttachment[] hangingAttachments;
+
     [Header("Generated")]
     [SerializeField] private Transform generatedRoot;
     [SerializeField] private RopeSegment[] segments;
+
+    private readonly List<HingeJoint2D> hangingJoints = new List<HingeJoint2D>();
 
     private void Awake()
     {
@@ -81,6 +107,7 @@ public class Rope : MonoBehaviour
 
             SpriteRenderer renderer = segmentObject.AddComponent<SpriteRenderer>();
             renderer.sprite = segmentSprite;
+            renderer.sortingOrder = segmentOrderInLayer;
 
             Rigidbody2D body = segmentObject.AddComponent<Rigidbody2D>();
             body.bodyType = RigidbodyType2D.Dynamic;
@@ -101,11 +128,15 @@ public class Rope : MonoBehaviour
             segments[i] = segment;
             previousBody = body;
         }
+
+        AttachHangingObjects();
     }
 
     [ContextMenu("Clear Rope")]
     public void ClearRope()
     {
+        ClearHangingJoints();
+
         if (generatedRoot != null)
         {
             for (int i = generatedRoot.childCount - 1; i >= 0; i--)
@@ -120,6 +151,54 @@ public class Rope : MonoBehaviour
         }
 
         segments = null;
+    }
+
+    private void AttachHangingObjects()
+    {
+        ClearHangingJoints();
+
+        if (segments == null || hangingAttachments == null)
+            return;
+
+        foreach (RopeHangingAttachment attachment in hangingAttachments)
+        {
+            if (attachment == null || attachment.target == null)
+                continue;
+
+            RopeSegment segment = ResolveSegment(attachment.segmentIndex);
+            if (segment == null)
+                continue;
+
+            HingeJoint2D joint = attachment.target.gameObject.AddComponent<HingeJoint2D>();
+            ConfigureJoint(joint, segment.Body, attachment.targetAnchor, attachment.segmentAnchor);
+
+            hangingJoints.Add(joint);
+        }
+    }
+
+    private RopeSegment ResolveSegment(int index)
+    {
+        if (segments == null || segments.Length == 0)
+            return null;
+
+        int resolvedIndex = index < 0 ? segments.Length - 1 : Mathf.Clamp(index, 0, segments.Length - 1);
+        return segments[resolvedIndex];
+    }
+
+    private void ClearHangingJoints()
+    {
+        foreach (HingeJoint2D joint in hangingJoints)
+        {
+            if (joint == null)
+                continue;
+
+            if (Application.isPlaying)
+                Destroy(joint);
+            else
+                DestroyImmediate(joint);
+        }
+
+        hangingJoints.Clear();
     }
 
     private void ConfigureJoint(HingeJoint2D joint, Rigidbody2D connectedBody, Vector2 jointAnchor, Vector2 connectedAnchor)
