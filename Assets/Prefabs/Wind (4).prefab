@@ -27,9 +27,9 @@ Transform:
   m_GameObject: {fileID: 3845864732988117415}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 31.4, z: 0}
-  m_LocalScale: {x: 0.5000036, y: 0.5000036, z: 0.5000037}
-  m_ConstrainProportionsScale: 0
+  m_LocalPosition: {x: 0, y: 35, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 5382595240389268210}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -169,7 +169,7 @@ ParticleSystem:
     startSpeed:
       serializedVersion: 2
       minMaxState: 0
-      scalar: 5
+      scalar: 0
       minScalar: 5
       maxCurve:
         serializedVersion: 2
@@ -670,9 +670,9 @@ ParticleSystem:
     boxThickness: {x: 0, y: 0, z: 0}
     radiusThickness: 1
     donutRadius: 0.2
-    m_Position: {x: 0, y: 22.9, z: 0}
+    m_Position: {x: 0, y: 0, z: 0}
     m_Rotation: {x: 0, y: 0, z: 0}
-    m_Scale: {x: 42, y: 170, z: 1}
+    m_Scale: {x: 5, y: 85, z: 1}
     placementMode: 0
     m_MeshMaterialIndex: 0
     m_MeshNormalOffset: 0
@@ -4883,6 +4883,7 @@ GameObject:
   - component: {fileID: 5358678478582435481}
   - component: {fileID: 4874292372043076756}
   - component: {fileID: 8813510490029885700}
+  - component: {fileID: 3374221704900809518}
   - component: {fileID: 2123253859775174610}
   m_Layer: 0
   m_Name: Wind
@@ -4900,7 +4901,7 @@ Transform:
   m_GameObject: {fileID: 7954514170079455545}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 5.8, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -4938,7 +4939,7 @@ BoxCollider2D:
   m_IsTrigger: 1
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: 0, y: 37.35515}
+  m_Offset: {x: 0, y: 25}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0, y: 0}
@@ -4949,7 +4950,7 @@ BoxCollider2D:
     adaptiveTiling: 0
   m_AutoTiling: 0
   serializedVersion: 2
-  m_Size: {x: 23, y: 88.72572}
+  m_Size: {x: 5, y: 55}
   m_EdgeRadius: 0
 --- !u!114 &8813510490029885700
 MonoBehaviour:
@@ -4967,13 +4968,40 @@ MonoBehaviour:
   windDirection: 2
   affectedParticleSystems:
   - {fileID: 4027986314369273796}
-  distanceFalloff: 6.2
+  distanceFalloff: 6
   stretchBySpeed: 1
   stretchLengthScale: 3
   stretchVelocityScale: 0.05
   killOnCollisionLayer:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 4160
+  blockingLayer:
+    serializedVersion: 2
+    m_Bits: 4160
+--- !u!114 &3374221704900809518
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7954514170079455545}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f72ae8aff4980924a907c51c915829e4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  windPower: 1000
+  windDirection: 2
+  blockPlayer: 1
+  distanceFalloff: 1.09
+  blockingLayer:
+    serializedVersion: 2
+    m_Bits: 4160
+  ignoredLayer:
+    serializedVersion: 2
+    m_Bits: 8192
+  blockPushSpeed: 15
+  blockBounciness: 0.3
 --- !u!50 &2123253859775174610
 Rigidbody2D:
   serializedVersion: 4
