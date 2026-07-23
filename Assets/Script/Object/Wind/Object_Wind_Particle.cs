@@ -50,6 +50,65 @@ public class Object_Wind_Particle : MonoBehaviour
         ApplyStretchSettings();
     }
 
+    public void SetEmissionEnabled(bool value)
+    {
+        if (affectedParticleSystems == null)
+            return;
+
+        foreach (var ps in affectedParticleSystems)
+        {
+            if (ps == null)
+                continue;
+
+            ParticleSystem.EmissionModule emission = ps.emission;
+            emission.enabled = value;
+        }
+    }
+
+    public void SetParticlesAlpha(float alpha)
+    {
+        if (affectedParticleSystems == null)
+            return;
+
+        byte alphaByte = (byte)Mathf.RoundToInt(Mathf.Clamp01(alpha) * 255f);
+
+        foreach (var ps in affectedParticleSystems)
+        {
+            if (ps == null)
+                continue;
+
+            int count = ps.particleCount;
+            if (count == 0)
+                continue;
+
+            if (particleBuffer.Length < count)
+                particleBuffer = new ParticleSystem.Particle[count];
+
+            count = ps.GetParticles(particleBuffer);
+
+            for (int i = 0; i < count; i++)
+            {
+                Color32 color = particleBuffer[i].startColor;
+                color.a = alphaByte;
+                particleBuffer[i].startColor = color;
+            }
+
+            ps.SetParticles(particleBuffer, count);
+        }
+    }
+
+    public void StopAndClearParticles()
+    {
+        if (affectedParticleSystems == null)
+            return;
+
+        foreach (var ps in affectedParticleSystems)
+        {
+            if (ps != null)
+                ps.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+        }
+    }
+
     private void ApplyStretchSettings()
     {
         if (!stretchBySpeed || affectedParticleSystems == null)
