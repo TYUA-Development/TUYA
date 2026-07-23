@@ -607,7 +607,7 @@ public class PlayerController : MonoBehaviour
         if (footstepSource == null)
             return;
 
-        bool isMoving = Mathf.Abs(Rigidbody2D.velocity.x) > 0.05f;
+        bool isMoving = InputReader.InputData.moveAxis.x != 0f;
 
         if (!isGround || !isMoving)
         {
