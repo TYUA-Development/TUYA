@@ -22,6 +22,7 @@ public class BoxObject : MonoBehaviour, IArrowHit, IArrowKnockbackReceiver
         if (rb == null)
             return;
 
-        rb.AddForce(hitDirection.normalized * knockbackForce, ForceMode2D.Impulse);
+        float xDir = Mathf.Sign(hitDirection.x);
+        rb.AddForce(new Vector2(xDir * knockbackForce, 0f), ForceMode2D.Impulse);
     }
 }
