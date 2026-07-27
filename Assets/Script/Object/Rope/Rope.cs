@@ -56,6 +56,25 @@ public class Rope : MonoBehaviour
 
     private readonly List<HingeJoint2D> hangingJoints = new List<HingeJoint2D>();
 
+    public RopeSegment[] Segments => segments;
+
+    public bool IsCut
+    {
+        get
+        {
+            if (segments == null)
+                return false;
+
+            for (int i = 0; i < segments.Length; i++)
+            {
+                if (segments[i] != null && segments[i].IsCut)
+                    return true;
+            }
+
+            return false;
+        }
+    }
+
     private void Awake()
     {
         if (segments == null || segments.Length == 0)
@@ -67,6 +86,17 @@ public class Rope : MonoBehaviour
         ropeLength = Mathf.Max(0.01f, ropeLength);
         segmentLength = Mathf.Max(0.01f, segmentLength);
         jointLimitAngle = Mathf.Clamp(jointLimitAngle, 0f, 179f);
+    }
+
+    public void SetHangingTarget(int attachmentIndex, Rigidbody2D newTarget)
+    {
+        if (hangingAttachments == null || attachmentIndex < 0 || attachmentIndex >= hangingAttachments.Length)
+        {
+            Debug.LogWarning($"[Rope] SetHangingTarget: attachmentIndex {attachmentIndex}가 Hanging Objects 배열 범위를 벗어났습니다 (길이={hangingAttachments?.Length ?? 0}).", this);
+            return;
+        }
+
+        hangingAttachments[attachmentIndex].target = newTarget;
     }
 
     public void NotifySegmentCut(RopeSegment segment, Vector2 cutPoint)

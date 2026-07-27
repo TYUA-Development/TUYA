@@ -733,6 +733,9 @@ public class PlayerFallState : PlayerState
             groundLayer
         );
 
+        if (hit != null && hit.isTrigger)
+            hit = null;
+
         if (hit == null && !controller.isGround)
             return;
 

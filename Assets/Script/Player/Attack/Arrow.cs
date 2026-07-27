@@ -101,6 +101,10 @@ public void OnTriggerEnter2D(Collider2D other)
             // 피격 시 이펙트 생성
             SpawnHitFX(hitPoint);
 
+            // 넉백을 받는 오브젝트라면 화살이 박히기(속도 0) 전에 진행 방향을 넘겨준다
+            if (other.TryGetComponent<IArrowKnockbackReceiver>(out IArrowKnockbackReceiver knockbackReceiver))
+                knockbackReceiver.OnArrowKnockback(hitPoint, rb.velocity.normalized);
+
             // 타겟 로직/피격 상태 갱신
             target.OnHit();
 
