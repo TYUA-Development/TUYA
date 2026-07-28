@@ -35,6 +35,12 @@ public class RopeRegenerator : MonoBehaviour
     [SerializeField] private float regenerateDelay = 3f;
     [SerializeField] private float glowFadeDuration = 1f;
 
+    [Header("Segment Collapse")]
+    [Tooltip("끊어진 지점에서 바깥쪽으로 한 단계(세그먼트 1~2개)씩 사라지는 간격")]
+    [SerializeField] private float segmentDisappearStepDelay = 0.15f;
+    [Tooltip("세그먼트 하나가 사라지는 데 걸리는 페이드아웃 시간")]
+    [SerializeField] private float segmentDisappearFadeDuration = 0.1f;
+
     [Header("Glow")]
     [SerializeField] private Color glowColor = Color.white;
 
@@ -91,6 +97,8 @@ public class RopeRegenerator : MonoBehaviour
 
         yield return new WaitForSeconds(regenerateDelay);
 
+        yield return StartCoroutine(CollapseRopeSegments());
+
         List<GameObject> newlySpawnedBoxes = AdvanceHangingBoxes();
 
         rope.BuildRope();
@@ -98,6 +106,83 @@ public class RopeRegenerator : MonoBehaviour
         yield return StartCoroutine(PlayGlowFade(newlySpawnedBoxes));
 
         isRegenerating = false;
+    }
+
+    // 끊어진 지점(가장 앵커에 가까운 IsCut 세그먼트)을 기준으로 양쪽으로 한 단계씩
+    // 확장하며 세그먼트를 순차적으로 페이드아웃-제거한다.
+    private IEnumerator CollapseRopeSegments()
+    {
+        RopeSegment[] segments = rope.Segments;
+        if (segments == null || segments.Length == 0)
+            yield break;
+
+        int pivot = FindTopmostCutIndex(segments);
+        if (pivot < 0)
+            yield break;
+
+        foreach (List<int> step in BuildCollapseSteps(pivot, segments.Length))
+        {
+            foreach (int index in step)
+            {
+                if (segments[index] != null)
+                    StartCoroutine(FadeAndDestroySegment(segments[index], segmentDisappearFadeDuration));
+            }
+
+            yield return new WaitForSeconds(segmentDisappearStepDelay);
+        }
+    }
+
+    private static int FindTopmostCutIndex(RopeSegment[] segments)
+    {
+        for (int i = 0; i < segments.Length; i++)
+        {
+            if (segments[i] != null && segments[i].IsCut)
+                return i;
+        }
+
+        return -1;
+    }
+
+    private static List<List<int>> BuildCollapseSteps(int pivot, int count)
+    {
+        var steps = new List<List<int>>();
+        int upper = pivot - 1;
+        int lower = pivot;
+
+        while (upper >= 0 || lower < count)
+        {
+            var step = new List<int>();
+            if (upper >= 0) step.Add(upper);
+            if (lower < count) step.Add(lower);
+            steps.Add(step);
+
+            upper--;
+            lower++;
+        }
+
+        return steps;
+    }
+
+    private IEnumerator FadeAndDestroySegment(RopeSegment segment, float duration)
+    {
+        if (segment == null)
+            yield break;
+
+        SpriteRenderer sr = segment.GetComponentInChildren<SpriteRenderer>();
+        if (sr != null)
+        {
+            Color start = sr.color;
+            float elapsed = 0f;
+            while (elapsed < duration && sr != null)
+            {
+                elapsed += Time.deltaTime;
+                sr.color = new Color(start.r, start.g, start.b, Mathf.Lerp(start.a, 0f, elapsed / duration));
+                yield return null;
+            }
+        }
+
+        if (segment != null)
+            Destroy(segment.gameObject);
     }
 
     private List<GameObject> AdvanceHangingBoxes()
@@ -200,7 +285,11 @@ public class RopeRegenerator : MonoBehaviour
         {
             foreach (RopeSegment segment in segments)
             {
-                if (segment != null && segment.TryGetComponent(out SpriteRenderer segmentRenderer))
+                if (segment == null)
+                    continue;
+
+                SpriteRenderer segmentRenderer = segment.GetComponentInChildren<SpriteRenderer>();
+                if (segmentRenderer != null)
                     renderers.Add(segmentRenderer);
             }
         }
