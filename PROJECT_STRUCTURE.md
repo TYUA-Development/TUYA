@@ -70,7 +70,13 @@ Present but disabled in build settings:
 - `Assets/Scenes/1 Stage.unity`
 - `Assets/Scenes/Jinho.unity`
 - `Assets/Scenes/SeungHyun.unity`
-- `Assets/Scenes/Mechanism.unity` (new — not referenced in `EditorBuildSettings.asset` at all, not even as a disabled entry; appears to be a standalone sandbox scene for testing the new Wind/Rope mechanisms rather than a level)
+
+Not referenced in `EditorBuildSettings.asset` at all (not even as a disabled entry) — sandbox/test scenes, not shippable levels:
+
+- `Assets/Scenes/Mechanism.unity` — sandbox for testing Wind/Rope/Box/Pressure-platform mechanisms.
+- `Assets/Scenes/InGameScene/Forest 2.unity` (new) — a second copy of the Forest scene alongside `Forest.unity`; likely a working/backup copy used while iterating on the puzzle mechanisms below. Confirm which of `Forest.unity` / `Forest 2.unity` is the live level before editing either.
+
+As of this snapshot, `Assets/Scenes/InGameScene/Forest.unity` and `Assets/Scenes/Mechanism.unity` both have further **uncommitted** local scene-data changes on top of the last commit — check `git status`/`git diff` before assuming either file matches HEAD.
 
 Note: the enabled/disabled set and scene paths have changed since the last snapshot — `TitleScene` and `SeungHyun2_Restore` moved under `Assets/Scenes/InGameScene/` and are now enabled, while `SeungHyun.unity` (root-level, distinct from the `InGameScene` copy) is now disabled. Each main scene has a matching `<SceneName>_Profiles/` folder next to it holding Volume Profile `.asset` files (e.g. `Scenes/SeungHyun_Profiles/`, `Scenes/InGameScene/Forest_Profiles/`, `Scenes/1 Stage_Profiles/`) — treat these as scene-owned post-processing/volume data, not shared assets.
 
@@ -101,17 +107,23 @@ Note: the `Assets/Prefab/` folder named in earlier notes has been renamed to `As
 
 ```text
 Assets/Script/
-+-- Arrow/              Arrow interfaces, small utilities, arrow prefabs/materials, ArrowBlocker, IArrowPassThrough.cs (new)
++-- Arrow/              Arrow interfaces, small utilities, arrow prefabs/materials: ArrowBlocker, IArrowPassThrough.cs, IArrowKnockbackReceiver.cs (new)
 +-- Camera/             Camera follow, zoom, parallax, trigger areas, title camera logic (incl. CameraEndingAreaTrigger.cs)
 +-- Object/             Puzzle and interactive objects
-|   +-- CoreObjects/    Core activation, temple, bridge, floor movement, rising objects
+|   +-- CoreObjects/    Core activation, temple, bridge, floor movement, rising/pressure objects
 |   +-- MusicPuzzle/    Sound/note puzzle: hanging note objects, area controller, core bridges
-|   +-- Rope/           Procedural cuttable rope (Rope.cs, RopeSegment.cs) (new)
+|   +-- Rope/           Procedural cuttable rope + regeneration (Rope.cs, RopeSegment.cs, RopeRegenerator.cs (new))
 |   +-- Stone Pillar/   Pillar and windmill objects
 |   +-- StoneCircle/    Circle rotation, propeller, wind machine, passage looper
 |   +-- StoneFloor/     Breakable platform events
-|   +-- Wind/           Wind force objects (incl. particle-affecting wind; now with directional enum + distance falloff)
-|   +-- Magnetic.cs      Loose script directly under Object/, not in a subfolder
+|   +-- Wind/           Wind force objects (incl. particle-affecting wind; directional enum + distance falloff + player-blocking push)
+|   +-- BasicObject.cs   Loose helper for drawing/instantiating sprite objects
+|   +-- BoxObject.cs     Loose, IArrowHit/IArrowKnockbackReceiver box (new)
+|   +-- DisappearMethod.cs  Loose, legacy-Animation "play then destroy" helper (new)
+|   +-- Magnetic.cs      Loose rider/carry-along script
+|   +-- PressurePlate.cs Loose, simple on/off ICoreEvent pressure plate (no weight comparison)
+|   +-- RunwayObject.cs  Loose, player-triggered drop-through platform
+|   +-- SampleObject.cs  Loose, minimal IArrowHit sample
 +-- Particle/           Custom particle/object-pool system
 +-- Player/             Player controller, input, state machine, attack, animations
 |   +-- Animation/       Player .anim clips and Animator controllers
@@ -119,26 +131,28 @@ Assets/Script/
 |   +-- PlayerState/     PlayerState.cs (all state classes live in this one file)
 +-- Scene/              Scene-specific intro/cutscene controllers
 +-- Settings/           Settings persistence, settings UI, key bindings, in-game settings
-+-- Shader/             Shader helper scripts, shader/material assets
++-- Shader/             Shader helper scripts, shader/material assets (incl. SpriteFlash.shader (new), used for the Rope regeneration glow)
 +-- Sky/                Sky/background manager, zone particle activator
 +-- UI/                 Title, fade, menu UI, tutorial prompts
-+-- Utils/              Shared interfaces, noise, generic Pair
-+-- TestJumpForce.cs     Loose debug/test script at Script root (new, not in any subfolder)
++-- Utils/              Shared interfaces, noise, generic Pair, TY_Weight.cs (new)
++-- TestJumpForce.cs     Loose debug/test script at Script root, not in any subfolder
 ```
 
-Approximate C# file counts (102 total under `Assets/Script`):
+Approximate C# file counts (113 total under `Assets/Script`):
 
-- `Object` (incl. `CoreObjects`, `MusicPuzzle`, `Rope` (new), `Stone Pillar`, `StoneCircle`, `StoneFloor`, `Wind`, loose `Magnetic.cs`): 33
+- `Object` (incl. `CoreObjects`, `MusicPuzzle`, `Rope`, `Stone Pillar`, `StoneCircle`, `StoneFloor`, `Wind`, and 7 loose files: `BasicObject.cs`, `BoxObject.cs` (new), `DisappearMethod.cs` (new), `Magnetic.cs`, `PressurePlate.cs`, `RunwayObject.cs`, `SampleObject.cs`): 42
 - `Camera` (incl. `Parallax`, `DistanceParallax`, `CameraEndingAreaTrigger.cs`): 21
 - `UI`: 11
 - `Settings`: 9
 - `Particle` (incl. `ParticleComponent`): 9
 - `Player` (incl. `PlayerState`, `Attack`): 7
-- `Arrow` (incl. new `IArrowPassThrough.cs`): 4
-- `Utils`: 3
+- `Arrow` (incl. `IArrowPassThrough.cs`, new `IArrowKnockbackReceiver.cs`): 5
+- `Utils` (incl. new `TY_Weight.cs`): 4
 - `Sky`: 2
 - `Scene`: 1
 - `Shader`: 1
+
+`CoreObjects/` alone now holds 15 scripts (up from 10): the original `CoreActivationController.cs`, `CoreCameraFocus2D.cs`, `CoreObjectMoveFloor.cs`, `CoreObjectTemple.cs`, `CorePropellerDoorSequence.cs`, `CoreTimedStoneGroupTrigger.cs`, `ICoreEvent.cs`, `RisingObjectController.cs`, `StoneBridge.cs`, `TimedRisingObjectController.cs`, plus new `CoreActivation.cs`, `CoreObjectToggle.cs`, `PressureCorePlatform.cs`, `PressureTopRelay.cs`, `RiseObject.cs`.
 - Script root (loose): 1 (`TestJumpForce.cs`)
 
 Additional related script files outside `Assets/Script` (108 total `.cs` files project-wide):
@@ -188,10 +202,10 @@ Notes:
 
 - Do not transition into `PlayerTurnState` until it is implemented.
 - `PlayerController.ChangeDirection(float dir)` flips `transform.localScale.x`.
-- Footsteps depend on `isGround`, `isOnGrass`, horizontal Rigidbody2D velocity, and `grassFootsteps`.
+- Footsteps depend on `isGround`, `isOnGrass`, `grassFootsteps`, and (as of this snapshot) `InputReader.InputData.moveAxis.x != 0f` for the "is moving" check — previously this read horizontal Rigidbody2D velocity, which could report movement from external forces (e.g. wind push, knockback) even with no move input; it now reflects actual player input intent instead.
 - `PlayerController.PreventSlide` now also freezes the player while `currentState == attackState` (previously it only froze when there was no horizontal/negative-vertical move input), so aiming/shooting on a slope no longer slides the player.
 - Input locking has two entry points now: `LockPlayerInput(float time)` (timer-based, via `lockInputCoroutine`) and the new `SetInputLocked(bool locked)` (open-ended, cancels any running timer-based lock first). Callers that need to unlock based on a runtime condition (e.g. "player has landed") rather than a fixed duration should use `SetInputLocked` — see `BreakableFragmentPlatformEvent` below.
-- `PlayerJumpState.PhysicsUpdate` and `PlayerFallState`'s ground probe now also check `controller.isGround` directly (not just Rigidbody2D vertical velocity / a small overlap box), reducing missed jump-to-fall / fall-to-ground transitions.
+- `PlayerJumpState.PhysicsUpdate` and `PlayerFallState`'s ground probe now also check `controller.isGround` directly (not just Rigidbody2D vertical velocity / a small overlap box), reducing missed jump-to-fall / fall-to-ground transitions. `PlayerFallState`'s ground raycast now also discards a hit whose collider is a trigger (`hit.isTrigger`) — trigger volumes (e.g. Wind/detection triggers) can no longer be mistaken for solid ground.
 - Several source comments have mojibake/encoding damage. Prefer actual code flow over comments.
 - `PlayerSilhouetteController` lerps SpriteRenderer colors toward a silhouette color using `transitionSpeed`. Call `SetSilhouette(float)` to trigger.
 - `PlayerBloomAreaTrigger` enables/disables a bloom effect when the player enters or exits a trigger zone.
@@ -224,7 +238,8 @@ Key files:
 
 - `Assets/Script/Player/Attack/Arrow.cs`
 - `Assets/Script/Arrow/IArrowHit.cs`
-- `Assets/Script/Arrow/IArrowPassThrough.cs` (new)
+- `Assets/Script/Arrow/IArrowPassThrough.cs`
+- `Assets/Script/Arrow/IArrowKnockbackReceiver.cs` (new)
 - `Assets/Script/Arrow/DestroyAfterSeconds.cs`
 
 `Arrow` is a Rigidbody2D projectile.
@@ -232,10 +247,10 @@ Key files:
 - `Launch(Vector2 dir, Transform shooter)` sets normalized velocity and orientation.
 - Gravity is disabled at launch and restored after `flyTime`.
 - `OnTriggerEnter2D` ignores the shooter, then checks `other.TryGetComponent<IArrowPassThrough>` **before** `IArrowHit`: if the collider implements `IArrowPassThrough`, the arrow calls `OnArrowPass(hitPoint, direction)` and `return`s immediately — it does **not** set `hasHit`, stop, or stick, so the arrow keeps flying straight through.
-- Only if there is no `IArrowPassThrough` does it fall through to the existing `IArrowHit` check: on a valid hit, it stops flight FX, plays hit SFX, spawns hit FX, calls `target.OnHit()`, and sticks the arrow to the target transform.
-- Colliders with neither interface are ignored and the arrow passes through unaffected (physically, since these are triggers, not solid colliders).
+- Only if there is no `IArrowPassThrough` does it fall through to the existing `IArrowHit` check: on a valid hit, it stops flight FX, plays hit SFX, spawns hit FX. Just **before** calling `target.OnHit()`, it now also checks `other.TryGetComponent<IArrowKnockbackReceiver>` and, if present, calls `OnArrowKnockback(hitPoint, rb.velocity.normalized)` — this is checked in addition to `IArrowHit`, not instead of it (unlike the `IArrowPassThrough`/`IArrowHit` split, a single collider can implement both `IArrowHit` and `IArrowKnockbackReceiver` and get both effects). `target.OnHit()` then runs and the arrow sticks to the target transform.
+- Colliders with neither `IArrowPassThrough` nor `IArrowHit` are ignored and the arrow passes through unaffected (physically, since these are triggers, not solid colliders). `IArrowKnockbackReceiver` alone (without `IArrowHit`) has no effect, since the knockback call only happens on the `IArrowHit` hit path.
 
-Most puzzle interactions are connected through the `IArrowHit.OnHit()` contract. `IArrowPassThrough.OnArrowPass()` (new) is for objects the arrow should visually/physically fly through while still reacting to the hit — currently used by rope cutting (see `Rope`/`RopeSegment` below).
+Most puzzle interactions are connected through the `IArrowHit.OnHit()` contract. `IArrowPassThrough.OnArrowPass()` is for objects the arrow should visually/physically fly through while still reacting to the hit — currently used by rope cutting (see `Rope`/`RopeSegment` below). `IArrowKnockbackReceiver.OnArrowKnockback()` (new) is for objects that should physically recoil from the hit; `BoxObject.cs` (new, `Assets/Script/Object/BoxObject.cs`) is the only current implementer — it has an empty `IArrowHit.OnHit()` (so the arrow still sticks) and applies a horizontal `ForceMode2D.Impulse` of `knockbackForce` in the arrow's direction via `Rigidbody2D.AddForce`.
 
 Arrow-related prefabs/materials live in `Assets/Script/Arrow/`:
 
@@ -290,7 +305,7 @@ Important folders:
 
 - `Assets/Script/Object/`
 - `Assets/Script/Object/CoreObjects/`
-- `Assets/Script/Object/MusicPuzzle/` (new)
+- `Assets/Script/Object/MusicPuzzle/`
 - `Assets/Script/Object/Stone Pillar/`
 - `Assets/Script/Object/StoneCircle/`
 - `Assets/Script/Object/StoneFloor/`
@@ -299,15 +314,19 @@ Important folders:
 Common contracts:
 
 - `IArrowHit.OnHit()` receives arrow-hit events.
-- `ICoreEvent.OnCoreEvent()` represents a broader puzzle/core activation event.
+- `ICoreEvent.OnCoreEvent(bool isPressed = true)` represents a broader puzzle/core activation event; the `isPressed` argument distinguishes press vs. release for callers that care (e.g. `PressurePlate`'s `isCancel` mode).
+- `IArrowKnockbackReceiver.OnArrowKnockback(hitPoint, hitDirection)` (new, see Arrow And Hit Contract above) is a physical-recoil-only contract, orthogonal to `IArrowHit`.
 - Many effects are Coroutine-based movement, rotation, activation, and camera staging.
 
 Key files:
 
 - `BasicObject.cs`: helper for drawing/instantiating sprite objects.
-- `RunwayObject.cs`: toggles a runway collider while the player is inside/staying on it.
+- `RunwayObject.cs`: toggles a runway collider while the player is inside/staying on it. Now tracks `playerInsideDetection` (set in `OnTriggerStay2D`, cleared in `OnTriggerExit2D`): while true, neither the delayed re-enable coroutine (`DropRoutine`) nor the external `OnRunWayCollider()` call will turn the collider back on — only actually leaving the detection trigger re-arms it. Fixes the platform re-enabling underneath the player while they are still standing in the detection zone.
 - `SampleObject.cs`: minimal `IArrowHit` sample.
+- `PressurePlate.cs`: simple binary (no weight comparison) `ICoreEvent` trigger — any layer-matched `Collision2D` pressed from above (contact normal `y >= minUpwardNormal`) calls `OnCoreEvent(true)` on each `ICoreEvent` in `targetObjects`; if `isCancel` is set, releasing all pressing colliders calls `OnCoreEvent(false)`. Distinct from the newer weight-comparison `PressureCorePlatform` below — the two are separate systems that happen to share the word "Pressure".
 - `CoreActivationController.cs`: implements both `IArrowHit` and `ICoreEvent`. On arrow hit, fires a full cutscene sequence — letterbox, player lock via `PlayerCutsceneLocker2D`, camera focus, tutorial prompt, hint ring — then broadcasts the core activation event.
+- `CoreActivation.cs` (`CoreObjects/`, new): a second, self-contained core-activation implementation — also `IArrowHit`+`ICoreEvent`, also exposes an `onActivated` event — but instead of delegating to a hint-ring/tutorial/letterbox sequence, it owns its own visuals directly (`hitFlashRenderer`/`activateGlowRenderer`/`stableGlowRenderer` alpha fades, `hitParticle`/`activateParticle`, `hitAudio`/`activateAudio`) and locks the player via `PlayerCutsceneLocker2D` or a plain `PlayerController.LockPlayerInput` fallback. It activates on either `OnTriggerEnter2D` or `OnCollisionEnter2D` from an object tagged/typed as `Arrow`, not only via the `IArrowHit`/`Arrow.cs` stick path. **`CoreActivation` and `CoreActivationController` are two different classes with similar purposes** — check which one a given core prefab actually uses before assuming shared behavior.
+- `CoreObjectToggle.cs` (`CoreObjects/`, new): subscribes to one or more `CoreActivationController.onActivated` events (`coreObjects` list — any one firing runs the same handler) and, on activation, flips each `targetObjects` entry: if the target has a `RiseObject` component, calls `Rise()` on it; otherwise, if it (or a child) has `Object_Wind`/`Object_Wind_Particle`, smoothly fades `windPower` to/from 0 over `windFadeDuration` (via coroutine `FadeWindAndToggle`, tracked per-object in `windFadeCoroutines`) instead of an instant on/off, additionally fading `Object_Wind_Particle` particle alpha out over `particleFadeOutDuration` before disabling; otherwise just calls `GameObject.SetActive(!activeSelf)`.
 - `CoreObjectTemple.cs`: raises temple pieces and optionally moves the player with a selected piece.
 - `CoreObjectMoveFloor.cs`: toggles wind objects, toggles propeller rotation, and moves floors between previous/next positions.
 - `CoreCameraFocus2D.cs`: smoothly pans and zooms the camera to a focus point during core events.
@@ -315,6 +334,7 @@ Key files:
 - `CoreTimedStoneGroupTrigger.cs`: activates a group of stone objects after a timed delay on core event.
 - `RisingObjectController.cs`: moves a set of objects upward on activation.
 - `TimedRisingObjectController.cs`: same as `RisingObjectController` but with configurable per-object delay.
+- `RiseObject.cs` (`CoreObjects/`, new): a single-object, richer alternative to `RisingObjectController`/`TimedRisingObjectController` — `Rise()` (called externally, e.g. by `CoreObjectToggle`) runs a one-shot coroutine that optionally pre-shakes in place (`usePreShake`), then moves from the current position to `targetPosition` over `riseDuration` along `riseCurve`, with optional continuous shake during the move (`useShakeDuringRise`, fading out near the end via `fadeOutShakeNearEnd`) and dust/light/debris/complete particles + matching audio cues at each phase. `enableReturn` makes it a round trip: hold at the target for `holdDuration`, then move back and reset `hasRisen` so `Rise()` can run again.
 - `StoneBridge.cs`: moves bridge pieces, raises core, and triggers camera movement/noise.
 - `StonePillarManager.cs`: creates stone pillars and windmills; windmill hits move connected pillars by step. Each pillar's next target position is now tracked in a `currentTargetPosition` list (updated from the *target*, not read back from the possibly-still-moving `transform.position`), and each pillar's move coroutine is tracked/stopped-and-restarted per index (`pillarMoveCoroutines`) — fixes drift/desync when a pillar is re-triggered while still mid-move.
 - `WindMillObject.cs`: `IArrowHit` adapter that calls `StonePillarManager.PillarMove`.
@@ -324,22 +344,36 @@ Key files:
 - `RotatingPassageLooper.cs`: loops a passage object's rotation for ambient motion.
 - `WindMachineActivationController.cs`: activates the wind machine sequence on core event.
 - `PassThroughExitCameraZoom.cs`: adjusts camera zoom when the player exits a pass-through area.
-- `Object_Wind.cs`: applies directional wind force to Rigidbody2D objects inside its trigger. Direction is now chosen via a `WindDirection` enum dropdown (`Right/UpRight/Up/UpLeft/Left/DownLeft/Down/DownRight`, resolved by the static `Object_Wind.GetDirectionVector(WindDirection)`) instead of being derived from `transform.rotation.eulerAngles.z`; negative `windPower` still flips the effective direction. New `distanceFalloff` (0-10, `[Range]`) scales force down with distance from the wind object's own `transform.position` via `1f / (1f + distanceFalloff * distance)` — `0` means no falloff (uniform force regardless of distance).
-- `Object_Wind_Particle.cs` (`Wind/`): pushes particles of assigned `ParticleSystem`s that are inside its collider by directly rewriting `ParticleSystem.Particle.velocity` via `GetParticles`/`SetParticles` (bypasses Rigidbody2D physics, so it works on non-physical particle-based foliage/dust). Optionally kills particles instantly on overlap with a `killOnCollisionLayer` (e.g. Floor). Now shares the same `WindDirection` enum and `distanceFalloff` falloff formula as `Object_Wind` (direction resolved via `Object_Wind.GetDirectionVector`). Also gained a "Stretch By Speed" option (`stretchBySpeed`, `stretchLengthScale`, `stretchVelocityScale`, applied once in `Init()` via `ApplyStretchSettings()`): when enabled, sets each affected `ParticleSystemRenderer.renderMode` to `Stretch` with the given `lengthScale`/`velocityScale`, so a single round particle visually stretches in proportion to how fast it's being pushed, instead of needing a separate elongated particle sprite.
+- `Object_Wind.cs`: applies directional wind force to Rigidbody2D objects inside its trigger. Direction is chosen via a `WindDirection` enum dropdown (`Right/UpRight/Up/UpLeft/Left/DownLeft/Down/DownRight`, resolved by the static `Object_Wind.GetDirectionVector(WindDirection)`) instead of being derived from `transform.rotation.eulerAngles.z`; negative `windPower` still flips the effective direction. `distanceFalloff` (0-10, `[Range]`) scales force down with distance from the wind object's own `transform.position` via `1f / (1f + distanceFalloff * distance)` — `0` means no falloff. New `ignoredLayer` mask makes matching colliders immune to the wind entirely. The `blockPlayer` path was reworked: it no longer just refuses entry — `BlockPlayer()` now measures the player/wind collider AABB overlap (`ComputeAxisPushDirection`, picking the shallower-overlapped axis) and pushes the player rigidbody out along that axis at up to `blockPushSpeed` units/sec (so the correction is visible motion, not a teleport), with `blockBounciness` (0-1) controlling how much of the player's into-the-wall velocity bounces back versus is simply absorbed. A player falling in from directly above (`IsFallingFromAbove`, comparing the previous-frame Y position against the wind collider's top bound) is exempted from both push force and blocking via `fallThroughExempt` until they fully exit the trigger — except for `WindDirection.Up` wind, which is meant to catch falling players. `IsBlocked()`'s line-of-sight cast now originates from the wind trigger's actual collider bounds center (not `transform.position`, which is often flush with the floor and would self-intersect) and shortens the cast by the target's own half-extent along the cast direction so the target's own ground/wall no longer registers as a false block.
+- `Object_Wind_Particle.cs` (`Wind/`): pushes particles of assigned `ParticleSystem`s that are inside its collider by directly rewriting `ParticleSystem.Particle.velocity` via `GetParticles`/`SetParticles` (bypasses Rigidbody2D physics, so it works on non-physical particle-based foliage/dust). Optionally kills particles instantly on overlap with a `killOnCollisionLayer` (e.g. Floor). Shares the same `WindDirection` enum and `distanceFalloff` falloff formula as `Object_Wind`. Also has a "Stretch By Speed" option (`stretchBySpeed`, `stretchLengthScale`, `stretchVelocityScale`, applied once in `Init()` via `ApplyStretchSettings()`) so particles visually elongate in proportion to push speed. New helper methods (added to support `CoreObjectToggle`'s fade-in/out): `SetEmissionEnabled(bool)` toggles the emission module, `SetParticlesAlpha(float)` rewrites every live particle's `startColor` alpha via `GetParticles`/`SetParticles`, and `StopAndClearParticles()` stops with `StopEmittingAndClear`.
 - `WindSystemManager.cs`: mostly empty placeholder at the time of writing.
 - `BreakableFragmentPlatformEvent.cs` (`StoneFloor/`): on player contact, disables the platform collider and triggers a fall sequence via `PlayerController.OnFall()` after a configurable FixedUpdate delay. Player input is now re-locked/unlocked via `PlayerController.SetInputLocked(bool)` instead of a fixed-duration `LockPlayerInput(time)` call — `UnlockInputAfterLandingRoutine()` waits for the player to actually leave and then re-touch the ground (`playerController.isGround`) before unlocking, plus an optional `extraInputLockAfterFinalImpact` grace period, rather than assuming a fixed fall duration.
-- `Magnetic.cs` (`Object/`, new, loose file not in a subfolder): tracks its own per-`FixedUpdate` position delta and, for each `GameObject` in its `attachedObjects` list that is currently touching its collider, applies the same delta to that object (via `Rigidbody2D.MovePosition` if it has one, otherwise directly to `transform.position`). Used to carry riders/objects along with a moving platform-like object without a physics joint. Caches colliders per attached object in a `Dictionary`. As of this snapshot it exists as a script but is not yet attached to any GameObject in a scene or prefab.
+- `Magnetic.cs` (`Object/`, loose file not in a subfolder): tracks its own per-`FixedUpdate` position delta and, for each `GameObject` in its `attachedObjects` list that is currently touching its collider, applies the same delta to that object (via `Rigidbody2D.MovePosition` if it has one, otherwise directly to `transform.position`). Used to carry riders/objects along with a moving platform-like object without a physics joint. Caches colliders per attached object in a `Dictionary`. As of this snapshot it exists as a script but is not yet attached to any GameObject in a scene or prefab.
+- `BoxObject.cs` (`Object/`, loose, new): see Arrow And Hit Contract above — `IArrowHit`+`IArrowKnockbackReceiver`, applies a horizontal impulse on arrow hit. Also used as the hanging-box payload for `RopeRegenerator` (see Rope below).
+- `DisappearMethod.cs` (`Object/`, loose, new): `[RequireComponent(typeof(Animation))]`. `PlayAndDestroy()` plays a legacy `AnimationClip` (`disappearClip`) via the (non-Animator) `Animation` component, waits for its length, then destroys the GameObject. Other scripts that need to remove an object with a fade/disappear animation check for this component first (see `RopeRegenerator.RemoveBox` below) and fall back to a plain `Destroy()` if it's absent.
 
 When changing puzzles, check Inspector-serialized lists and scene/prefab references. Many connections depend on list index order.
 
-### Rope (new)
+### Box, Pressure Plates, and Weighted Platforms (new)
 
-Key files, both under `Assets/Script/Object/Rope/`:
+Two independent "weight/pressure" systems now exist — do not conflate them:
 
-- `Rope.cs`: procedurally builds a cuttable rope out of `RopeSegment` pieces connected by `HingeJoint2D`s. `[ContextMenu("Build Rope")]` → `BuildRope()` spawns `ropeLength / segmentLength` segments (each with `SpriteRenderer` + dynamic `Rigidbody2D` + trigger `BoxCollider2D` + `HingeJoint2D` chained to the previous segment's body, first segment anchored to a static `Rigidbody2D` on `anchor`/`transform`) under a generated `GeneratedRopeSegments` child; `[ContextMenu("Clear Rope")]` → `ClearRope()` destroys them. Segment direction/rotation comes from a normalized `direction` vector (defaults `Vector2.down`). Optional `useJointLimits`/`jointLimitAngle` constrain each hinge's swing. `NotifySegmentCut(segment, cutPoint)` is the callback a `RopeSegment` invokes when cut — spawns `cutFXPrefab` and plays `cutClip` via `audioSource`.
-- `RopeSegment.cs`: implements `IArrowPassThrough` (not `IArrowHit`) on each generated segment's trigger collider. `OnArrowPass(hitPoint, direction)` calls `Cut(hitPoint)`, which destroys the segment's own `HingeJoint2D` (severing it from the previous segment/anchor) and notifies the owning `Rope`. `IsCut` reports `joint == null`. Because the arrow uses `IArrowPassThrough`, it keeps flying through the rope instead of sticking — the rope segment falls away (still simulated by its `Rigidbody2D`) rather than the arrow embedding in it.
+- **Simple on/off**: `PressurePlate.cs` (documented above) — any qualifying contact presses it; no comparison, no weight value.
+- **Weight-comparison seesaw**: `Assets/Script/Object/CoreObjects/PressureCorePlatform.cs` + `PressureTopRelay.cs` + `Assets/Script/Utils/TY_Weight.cs`, all new.
+  - `TY_Weight.cs`: a trivial `MonoBehaviour` carrying a single `public float weight = 1f`. Attach to anything that should count toward a `PressureCorePlatform`'s load (e.g. `BoxObject`).
+  - `PressureCorePlatform.cs`: sits on the platform's parent (which owns the `Rigidbody2D`); `topCollider` points at a child "Top" object's `Collider2D` that actually receives contact. Because Unity collision callbacks fire on the collider's own GameObject, the parent can't receive `OnCollisionEnter2D` for a child collider directly — `PressureTopRelay.cs` sits on the Top child and forwards `OnCollisionEnter2D/Stay2D/Exit2D` up to the parent's `HandleTopCollisionEnter/Stay/Exit` methods. Each contacting collider's `TY_Weight.weight` (found via `GetComponentInParent`) is summed into `currentWeight` (`pressingWeights` dictionary, contact accepted only if `|normal.y| >= minUpwardNormal`). Each platform has a `connectedPlatform` partner; `EvaluatePair()` compares `currentWeight` between the pair (equal weight = keep previous state, a hysteresis to avoid flapping) and drives the heavier one down (`MoveDownRoutine`, moving `topCollider.transform` in world space toward `bottomStopper` until `ColliderDistance2D` reports ~0) and the lighter one up (`MoveUpRoutine`, toward `upLocalPosition` resolved into world space via the Top's parent transform) — both always share the heavier side's `moveSpeed` so up/down motion stays in sync between the pair.
+- **Box payload**: `BoxObject.cs` (documented above) is the object typically weighed/knocked around by these systems; `Assets/Prefabs/Box (1).prefab` and `Assets/Prefabs/PressurePlatformCore.prefab` (both new) are the corresponding level-placeable prefabs, alongside new art in `Assets/Texture/artwork/Puzzle_esset_Wind/` (pressure-plate and platform sprites) and `Assets/Prefabs/Windgate.prefab` (new — a Wind-based gate object, art also in `Puzzle_esset_Wind/`).
 
-The rope is purely physics-visual (no `ICoreEvent`/puzzle wiring) — cutting a segment just lets gravity/joints take over for everything downstream of the cut. `Assets/Prefabs/Wind (4).prefab` (new) and level placements in `Assets/Scenes/Mechanism.unity` / `Assets/Scenes/InGameScene/Forest.unity` are where Wind and Rope objects are actually composed together in this update (e.g. rope bridges that sway in wind and can be shot down).
+### Rope
+
+Key files, all under `Assets/Script/Object/Rope/`:
+
+- `Rope.cs`: procedurally builds a cuttable rope out of `RopeSegment` pieces connected by `HingeJoint2D`s. `[ContextMenu("Build Rope")]` → `BuildRope()` spawns `ropeLength / segmentLength` segments (each with a child `Visual` GameObject holding the `SpriteRenderer` — scaled by `segmentSpriteScale`, previously the `SpriteRenderer` sat directly on the segment — plus a dynamic `Rigidbody2D` + trigger `BoxCollider2D` (sized by `segmentSpriteScale` too) + `HingeJoint2D` chained to the previous segment's body, first segment anchored to a static `Rigidbody2D` on `anchor`/`transform`) under a generated `GeneratedRopeSegments` child; `[ContextMenu("Clear Rope")]` → `ClearRope()` destroys them (and any hanging-object joints, see below). Segment direction/rotation comes from a normalized `direction` vector (defaults `Vector2.down`). Optional `useJointLimits`/`jointLimitAngle` constrain each hinge's swing. `segmentOrderInLayer` sets the generated `SpriteRenderer.sortingOrder`. `NotifySegmentCut(segment, cutPoint)` is the callback a `RopeSegment` invokes when cut — spawns `cutFXPrefab` and plays `cutClip` via `audioSource`. New `RopeSegment[] Segments` (read-only) and `bool IsCut` (true if *any* segment is cut) public accessors exist for external observers like `RopeRegenerator`.
+  - New **Hanging Objects** feature: a `RopeHangingAttachment[] hangingAttachments` array (`target` Rigidbody2D, `segmentIndex` — negative means "last segment" — plus per-side local anchors) lets `BuildRope()`'s `AttachHangingObjects()` add a `HingeJoint2D` on each `target` connecting it to the resolved segment's body, so objects (e.g. a box) dangle from a specific point on the rope. `SetHangingTarget(attachmentIndex, newTarget)` lets external code (`RopeRegenerator`) swap which Rigidbody2D is hooked to a given slot before the next `BuildRope()`.
+- `RopeSegment.cs`: implements `IArrowPassThrough` (not `IArrowHit`) on each generated segment's trigger collider. `OnArrowPass(hitPoint, direction)` calls `Cut(hitPoint)`, which destroys the segment's own `HingeJoint2D` (severing it from the previous segment/anchor) and notifies the owning `Rope`. `IsCut` reports `joint == null`. Because the arrow uses `IArrowPassThrough`, it keeps flying through the rope instead of sticking — the rope segment falls away (still simulated by its `Rigidbody2D`) rather than the arrow embedding in it. `Body` (the segment's `Rigidbody2D`) is exposed for `Rope.AttachHangingObjects()`.
+- `RopeRegenerator.cs` (new): a separate observer script (does not modify `Rope`/`RopeSegment` directly) that watches `rope.IsCut` every `Update()` and, once true, runs `RegenerateRoutine()`: wait `regenerateDelay`, then `CollapseRopeSegments()` (finds the topmost cut segment via `FindTopmostCutIndex` and fades-and-destroys segments outward from that pivot in `segmentDisappearStepDelay`-spaced steps via `BuildCollapseSteps`), then `AdvanceHangingBoxes()` (per `HangingBoxSlot`: destroys the previous fallen box — via its `DisappearMethod` if present, else `Destroy` — advances `currentBox` to `previousFallenBox`, and `Instantiate`s a fresh `boxPrefab` at the slot's recorded `spawnPosition`/`spawnRotation`, wiring it back into the rope via `rope.SetHangingTarget`), then calls `rope.BuildRope()` to regrow the rope, then `PlayGlowFade()` — swaps affected `SpriteRenderer`s (rope segments + newly spawned boxes) onto a shared `Custom/SpriteFlash`-shader `Material` (`Assets/Script/Shader/SpriteFlash.shader`, new) and fades `_FlashAmount` from 1 to 0 over `glowFadeDuration` so regenerated pieces visibly flash white before settling to normal.
+
+The rope is purely physics-visual (no `ICoreEvent`/puzzle wiring itself) — cutting a segment just lets gravity/joints take over for everything downstream of the cut; `RopeRegenerator` is what turns that into a repeatable puzzle mechanic (shoot the rope, the box falls, wait, a fresh box appears). `Assets/Prefabs/Wind (4).prefab` and level placements in `Assets/Scenes/Mechanism.unity` / `Assets/Scenes/InGameScene/Forest.unity` (and `Forest 2.unity`, new) are where Wind and Rope objects are actually composed together (e.g. rope bridges that sway in wind and can be shot down, or hanging boxes that regenerate after being cut loose).
 
 ### Music/Sound Puzzle (new)
 
@@ -524,9 +558,10 @@ Important `Assets/Texture/artwork` folders:
 - `Leaf`
 - `light`
 - `Mountain`
-- `Propeller` (now also holds `RotateObject.cs`, a loose rotation script)
+- `Propeller` (also holds `RotateObject.cs`, a loose rotation script)
+- `Puzzle_esset_Wind` (new — sprites for the Wind/Rope/Pressure-platform puzzles: `PressurePlate_*`, `Windgate_*`, `Puzzle_5_pillar_*`/`Puzzle_6_temple`/`puzzle_10_*`/`puzzle_11_*`, `Temple_Pillar_1`-`5`, `chandelier_1`/`2`, `hanging_platform`, `pillar`, `rope_rock_middle`/`small`. Note the folder name itself is a typo for "asset" — that's the real, tracked path.)
 - `Sky`
-- `Sound_Puzzle` (new — sprites for the hanging music/note puzzle: body, chain links, active/base dots, propeller)
+- `Sound_Puzzle` (sprites for the hanging music/note puzzle: body, chain links, active/base dots, propeller)
 - `stone`
 - `temple`
 - `temple2`
@@ -537,16 +572,21 @@ Important `Assets/Texture/artwork` folders:
 
 The folder name `Charactor` appears to be misspelled, but it is the real path. Do not rename it casually because Unity asset references may depend on it.
 
-`Assets/Texture/UI/` is new since the last snapshot and holds `CoreHintRing.controller` + `CoreHintRing_Pulse.anim` (the core-activation hint ring referenced from `CoreActivationController`) alongside UI sprites (`Ellipse 18.png`, `Group 10 (1).png`, `Rectangle 30/31/35.png`, `UI_Background.png`). `Assets/Texture/effect/` is also new and currently holds a single sprite (`Ellipse 147.png`).
+`Assets/Texture/UI/` holds `CoreHintRing.controller` + `CoreHintRing_Pulse.anim` (the core-activation hint ring referenced from `CoreActivationController`) alongside UI sprites (`Ellipse 18.png`, `Group 10 (1).png`, `Rectangle 30/31/35.png`, `UI_Background.png`). `Assets/Texture/effect/` holds a single sprite (`Ellipse 147.png`).
+
+`Assets/Texture/test/` has churned: the earlier phone-photo test images (`IMG_2050.PNG`-`IMG_2061.PNG`) were removed, replaced with pressure-plate/rope/line placeholder sprites (`PressurePlate_*`, `Rope.png`, `Line_1`-`3.png`, `steppe/`) — treat this folder as scratch/reference art, not final in-game assets (the finalized equivalents live under `artwork/Puzzle_esset_Wind/`).
 
 ## Prefabs And Assets
 
-Shared prefabs now live under `Assets/Prefabs/` (renamed from the singular `Prefab/`):
+Shared prefabs live under `Assets/Prefabs/` (renamed from the singular `Prefab/`):
 
 - `Assets/Prefabs/MissionArea.prefab`
 - `Assets/Prefabs/Settings.prefab`
-- `Assets/Prefabs/Player(-1~1).prefab` (new)
-- `Assets/Prefabs/UI/SettingsMenuPrefab.prefab` (new subfolder)
+- `Assets/Prefabs/Player(-1~1).prefab`
+- `Assets/Prefabs/UI/SettingsMenuPrefab.prefab`
+- `Assets/Prefabs/Box (1).prefab` (new) — the `BoxObject`/`TY_Weight`-bearing crate used as `RopeRegenerator` payload and `PressureCorePlatform` weight.
+- `Assets/Prefabs/PressurePlatformCore.prefab` (new) — a configured `PressureCorePlatform`/`PressureTopRelay` pair-platform prefab.
+- `Assets/Prefabs/Windgate.prefab` (new) — a Wind-based gate object built from `Puzzle_esset_Wind` art.
 
 Other prefabs are stored near their systems:
 
@@ -554,14 +594,14 @@ Other prefabs are stored near their systems:
 - `Assets/Script/Object/Stone Pillar/StonePillar.prefab`
 - `Assets/Script/Object/Wind/WindMill.prefab`
 - `Assets/Texture/artwork/grass/PrefabsReeds/*.prefab` (13 reed/flame-grass prefabs)
-- `Assets/Prefabs/Wind (4).prefab` (new) — a configured `Object_Wind`/`Object_Wind_Particle` prefab (naming suggests a 4th variant/iteration; check its Inspector values rather than assuming defaults)
+- `Assets/Prefabs/Wind (4).prefab` — a configured `Object_Wind`/`Object_Wind_Particle` prefab (naming suggests a 4th variant/iteration; check its Inspector values rather than assuming defaults). Updated again in this revision alongside the `Object_Wind` blocking rework above.
 
 Approximate asset counts:
 
-- `.prefab`: 23
+- `.prefab`: 26 (up from 23; new: `Box (1).prefab`, `PressurePlatformCore.prefab`, `Windgate.prefab`)
 - `.asset`: 29
-- `.mat`: 18 (up from 15; new: `Assets/LeafShaderGraph.mat` at the Assets root, `Camera/PinLightBlend.mat`, `CoreObjects/CoreMaterial.mat`, `Texture/Object/M_Wind_Streak.mat`, `Texture/Object/New Material.mat`)
-- `.shader`: 14 (1 gameplay shader in `Script/Shader/`, the remaining 13 are TextMesh Pro built-ins)
+- `.mat`: 18
+- `.shader`: 15 (2 gameplay shaders in `Script/Shader/` — `SpriteTopWind.shader` plus new `SpriteFlash.shader` — the remaining 13 are TextMesh Pro built-ins)
 - `.shadergraph`: 3
 - `.renderTexture`: 2 (`BaseRT.renderTexture`, `New Render Texture.renderTexture`)
 - `.mixer`: 2 (`Assets/Audio/GameAudioMixer.mixer`, `Assets/NewAudioMixer.mixer`)
@@ -578,7 +618,7 @@ The MusicPuzzle system (see below) does not add new prefabs — its GameObjects 
 - Do not edit `Library`, `Temp`, `obj`, or `.vs`.
 - Runtime scripts generally have no namespace. New scripts should usually follow that local style unless a broader refactor is intended.
 - Many fields are serialized in Inspector. Renaming serialized fields can break scene or prefab references.
-- `IArrowHit` and `ICoreEvent` are the key puzzle/event contracts. `CoreActivationController` is the primary concrete implementation of both. `IArrowPassThrough` (new) is a separate, narrower contract for objects the arrow should fly through while still reacting (currently only `RopeSegment`) — it is checked first in `Arrow.OnTriggerEnter2D` and is mutually exclusive in effect with `IArrowHit` on the same collider.
+- `IArrowHit` and `ICoreEvent` are the key puzzle/event contracts. `CoreActivationController` and the newer `CoreActivation` are both concrete implementations of both — they are separate classes, not a subclass relationship, so check which one a given core prefab actually uses. `IArrowPassThrough` is a separate, narrower contract for objects the arrow should fly through while still reacting (currently only `RopeSegment`) — it is checked first in `Arrow.OnTriggerEnter2D` and is mutually exclusive in effect with `IArrowHit` on the same collider. `IArrowKnockbackReceiver` (new) is a third, additive contract — checked alongside (not instead of) `IArrowHit` on the `IArrowHit` path, so a collider can implement both and get both effects (see `BoxObject`).
 - `KeyBindingSettings` is a static class; it is not a MonoBehaviour and should not be added to a GameObject.
 - `CameraMovement.Instance` and `SettingsManager.Instance` assume required scene objects exist.
 - Some comments are mojibake. Trust code flow and Unity references over damaged comments.
@@ -596,7 +636,13 @@ The MusicPuzzle system (see below) does not add new prefabs — its GameObjects 
 - `StonePillarManager` and `StoneCircleManager` now track each pillar's/circle's in-flight *target* position/rotation (`currentTargetPosition`, `currentTargetRotation`) rather than reading the live `transform`, and stop/replace the previous move coroutine before starting a new one — if you add similar step-move/rotate logic elsewhere, follow this pattern to avoid drift on rapid re-triggers.
 - `Arrow.OnTriggerEnter2D` now checks `IArrowPassThrough` *before* `IArrowHit`. If you add a new arrow-reactive script, decide up front whether the arrow should stick (`IArrowHit`) or fly through while still reacting (`IArrowPassThrough`, e.g. `RopeSegment`) — implementing both on the same collider means the pass-through path always wins and `IArrowHit.OnHit()` never fires.
 - `Object_Wind` and `Object_Wind_Particle` no longer derive push direction from the GameObject's Z rotation; they use the `WindDirection` enum field (via `Object_Wind.GetDirectionVector`) instead. If you find a wind object that seems to point the wrong way, check `windDirection` in the Inspector rather than the transform's rotation.
-- `Assets/Scenes/Mechanism.unity` is not wired into `EditorBuildSettings.asset` at all (not even disabled) — treat it as an editor-only sandbox/test scene, not a shippable level.
+- `Assets/Scenes/Mechanism.unity` and `Assets/Scenes/InGameScene/Forest 2.unity` are not wired into `EditorBuildSettings.asset` at all (not even disabled) — treat both as editor-only sandbox/backup scenes, not shippable levels.
+- `PressurePlate.cs` (simple on/off, `Object/`) and `PressureCorePlatform.cs` (weight-comparison seesaw, `CoreObjects/`) are two unrelated systems with similar names — don't assume a "pressure" object in a scene uses the weight/seesaw logic just because the word appears.
+- `CoreActivation.cs` and `CoreActivationController.cs` are likewise two unrelated classes with overlapping purpose (both `IArrowHit`+`ICoreEvent`+`onActivated`) — grep the actual component list on a given core GameObject rather than assuming which one it uses.
+- `BoxObject.OnHit()` is intentionally empty — its puzzle behavior comes entirely from `IArrowKnockbackReceiver.OnArrowKnockback()`, not from `OnHit()`. Don't add logic to `OnHit()` expecting it to run on arrow-stick; it already always sticks via `Arrow.cs`'s `IArrowHit` path regardless.
+- `RopeRegenerator` does not modify `Rope`/`RopeSegment`; it only reads `Rope.IsCut`/`Rope.Segments` and calls `Rope.SetHangingTarget()` + `Rope.BuildRope()`. If you change `Rope`'s public surface (`IsCut`, `Segments`, `SetHangingTarget`), check `RopeRegenerator` for breakage.
+- `Assets/Script/Object/Rope/RopeRegenerator.cs`'s glow effect depends on `Shader.Find("Custom/SpriteFlash")` succeeding at runtime — if `Assets/Script/Shader/SpriteFlash.shader` is renamed, stripped from a build, or its shader name string changed, `flashMaterial` silently stays null and `PlayGlowFade()` no-ops (no error, the flash just never appears).
+- `Object_Wind.BlockPlayer()`'s push logic and `IsFallingFromAbove()`'s fall-through exemption are new and physics-sensitive (AABB overlap axis, previous-frame position estimate from `rb.velocity * Time.fixedDeltaTime`); if a wind-blocking bug appears, check these two methods and the `fallThroughExempt` set before assuming the older `IsBlocked()` boxcast is at fault.
 
 ## Recommended AI Inspection Order
 
@@ -614,17 +660,22 @@ The MusicPuzzle system (see below) does not add new prefabs — its GameObjects 
 - Player movement/jump/fall: `PlayerState.cs`, `PlayerController.cs`
 - Player animation: `Script/Player/Animation/PlayerAnimation.controller`, `PlayerUpperAnimation.controller`
 - Aiming and arrow shooting: `PlayerAttackState`, `PlayerController.ShootArrow`, `Arrow.cs`
-- Arrow-hit puzzles: `IArrowHit`, `CoreActivationController`, `CoreObject*`, `StoneBridge`, `StoneCircleManager`, `StonePillarManager`
+- Arrow-hit puzzles: `IArrowHit`, `CoreActivationController`, `CoreActivation`, `CoreObject*`, `StoneBridge`, `StoneCircleManager`, `StonePillarManager`
 - Arrow blocking (no hit logic, just catches arrows): `ArrowBlocker.cs`
 - Arrow pass-through (react without sticking): `IArrowPassThrough.cs`, `RopeSegment.cs`
-- Cuttable rope: `Rope.cs`, `RopeSegment.cs`
+- Arrow knockback (physical recoil, additive to `IArrowHit`): `IArrowKnockbackReceiver.cs`, `BoxObject.cs`
+- Cuttable rope + hanging payload regeneration: `Rope.cs`, `RopeSegment.cs`, `RopeRegenerator.cs`, `DisappearMethod.cs`
 - Music/sound note puzzle: `MusicPuzzleAreaController.cs`, `HangingMusicPuzzleNoteObject.cs`, `MusicPuzzleCoreBridge.cs`, `MusicPuzzlePropellerHitProxy.cs`, `MusicPuzzleAreaTriggerBridge.cs`
-- Directional wind (rigidbody + particle) with distance falloff: `Object_Wind.cs`, `Object_Wind_Particle.cs` (shared `WindDirection` enum)
+- Directional wind (rigidbody + particle) with distance falloff and player-blocking push: `Object_Wind.cs`, `Object_Wind_Particle.cs` (shared `WindDirection` enum)
 - Particle-affecting wind: `Object_Wind_Particle.cs`
 - Particle soft-stop: `ParticleFreezeAfterSeconds.cs` (class `ParticleSimulationSoftStopper`)
+- Simple on/off pressure plate: `PressurePlate.cs`
+- Weight-comparison seesaw platform: `PressureCorePlatform.cs`, `PressureTopRelay.cs`, `TY_Weight.cs`
+- Core-driven toggle/rise/wind-fade of level objects: `CoreObjectToggle.cs`, `RiseObject.cs`
 - Camera follow/staging: `CameraMovement.cs`, `MissionAreaCamera.cs`, `FakeZZoomManager.cs`
 - Camera restore/ending: `CameraRestoreAreaTrigger.cs`, `CameraEndingAreaTrigger.cs`
 - Rider/carry-along movement: `Magnetic.cs`
+- Drop-through platform: `RunwayObject.cs`
 - Parallax/background depth: `ParallaxManager.cs`, `ParallaxImage.cs`, `DistanceParallaxManager.cs`
 - Particles: `ParticleManager.cs`, `ParticleScriptable.cs`
 - Settings persistence: `SettingsData.cs`, `SettingsManager.cs`
@@ -641,7 +692,21 @@ The MusicPuzzle system (see below) does not add new prefabs — its GameObjects 
 
 Before creating the original version of this document, `.codex/` was already untracked. It appears to be local Codex configuration and is unrelated to project source structure.
 
-This revision (as of commit `227c17f` "WindObject 개선 및 밧줄 구현", merged to `main` as `a4d2870`) was generated by diffing against the previous snapshot's commit (`9d27468` "각종 오류 개선(7.16)") and re-scanning the changed areas. **Note:** the previous snapshot text was itself never actually updated in commit `227c17f` (that commit's `PROJECT_STRUCTURE.md` edit only caught the doc up to the `9d27468` code state, not its own Rope/Wind changes) — so this revision covers two generations of change at once: everything listed in the older note below, plus the new Wind/Rope work from `227c17f`:
+This revision (scanned at commit `56399fc` "1차 수정", with local uncommitted edits to `Assets/Scenes/InGameScene/Forest.unity` and `Assets/Scenes/Mechanism.unity` present on top of that commit) was generated by diffing against the previous snapshot's commit (`077724c` "바람이 오브젝트에 가려지는 기능 추가, 발판 구현") across the 25 intervening commits and re-scanning the changed script/prefab/texture areas. Unity version, package dependencies, and enabled build scenes are unchanged from the previous snapshot. Summary of what changed:
+
+- **New: Box + arrow knockback.** `Assets/Script/Arrow/IArrowKnockbackReceiver.cs` is a new interface, checked in `Arrow.OnTriggerEnter2D` *in addition to* (not instead of) `IArrowHit` on the same hit path. `BoxObject.cs` (`Object/`) is the first implementer — empty `IArrowHit.OnHit()`, and `OnArrowKnockback()` applies a horizontal `Rigidbody2D.AddForce` impulse. New prefab `Assets/Prefabs/Box (1).prefab`.
+- **New: weight-comparison seesaw platforms.** `Assets/Script/Object/CoreObjects/PressureCorePlatform.cs` + `PressureTopRelay.cs` (child-to-parent collision relay) + `Assets/Script/Utils/TY_Weight.cs` (per-object weight value). Paired platforms (`connectedPlatform`) compare summed contact weight and move the heavier one down / lighter one up at a shared speed, with hysteresis on equal weight. Distinct from the pre-existing simple on/off `PressurePlate.cs`, which this snapshot also documents in-place for the first time (it existed since `077724c` but was missing from the prior doc revision). New prefab `Assets/Prefabs/PressurePlatformCore.prefab`, new art `Assets/Texture/artwork/Puzzle_esset_Wind/`.
+- **New: core-driven toggle/rise helpers.** `CoreObjectToggle.cs` (`CoreObjects/`) subscribes to one or more `CoreActivationController.onActivated` and, per target, either calls a `RiseObject.Rise()`, wind-fades an `Object_Wind`/`Object_Wind_Particle` child in/out, or does a plain `SetActive` toggle. `RiseObject.cs` (`CoreObjects/`) is a new single-object rise-with-shake-and-particles animation, with an optional round-trip return.
+- **New: second core-activation implementation.** `CoreActivation.cs` (`CoreObjects/`) is a self-contained `IArrowHit`+`ICoreEvent` cutscene core (owns its own flash/glow renderer fades, particles, audio, player lock) — a parallel, unrelated implementation to the pre-existing `CoreActivationController.cs`. Check which one a given core prefab uses.
+- **New: rope hanging objects + regeneration.** `Rope.cs` gained a `RopeHangingAttachment[]` array so objects (typically a `BoxObject`) can hang from a specific rope segment via a `HingeJoint2D`, plus `Segments`/`IsCut` accessors and `SetHangingTarget()` for external control. New `RopeRegenerator.cs` (`Rope/`) watches `Rope.IsCut`, collapses the severed segments with a staggered fade, spawns a fresh hanging box (destroying the previously-fallen one, via `DisappearMethod.cs` if present), rebuilds the rope, and plays a white flash-fade over the regenerated pieces using new shader `Assets/Script/Shader/SpriteFlash.shader`. `Rope.cs` also gained `segmentSpriteScale` (moved the `SpriteRenderer` onto a child `Visual` object) and `segmentOrderInLayer`.
+- **Wind blocking rework.** `Object_Wind.BlockPlayer()` now pushes the player out along the shallower-overlapped AABB axis at a capped `blockPushSpeed`, with `blockBounciness` controlling velocity rebound, instead of just refusing entry. New `ignoredLayer` mask and an `IsFallingFromAbove()` exemption (skipped for `WindDirection.Up`) so a player falling in from above isn't pushed/blocked until fully exiting. `IsBlocked()`'s boxcast origin moved from `transform.position` to the actual collider bounds center, and now shortens the cast by the target's own half-extent to avoid false-positive blocks from the target's own floor/wall.
+- **Small fixes:** `RunwayObject` no longer re-enables its collider while the player is still standing in the detection trigger (`playerInsideDetection` guard). `PlayerController`'s footstep "is moving" check now reads input axis instead of Rigidbody2D velocity (so external forces like wind/knockback no longer trigger footsteps). `PlayerFallState`'s ground raycast now discards trigger-collider hits.
+- New scene `Assets/Scenes/InGameScene/Forest 2.unity` (unlisted in build settings, like `Mechanism.unity`) and new prefab `Assets/Prefabs/Windgate.prefab`; `Forest.unity` and `Mechanism.unity` both received further large scene-data edits (committed and, as of this snapshot, also uncommitted), not reflected line-by-line in this document.
+
+<details>
+<summary>Older note (commit `227c17f`, for historical context)</summary>
+
+This revision (as of commit `227c17f` "WindObject 개선 및 밧줄 구현", merged to `main` as `a4d2870`) was generated by diffing against the previous snapshot's commit (`9d27468` "각종 오류 개선(7.16)") and re-scanning the changed areas. **Note:** the previous snapshot text was itself never actually updated in commit `227c17f` (that commit's `PROJECT_STRUCTURE.md` edit only caught the doc up to the `9d27468` code state, not its own Rope/Wind changes) — so this revision covers two generations of change at once: everything listed in the older nested note below, plus the new Wind/Rope work from `227c17f`:
 
 - **New: cuttable rope system.** `Assets/Script/Object/Rope/Rope.cs` procedurally builds a `HingeJoint2D` chain of `RopeSegment`s (editor `[ContextMenu]` `Build Rope`/`Clear Rope`). `RopeSegment.cs` implements the new `IArrowPassThrough` interface — an arrow hitting it triggers `Cut()` (destroys that segment's joint, dropping everything downstream) but the arrow keeps flying instead of sticking.
 - **New: `IArrowPassThrough` interface** (`Assets/Script/Arrow/IArrowPassThrough.cs`). `Arrow.OnTriggerEnter2D` now checks this *before* `IArrowHit` — objects implementing it get notified (`OnArrowPass`) but do not stop or embed the arrow.
@@ -652,7 +717,7 @@ This revision (as of commit `227c17f` "WindObject 개선 및 밧줄 구현", mer
 Unity version, enabled build scenes (aside from the new unlisted `Mechanism.unity`), and package dependencies are unchanged from the previous snapshot.
 
 <details>
-<summary>Older note (commit `9d27468`, for historical context)</summary>
+<summary>Even older note (commit `9d27468`, for historical context)</summary>
 
 This revision (as of commit `9d27468` "각종 오류 개선(7.16)") was generated by diffing against the previous snapshot's commit (`5697f20` "맵디자인") and re-scanning `Assets/Script`; see the "Change Safety Notes" and inline notes above for what has moved or been added since. This update spans three bugfix commits (`69e82fe`, `34dd7cb`, `9d27468`, all "각종 오류 개선" / "various error fixes") and is mostly behavior fixes rather than new systems:
 
@@ -666,5 +731,7 @@ This revision (as of commit `9d27468` "각종 오류 개선(7.16)") was generate
 - `Assets/Scenes/InGameScene/Forest.unity` and `SeungHyun2_Restore.unity` both received large scene-data edits in this range (level content/wiring), not reflected line-by-line in this document.
 
 Unity version, enabled build scenes, and package dependencies are unchanged from the previous snapshot.
+
+</details>
 
 </details>

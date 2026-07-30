@@ -27,7 +27,7 @@ Transform:
   m_GameObject: {fileID: 3845864732988117415}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 35, z: 0}
+  m_LocalPosition: {x: 0, y: 0.2, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 1
   m_Children: []
@@ -672,7 +672,7 @@ ParticleSystem:
     donutRadius: 0.2
     m_Position: {x: 0, y: 0, z: 0}
     m_Rotation: {x: 0, y: 0, z: 0}
-    m_Scale: {x: 5, y: 85, z: 1}
+    m_Scale: {x: 5, y: 2, z: 1}
     placementMode: 0
     m_MeshMaterialIndex: 0
     m_MeshNormalOffset: 0
@@ -4885,7 +4885,7 @@ GameObject:
   - component: {fileID: 8813510490029885700}
   - component: {fileID: 3374221704900809518}
   - component: {fileID: 2123253859775174610}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Wind
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4968,13 +4968,13 @@ MonoBehaviour:
   windDirection: 2
   affectedParticleSystems:
   - {fileID: 4027986314369273796}
-  distanceFalloff: 6
+  distanceFalloff: 1
   stretchBySpeed: 1
   stretchLengthScale: 3
   stretchVelocityScale: 0.05
   killOnCollisionLayer:
     serializedVersion: 2
-    m_Bits: 4160
+    m_Bits: 4672
   blockingLayer:
     serializedVersion: 2
     m_Bits: 4160
@@ -4999,7 +4999,7 @@ MonoBehaviour:
     m_Bits: 4160
   ignoredLayer:
     serializedVersion: 2
-    m_Bits: 8192
+    m_Bits: 8704
   blockPushSpeed: 15
   blockBounciness: 0.3
 --- !u!50 &2123253859775174610

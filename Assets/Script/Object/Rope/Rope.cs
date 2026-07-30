@@ -25,6 +25,8 @@ public class Rope : MonoBehaviour
 {
     [Header("Rope Shape")]
     [SerializeField] private Sprite segmentSprite;
+    [Tooltip("세그먼트 스프라이트의 렌더링 크기 배율(콜라이더 크기도 함께 조절됨). 세그먼트 간 물리적 간격(Segment Length)에는 영향을 주지 않습니다.")]
+    [SerializeField] private Vector2 segmentSpriteScale = Vector2.one;
     [SerializeField] private float ropeLength = 5f;
     [SerializeField] private float segmentLength = 0.5f;
     [SerializeField] private Vector2 direction = Vector2.down;
@@ -86,6 +88,7 @@ public class Rope : MonoBehaviour
         ropeLength = Mathf.Max(0.01f, ropeLength);
         segmentLength = Mathf.Max(0.01f, segmentLength);
         jointLimitAngle = Mathf.Clamp(jointLimitAngle, 0f, 179f);
+        segmentSpriteScale = new Vector2(Mathf.Max(0.01f, segmentSpriteScale.x), Mathf.Max(0.01f, segmentSpriteScale.y));
     }
 
     public void SetHangingTarget(int attachmentIndex, Rigidbody2D newTarget)
@@ -135,7 +138,11 @@ public class Rope : MonoBehaviour
             segmentObject.transform.position = startPosition + (Vector3)(dir * actualSegmentLength * (i + 1));
             segmentObject.transform.rotation = segmentRotation;
 
-            SpriteRenderer renderer = segmentObject.AddComponent<SpriteRenderer>();
+            GameObject visualObject = new GameObject("Visual");
+            visualObject.transform.SetParent(segmentObject.transform, false);
+            visualObject.transform.localScale = new Vector3(segmentSpriteScale.x, segmentSpriteScale.y, 1f);
+
+            SpriteRenderer renderer = visualObject.AddComponent<SpriteRenderer>();
             renderer.sprite = segmentSprite;
             renderer.sortingOrder = segmentOrderInLayer;
 
@@ -147,7 +154,8 @@ public class Rope : MonoBehaviour
 
             BoxCollider2D collider = segmentObject.AddComponent<BoxCollider2D>();
             collider.isTrigger = true;
-            collider.size = segmentSprite != null ? segmentSprite.bounds.size : new Vector2(0.2f, actualSegmentLength);
+            Vector2 baseColliderSize = segmentSprite != null ? segmentSprite.bounds.size : new Vector2(0.2f, actualSegmentLength);
+            collider.size = new Vector2(baseColliderSize.x * segmentSpriteScale.x, baseColliderSize.y * segmentSpriteScale.y);
 
             HingeJoint2D joint = segmentObject.AddComponent<HingeJoint2D>();
             ConfigureJoint(joint, previousBody, Vector2.up * actualSegmentLength * 0.5f, Vector2.down * actualSegmentLength * 0.5f);
@@ -201,7 +209,6 @@ public class Rope : MonoBehaviour
 
             HingeJoint2D joint = attachment.target.gameObject.AddComponent<HingeJoint2D>();
             ConfigureJoint(joint, segment.Body, attachment.targetAnchor, attachment.segmentAnchor);
-
             hangingJoints.Add(joint);
         }
     }

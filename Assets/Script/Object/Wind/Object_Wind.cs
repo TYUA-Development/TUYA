@@ -48,9 +48,12 @@ public class Object_Wind : MonoBehaviour, ICoreEvent
     private Dictionary<Collider2D, Rigidbody2D> colliderList = new Dictionary<Collider2D, Rigidbody2D> ();
     private readonly HashSet<Collider2D> fallThroughExempt = new HashSet<Collider2D>();
 
+    private Collider2D selfCollider;
+
     // Start is called before the first frame update
     void Start()
     {
+        selfCollider = GetComponent<Collider2D>();
         Init();
     }
 
@@ -104,7 +107,10 @@ public class Object_Wind : MonoBehaviour, ICoreEvent
         if (blockingLayer.value == 0)
             return false;
 
-        Vector2 origin = transform.position;
+        // transform.position(오브젝트 앵커)이 아니라 실제 트리거 콜라이더의 중심을 기준으로 삼는다.
+        // 바닥에 설치된 바람 오브젝트는 앵커가 바닥 바로 위에 붙어 있는 경우가 많아서, 앵커를
+        // 기준으로 하면 캐스트 시작점 자체가 그 바닥과 겹쳐버려 항상 차단으로 오판하게 된다.
+        Vector2 origin = selfCollider != null ? (Vector2)selfCollider.bounds.center : (Vector2)transform.position;
         Vector2 toTarget = targetPosition - origin;
         float distance = toTarget.magnitude;
 
@@ -114,7 +120,16 @@ public class Object_Wind : MonoBehaviour, ICoreEvent
         Vector2 direction = toTarget / distance;
         Vector2 boxSize = targetCollider != null ? (Vector2)targetCollider.bounds.size : new Vector2(0.1f, 0.1f);
 
-        return Physics2D.BoxCast(origin, boxSize, 0f, direction, distance, blockingLayer);
+        // 대상 콜라이더 자신의 절반 크기만큼은 캐스트 거리에서 빼준다. 그렇지 않으면 대상이
+        // 서 있는 바닥/벽 자체가 항상 캐스트 박스 끝에 걸려서, 진짜 가로막는 벽이 없어도
+        // 매번 "차단됨"으로 오판하게 된다.
+        float targetHalfExtent = Mathf.Abs(Vector2.Dot(boxSize * 0.5f, direction));
+        float castDistance = distance - targetHalfExtent;
+
+        if (castDistance <= 0f)
+            return false;
+
+        return Physics2D.BoxCast(origin, boxSize, 0f, direction, castDistance, blockingLayer);
     }
 
     private void OnTriggerEnter2D(Collider2D collision)
@@ -126,7 +141,8 @@ public class Object_Wind : MonoBehaviour, ICoreEvent
         {
             // 위에서 낙하해 들어온 경우 힘도 적용하지 않고 막지도 않는다. 완전히 빠져나갈
             // 때까지(OnTriggerExit2D) 이 상태를 유지해서, 낙하 도중 다시 힘/차단이 끼어들지 않게 한다.
-            if (IsFallingFromAbove(collision))
+            // 단, Up 방향 바람은 위에서 떨어지는 플레이어를 받아 올리는 용도이므로 이 예외를 적용하지 않는다.
+            if (windDirection != WindDirection.Up && IsFallingFromAbove(collision))
             {
                 fallThroughExempt.Add(collision);
                 return;
@@ -165,7 +181,6 @@ public class Object_Wind : MonoBehaviour, ICoreEvent
         if (playerCollider.attachedRigidbody == null)
             return false;
 
-        Collider2D selfCollider = GetComponent<Collider2D>();
         if (selfCollider == null)
             return false;
 
@@ -204,7 +219,6 @@ public class Object_Wind : MonoBehaviour, ICoreEvent
         if (IsBlocked(playerCollider, rb.position))
             return;
 
-        Collider2D selfCollider = GetComponent<Collider2D>();
         if (selfCollider == null)
             return;
 
