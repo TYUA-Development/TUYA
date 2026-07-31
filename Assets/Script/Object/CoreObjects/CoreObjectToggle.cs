@@ -5,8 +5,8 @@ using UnityEngine;
 public class CoreObjectToggle : MonoBehaviour
 {
     [Header("Core Objects")]
-    [Tooltip("어떤 코어를 맞춰도 동일하게 동작합니다. 여러 번 맞출 수 있는지 여부는 각 CoreActivationController의 activateOnlyOnce 값을 따릅니다.")]
-    public List<CoreActivationController> coreObjects;
+    [Tooltip("어떤 코어를 맞춰도 동일하게 동작합니다. 여러 번 맞출 수 있는지 여부는 각 CoreActivation의 activateOnlyOnce 값을 따릅니다.")]
+    public List<CoreActivation> coreObjects;
 
     [Header("Toggle Targets")]
     [Tooltip("코어가 활성화될 때마다 각 오브젝트의 활성 상태를 개별적으로 반전시킨다 (켜져있으면 끄고, 꺼져있으면 켠다)")]
@@ -16,11 +16,8 @@ public class CoreObjectToggle : MonoBehaviour
     [Tooltip("대상에 Object_Wind/Object_Wind_Particle이 자식으로 있으면 즉시 켜고 끄는 대신 WindPower를 이 시간(초) 동안 서서히 올리고 내린다.")]
     public float windFadeDuration = 1f;
 
-    [Tooltip("끌 때, WindPower가 0이 된 직후 바로 비활성화하지 않고 이 시간(초) 동안 파티클을 서서히 투명하게 만든 뒤 비활성화한다.")]
-    public float particleFadeOutDuration = 1f;
-
     private readonly Dictionary<Object_Wind, float> originalWindPower = new Dictionary<Object_Wind, float>();
-    private readonly Dictionary<Object_Wind_Particle, float> originalWindParticlePower = new Dictionary<Object_Wind_Particle, float>();
+    private readonly Dictionary<Object_Wind_Particle, float> originalWindParticlePowerScale = new Dictionary<Object_Wind_Particle, float>();
     private readonly Dictionary<GameObject, Coroutine> windFadeCoroutines = new Dictionary<GameObject, Coroutine>();
 
     void Start()
@@ -86,37 +83,58 @@ public class CoreObjectToggle : MonoBehaviour
             windTarget[i] = turningOn ? originalWindPower[wind] : 0f;
         }
 
-        float[] particleStart = new float[windParticles.Length];
-        float[] particleTarget = new float[windParticles.Length];
-
-        for (int i = 0; i < windParticles.Length; i++)
-        {
-            Object_Wind_Particle windParticle = windParticles[i];
-
-            if (!originalWindParticlePower.ContainsKey(windParticle))
-                originalWindParticlePower[windParticle] = windParticle.windPower;
-
-            particleStart[i] = turningOn ? 0f : windParticle.windPower;
-            particleTarget[i] = turningOn ? originalWindParticlePower[windParticle] : 0f;
-        }
+        float[] particleStart = null;
+        float[] particleTarget = null;
 
         if (turningOn)
         {
+            particleStart = new float[windParticles.Length];
+            particleTarget = new float[windParticles.Length];
+
+            for (int i = 0; i < windParticles.Length; i++)
+            {
+                Object_Wind_Particle windParticle = windParticles[i];
+
+                if (!originalWindParticlePowerScale.ContainsKey(windParticle))
+                    originalWindParticlePowerScale[windParticle] = windParticle.powerScale;
+
+                particleStart[i] = 0f;
+                particleTarget[i] = originalWindParticlePowerScale[windParticle];
+
+                windParticle.powerScale = 0f;
+                windParticle.Init();
+                windParticle.SetEmissionEnabled(true);
+                windParticle.SetParticlesAlpha(1f);
+            }
+
             for (int i = 0; i < winds.Length; i++)
             {
                 winds[i].windPower = 0f;
                 winds[i].Init();
-            }
-
-            for (int i = 0; i < windParticles.Length; i++)
-            {
-                windParticles[i].windPower = 0f;
-                windParticles[i].Init();
-                windParticles[i].SetEmissionEnabled(true);
-                windParticles[i].SetParticlesAlpha(1f);
+                // Collider2D.enabled는 GameObject.SetActive와 별개라, 이전에 꺼둔 채로
+                // 남아있을 수 있으므로 명시적으로 다시 켠다.
+                winds[i].SetColliderEnabled(true);
             }
 
             obj.SetActive(true);
+        }
+        else
+        {
+            // 끄는 순간 즉시 콜라이더부터 비활성화한다 - BlockPlayer()는 windPower를 참조하지
+            // 않아서 콜라이더가 켜져 있는 한 페이드와 무관하게 계속 플레이어를 막기 때문이다.
+            // 오브젝트 전체를 SetActive(false)하지 않는 이유는 파티클이 함께 있으면 그 순간
+            // 렌더링/시뮬레이션이 끊겨 파티클 페이드가 중간에 뚝 끊기기 때문이다.
+            for (int i = 0; i < winds.Length; i++)
+                winds[i].SetColliderEnabled(false);
+
+            // 끄는 순간 즉시 생성을 멈추고 release한다. release된 파티클은 그 시점 속도 그대로
+            // 직진하며 (더 이상 밀리지 않음) 개별적으로 거리 기반 페이드아웃되므로, 이 코루틴이
+            // 더 이상 파티클의 powerScale/알파를 프레임마다 건드릴 필요가 없다.
+            for (int i = 0; i < windParticles.Length; i++)
+            {
+                windParticles[i].SetEmissionEnabled(false);
+                windParticles[i].Release();
+            }
         }
 
         float timer = 0f;
@@ -132,10 +150,13 @@ public class CoreObjectToggle : MonoBehaviour
                 winds[i].Init();
             }
 
-            for (int i = 0; i < windParticles.Length; i++)
+            if (turningOn)
             {
-                windParticles[i].windPower = Mathf.Lerp(particleStart[i], particleTarget[i], t);
-                windParticles[i].Init();
+                for (int i = 0; i < windParticles.Length; i++)
+                {
+                    windParticles[i].powerScale = Mathf.Lerp(particleStart[i], particleTarget[i], t);
+                    windParticles[i].Init();
+                }
             }
 
             yield return null;
@@ -147,34 +168,19 @@ public class CoreObjectToggle : MonoBehaviour
             winds[i].Init();
         }
 
-        for (int i = 0; i < windParticles.Length; i++)
-        {
-            windParticles[i].windPower = particleTarget[i];
-            windParticles[i].Init();
-        }
-
-        if (!turningOn)
+        if (turningOn)
         {
             for (int i = 0; i < windParticles.Length; i++)
-                windParticles[i].SetEmissionEnabled(false);
-
-            float fadeTimer = 0f;
-
-            while (fadeTimer < particleFadeOutDuration)
             {
-                fadeTimer += Time.deltaTime;
-                float fadeT = Mathf.Clamp01(fadeTimer / particleFadeOutDuration);
-                float fadeAlpha = Mathf.Lerp(1f, 0f, fadeT);
-
-                for (int i = 0; i < windParticles.Length; i++)
-                    windParticles[i].SetParticlesAlpha(fadeAlpha);
-
-                yield return null;
+                windParticles[i].powerScale = particleTarget[i];
+                windParticles[i].Init();
             }
-
-            for (int i = 0; i < windParticles.Length; i++)
-                windParticles[i].StopAndClearParticles();
-
+        }
+        else if (windParticles.Length == 0)
+        {
+            // 파티클이 없는(리지드바디 바람만 있는) 대상은 기존처럼 페이드 후 비활성화한다.
+            // 파티클이 있는 대상은 release된 파티클이 각자 다른 시점에 다 사라질 때까지
+            // 렌더링/시뮬레이션이 끊기지 않도록 계속 활성 상태로 둔다.
             obj.SetActive(false);
         }
 

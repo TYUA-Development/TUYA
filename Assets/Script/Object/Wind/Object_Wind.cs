@@ -42,6 +42,9 @@ public class Object_Wind : MonoBehaviour, ICoreEvent
     [Tooltip("막힐 때 진입 속도를 얼마나 반동으로 되돌릴지. 0 = 그 자리에서 멈춤, 1 = 들어온 속도 그대로 튕겨나감.")]
     public float blockBounciness = 0.3f;
 
+    [Tooltip("차단 판정 최소 검사 깊이(유닛). 실제 검사 범위는 대상 위치부터 이 바람 콜라이더 자신의 경계까지 자동으로 늘어나므로(점프 등으로 차단벽에서 떨어져도 같은 바람 구역 안이면 계속 보호됨), 이 값은 그 여유분(그리고 콜라이더가 없을 때의 기본값) 역할만 합니다.")]
+    public float blockingCheckDepth = 0.3f;
+
     private Vector2 direction;
     private Vector2 power;
 
@@ -61,6 +64,19 @@ public class Object_Wind : MonoBehaviour, ICoreEvent
     {
         direction = GetDirectionVector(windDirection);
         power = direction * windPower;
+    }
+
+    // CoreObjectToggle이 바람을 끌 때, 오브젝트 전체를 SetActive(false)하지 않고도(파티클이
+    // 함께 있으면 그러면 파티클 페이드가 끊기므로) 즉시 충돌/차단(BlockPlayer)만 멈추고 싶을 때
+    // 쓴다. GameObject.SetActive와 달리 Collider2D.enabled는 독립적인 값이라 명시적으로
+    // 켜고 꺼야 한다.
+    public void SetColliderEnabled(bool value)
+    {
+        if (selfCollider == null)
+            selfCollider = GetComponent<Collider2D>();
+
+        if (selfCollider != null)
+            selfCollider.enabled = value;
     }
 
     public static Vector2 GetDirectionVector(WindDirection dir)
@@ -85,7 +101,7 @@ public class Object_Wind : MonoBehaviour, ICoreEvent
         {
             Rigidbody2D rb = kvp.Value;
 
-            if (IsBlocked(kvp.Key, rb.position))
+            if (IsBlocked(kvp.Key))
                 continue;
 
             float falloff = GetFalloffMultiplier(rb.position);
@@ -102,34 +118,57 @@ public class Object_Wind : MonoBehaviour, ICoreEvent
         return 1f / (1f + distanceFalloff * distance);
     }
 
-    private bool IsBlocked(Collider2D targetCollider, Vector2 targetPosition)
+    // 대상은 이미 바람 트리거 안에 들어와 있을 때만 이 메서드가 호출되므로(OnTrigger already
+    // overlapping), 바람 오브젝트에서 대상까지의 장거리 라인오브사이트 대신 "대상 기준 바람이
+    // 오는 반대 방향(-direction)에 차단벽/바닥이 있는가"만 확인한다. 대상의 절반 크기만큼
+    // 거리를 트리밍하던 이전 방식은 대상이 정확히 그 위에 서 있는(틈이 0인) 차단벽까지 검사
+    // 범위 밖으로 밀어내 버려서, 정작 "차단벽 위에 서 있어서 안전한" 가장 흔한 경우를
+    // 놓치는 문제가 있었다.
+    private bool IsBlocked(Collider2D targetCollider)
     {
-        if (blockingLayer.value == 0)
+        if (blockingLayer.value == 0 || targetCollider == null)
             return false;
 
-        // transform.position(오브젝트 앵커)이 아니라 실제 트리거 콜라이더의 중심을 기준으로 삼는다.
-        // 바닥에 설치된 바람 오브젝트는 앵커가 바닥 바로 위에 붙어 있는 경우가 많아서, 앵커를
-        // 기준으로 하면 캐스트 시작점 자체가 그 바닥과 겹쳐버려 항상 차단으로 오판하게 된다.
-        Vector2 origin = selfCollider != null ? (Vector2)selfCollider.bounds.center : (Vector2)transform.position;
-        Vector2 toTarget = targetPosition - origin;
-        float distance = toTarget.magnitude;
-
-        if (distance <= 0.0001f)
+        Vector2 checkDirection = -direction;
+        if (checkDirection == Vector2.zero)
             return false;
 
-        Vector2 direction = toTarget / distance;
-        Vector2 boxSize = targetCollider != null ? (Vector2)targetCollider.bounds.size : new Vector2(0.1f, 0.1f);
+        Bounds bounds = targetCollider.bounds;
+        bool vertical = Mathf.Abs(checkDirection.y) >= Mathf.Abs(checkDirection.x);
 
-        // 대상 콜라이더 자신의 절반 크기만큼은 캐스트 거리에서 빼준다. 그렇지 않으면 대상이
-        // 서 있는 바닥/벽 자체가 항상 캐스트 박스 끝에 걸려서, 진짜 가로막는 벽이 없어도
-        // 매번 "차단됨"으로 오판하게 된다.
-        float targetHalfExtent = Mathf.Abs(Vector2.Dot(boxSize * 0.5f, direction));
-        float castDistance = distance - targetHalfExtent;
+        // 점프 등으로 대상이 차단벽에서 살짝 떨어져도(맞닿아 있지 않아도) 같은 바람 구역
+        // 안에서 그 차단벽 뒤에 있다면 계속 보호되도록, 검사 깊이를 대상 위치부터 "이 바람
+        // 콜라이더 자신의 경계"까지로 늘린다. 그 경계를 벗어나면 애초에 이 바람의 트리거
+        // 밖이라 이 메서드 자체가 호출되지 않으므로, 더 늘릴 필요는 없다.
+        float probeDepth = blockingCheckDepth;
+        if (selfCollider != null)
+        {
+            Bounds windBounds = selfCollider.bounds;
+            float playerNearEdge;
+            float windFarEdge;
 
-        if (castDistance <= 0f)
-            return false;
+            if (vertical)
+            {
+                if (checkDirection.y < 0f) { playerNearEdge = bounds.min.y; windFarEdge = windBounds.min.y; }
+                else { playerNearEdge = bounds.max.y; windFarEdge = windBounds.max.y; }
+            }
+            else
+            {
+                if (checkDirection.x < 0f) { playerNearEdge = bounds.min.x; windFarEdge = windBounds.min.x; }
+                else { playerNearEdge = bounds.max.x; windFarEdge = windBounds.max.x; }
+            }
 
-        return Physics2D.BoxCast(origin, boxSize, 0f, direction, castDistance, blockingLayer);
+            probeDepth = Mathf.Max(probeDepth, Mathf.Abs(windFarEdge - playerNearEdge) + blockingCheckDepth);
+        }
+
+        Vector2 probeSize = vertical
+            ? new Vector2(bounds.size.x, probeDepth)
+            : new Vector2(probeDepth, bounds.size.y);
+
+        float edgeOffset = vertical ? bounds.extents.y : bounds.extents.x;
+        Vector2 probeCenter = (Vector2)bounds.center + checkDirection.normalized * (edgeOffset + probeDepth * 0.5f);
+
+        return Physics2D.OverlapBox(probeCenter, probeSize, 0f, blockingLayer) != null;
     }
 
     private void OnTriggerEnter2D(Collider2D collision)
@@ -216,7 +255,7 @@ public class Object_Wind : MonoBehaviour, ICoreEvent
         if (rb == null)
             return;
 
-        if (IsBlocked(playerCollider, rb.position))
+        if (IsBlocked(playerCollider))
             return;
 
         if (selfCollider == null)

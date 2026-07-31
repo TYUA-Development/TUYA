@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -52,13 +53,74 @@ public class Rope : MonoBehaviour
     [Header("Hanging Objects")]
     [SerializeField] private RopeHangingAttachment[] hangingAttachments;
 
+    [Header("Segment Collapse")]
+    [Tooltip("끊어짐이 감지된 뒤 세그먼트가 사라지기 시작하기까지 대기하는 시간(초). Rope 스스로 IsCut을 감시해서 이 시간 뒤에 자동으로 사라집니다.")]
+    [SerializeField] private float collapseDelay = 3f;
+    [Tooltip("끊어진 지점에서 바깥쪽으로 한 단계(세그먼트 1~2개)씩 사라지는 간격")]
+    [SerializeField] private float segmentDisappearStepDelay = 0.15f;
+    [Tooltip("세그먼트 하나가 사라지는 데 걸리는 페이드아웃 시간")]
+    [SerializeField] private float segmentDisappearFadeDuration = 0.1f;
+    [Tooltip("체크하면(또는 코드에서 true를 대입하면) 대기 없이 즉시 세그먼트가 바깥쪽으로 순차적으로 페이드아웃되며 사라집니다. Inspector에서 직접 테스트할 수 있도록 노출되어 있으며, 트리거된 다음 프레임에 자동으로 체크가 해제됩니다.")]
+    [SerializeField] private bool collapseSegments;
+
     [Header("Generated")]
     [SerializeField] private Transform generatedRoot;
     [SerializeField] private RopeSegment[] segments;
 
     private readonly List<HingeJoint2D> hangingJoints = new List<HingeJoint2D>();
+    private bool isCollapsing;
+    private bool isWaitingToCollapse;
 
     public RopeSegment[] Segments => segments;
+
+    // CollapseSegmentsRoutine이 진행 중인지 여부. RopeRegenerator 등 외부에서 완료 시점을
+    // 기다릴 때(예: 그 다음 BuildRope() 호출 전) 사용한다.
+    public bool IsCollapsing => isCollapsing;
+
+    // 세그먼트가 다 사라진 직후(재생성 여부와 무관하게) 매번 호출된다. RopeRegenerator처럼
+    // "사라진 다음 무엇을 할지"를 담당하는 외부 스크립트가 이 이벤트를 구독해서 이어받는다.
+    public event System.Action onCollapsed;
+
+    // true를 대입하면(또는 Inspector에서 체크하면) 대기 없이 즉시 세그먼트가 바깥쪽으로
+    // 한 단계씩 순차적으로 페이드아웃되며 사라진다. 실제 트리거는 다음 Update()에서 일어난다.
+    // 별도로 아무것도 하지 않아도, Rope는 스스로 IsCut을 감시해서 collapseDelay 뒤에
+    // 자동으로 이 과정을 시작한다 - 외부(RopeRegenerator 등)의 감지/트리거에 의존하지 않는다.
+    public bool CollapseSegments
+    {
+        get => collapseSegments;
+        set => collapseSegments = value;
+    }
+
+    private void Update()
+    {
+        if (collapseSegments)
+        {
+            collapseSegments = false;
+            TriggerCollapse();
+            return;
+        }
+
+        if (!isCollapsing && !isWaitingToCollapse && IsCut)
+        {
+            isWaitingToCollapse = true;
+            StartCoroutine(WaitThenCollapseRoutine());
+        }
+    }
+
+    private IEnumerator WaitThenCollapseRoutine()
+    {
+        yield return new WaitForSeconds(collapseDelay);
+        isWaitingToCollapse = false;
+        TriggerCollapse();
+    }
+
+    private void TriggerCollapse()
+    {
+        if (isCollapsing)
+            return;
+
+        StartCoroutine(CollapseSegmentsRoutine());
+    }
 
     public bool IsCut
     {
@@ -274,5 +336,87 @@ public class Rope : MonoBehaviour
 
         body.bodyType = RigidbodyType2D.Static;
         return body;
+    }
+
+    // 끊어진 지점(가장 앵커에 가까운 IsCut 세그먼트)을 기준으로 양쪽으로 한 단계씩
+    // 확장하며 세그먼트를 순차적으로 페이드아웃-제거한다.
+    private IEnumerator CollapseSegmentsRoutine()
+    {
+        isCollapsing = true;
+
+        if (segments != null && segments.Length > 0)
+        {
+            int pivot = FindTopmostCutIndex(segments);
+
+            if (pivot >= 0)
+            {
+                foreach (List<int> step in BuildCollapseSteps(pivot, segments.Length))
+                {
+                    foreach (int index in step)
+                    {
+                        if (segments[index] != null)
+                            StartCoroutine(FadeAndDestroySegment(segments[index], segmentDisappearFadeDuration));
+                    }
+
+                    yield return new WaitForSeconds(segmentDisappearStepDelay);
+                }
+            }
+        }
+
+        isCollapsing = false;
+        onCollapsed?.Invoke();
+    }
+
+    private static int FindTopmostCutIndex(RopeSegment[] segments)
+    {
+        for (int i = 0; i < segments.Length; i++)
+        {
+            if (segments[i] != null && segments[i].IsCut)
+                return i;
+        }
+
+        return -1;
+    }
+
+    private static List<List<int>> BuildCollapseSteps(int pivot, int count)
+    {
+        var steps = new List<List<int>>();
+        int upper = pivot - 1;
+        int lower = pivot;
+
+        while (upper >= 0 || lower < count)
+        {
+            var step = new List<int>();
+            if (upper >= 0) step.Add(upper);
+            if (lower < count) step.Add(lower);
+            steps.Add(step);
+
+            upper--;
+            lower++;
+        }
+
+        return steps;
+    }
+
+    private IEnumerator FadeAndDestroySegment(RopeSegment segment, float duration)
+    {
+        if (segment == null)
+            yield break;
+
+        SpriteRenderer sr = segment.GetComponentInChildren<SpriteRenderer>();
+        if (sr != null)
+        {
+            Color start = sr.color;
+            float elapsed = 0f;
+            while (elapsed < duration && sr != null)
+            {
+                elapsed += Time.deltaTime;
+                sr.color = new Color(start.r, start.g, start.b, Mathf.Lerp(start.a, 0f, elapsed / duration));
+                yield return null;
+            }
+        }
+
+        if (segment != null)
+            Destroy(segment.gameObject);
     }
 }
