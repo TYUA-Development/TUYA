@@ -2,9 +2,10 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-// Rope를 직접 건드리지 않고, 별도로 참조를 받아와 끊어짐을 감지 -> 일정 시간 대기 -> 재생성하는 스크립트.
-// 로프에 매달린 박스는 끊어질 때마다 새로 생성되며, 방금 떨어진 박스는 한 턴(다음 재생성까지)
-// 동안 그대로 남아있다가 그 다음 재생성 시점에 제거된다.
+// 끊어짐 감지 -> 대기 -> 세그먼트 제거는 전부 Rope가 스스로 담당한다(Rope.onCollapsed).
+// 이 스크립트는 그 결과(onCollapsed)를 구독해서 그 다음 순서, 즉 매달린 박스 교체와
+// 로프 재생성만 담당한다. 로프에 매달린 박스는 끊어질 때마다 새로 생성되며, 방금 떨어진
+// 박스는 한 턴(다음 재생성까지) 동안 그대로 남아있다가 그 다음 재생성 시점에 제거된다.
 // 로프 세그먼트와 새로 생성된 박스는 오브젝트 모양 그대로 흰색으로 발광한 뒤 서서히 원래 모습으로 페이드된다.
 public class RopeRegenerator : MonoBehaviour
 {
@@ -32,14 +33,7 @@ public class RopeRegenerator : MonoBehaviour
     [SerializeField] private HangingBoxSlot[] hangingBoxes;
 
     [Header("Timing")]
-    [SerializeField] private float regenerateDelay = 3f;
     [SerializeField] private float glowFadeDuration = 1f;
-
-    [Header("Segment Collapse")]
-    [Tooltip("끊어진 지점에서 바깥쪽으로 한 단계(세그먼트 1~2개)씩 사라지는 간격")]
-    [SerializeField] private float segmentDisappearStepDelay = 0.15f;
-    [Tooltip("세그먼트 하나가 사라지는 데 걸리는 페이드아웃 시간")]
-    [SerializeField] private float segmentDisappearFadeDuration = 0.1f;
 
     [Header("Glow")]
     [SerializeField] private Color glowColor = Color.white;
@@ -80,24 +74,28 @@ public class RopeRegenerator : MonoBehaviour
                 Debug.LogWarning($"[RopeRegenerator] Initial Box가 지정되지 않아 재생성 위치를 알 수 없습니다 (attachmentIndex={slot.attachmentIndex}).", this);
             }
         }
+
+        if (rope != null)
+            rope.onCollapsed += HandleRopeCollapsed;
     }
 
-    private void Update()
+    private void OnDestroy()
     {
-        if (isRegenerating || rope == null)
+        if (rope != null)
+            rope.onCollapsed -= HandleRopeCollapsed;
+    }
+
+    private void HandleRopeCollapsed()
+    {
+        if (isRegenerating)
             return;
 
-        if (rope.IsCut)
-            StartCoroutine(RegenerateRoutine());
+        StartCoroutine(RegenerateRoutine());
     }
 
     private IEnumerator RegenerateRoutine()
     {
         isRegenerating = true;
-
-        yield return new WaitForSeconds(regenerateDelay);
-
-        yield return StartCoroutine(CollapseRopeSegments());
 
         List<GameObject> newlySpawnedBoxes = AdvanceHangingBoxes();
 
@@ -106,83 +104,6 @@ public class RopeRegenerator : MonoBehaviour
         yield return StartCoroutine(PlayGlowFade(newlySpawnedBoxes));
 
         isRegenerating = false;
-    }
-
-    // 끊어진 지점(가장 앵커에 가까운 IsCut 세그먼트)을 기준으로 양쪽으로 한 단계씩
-    // 확장하며 세그먼트를 순차적으로 페이드아웃-제거한다.
-    private IEnumerator CollapseRopeSegments()
-    {
-        RopeSegment[] segments = rope.Segments;
-        if (segments == null || segments.Length == 0)
-            yield break;
-
-        int pivot = FindTopmostCutIndex(segments);
-        if (pivot < 0)
-            yield break;
-
-        foreach (List<int> step in BuildCollapseSteps(pivot, segments.Length))
-        {
-            foreach (int index in step)
-            {
-                if (segments[index] != null)
-                    StartCoroutine(FadeAndDestroySegment(segments[index], segmentDisappearFadeDuration));
-            }
-
-            yield return new WaitForSeconds(segmentDisappearStepDelay);
-        }
-    }
-
-    private static int FindTopmostCutIndex(RopeSegment[] segments)
-    {
-        for (int i = 0; i < segments.Length; i++)
-        {
-            if (segments[i] != null && segments[i].IsCut)
-                return i;
-        }
-
-        return -1;
-    }
-
-    private static List<List<int>> BuildCollapseSteps(int pivot, int count)
-    {
-        var steps = new List<List<int>>();
-        int upper = pivot - 1;
-        int lower = pivot;
-
-        while (upper >= 0 || lower < count)
-        {
-            var step = new List<int>();
-            if (upper >= 0) step.Add(upper);
-            if (lower < count) step.Add(lower);
-            steps.Add(step);
-
-            upper--;
-            lower++;
-        }
-
-        return steps;
-    }
-
-    private IEnumerator FadeAndDestroySegment(RopeSegment segment, float duration)
-    {
-        if (segment == null)
-            yield break;
-
-        SpriteRenderer sr = segment.GetComponentInChildren<SpriteRenderer>();
-        if (sr != null)
-        {
-            Color start = sr.color;
-            float elapsed = 0f;
-            while (elapsed < duration && sr != null)
-            {
-                elapsed += Time.deltaTime;
-                sr.color = new Color(start.r, start.g, start.b, Mathf.Lerp(start.a, 0f, elapsed / duration));
-                yield return null;
-            }
-        }
-
-        if (segment != null)
-            Destroy(segment.gameObject);
     }
 
     private List<GameObject> AdvanceHangingBoxes()

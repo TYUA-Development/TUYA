@@ -3,19 +3,23 @@ using UnityEngine;
 
 public class Object_Wind_Particle : MonoBehaviour
 {
-    [Tooltip("바람 방향으로 파티클이 움직이는 목표 속도. 시간에 따라 가속/누적되지 않고, 매 프레임 이 값에 거리 감쇠(Distance Falloff)를 곱한 속도로 즉시 고정됩니다 (멀어질수록 이 값보다 느려짐).")]
-    public float windPower;
+    [Tooltip("바람 세기 전체 배율(0~1). 0이면 파티클이 밀리지 않고, 1이면 Wind Speed Range에서 배정된 속도가 그대로 적용됩니다. CoreObjectToggle의 바람 페이드 인/아웃이 이 값을 서서히 올리고 내립니다.")]
+    [Range(0f, 1f)]
+    public float powerScale = 1f;
 
-    [Tooltip("바람이 향하는 방향. windPower가 음수이면 이 방향의 반대로 힘이 작용합니다.")]
+    [Tooltip("바람이 향하는 방향.")]
     public WindDirection windDirection = WindDirection.Right;
 
     [Header("Particle Wind")]
     public ParticleSystem[] affectedParticleSystems;
 
-    [Header("Distance Falloff")]
-    [Range(0f, 10f)]
-    [Tooltip("이 오브젝트(transform.position)에서 멀어질수록 파티클을 미는 힘이 감소하는 정도. 0 = 감소 없음(거리와 무관하게 동일한 힘), 10 = 아주 빠르게 감소")]
-    public float distanceFalloff = 0f;
+    [Header("Wind Speed Range")]
+    [Tooltip("각 파티클에게 배정되는 목표 속도의 최소값")]
+    public float windSpeedMin = 5f;
+    [Tooltip("각 파티클에게 배정되는 목표 속도의 최대값")]
+    public float windSpeedMax = 8f;
+    [Tooltip("windSpeedMin~windSpeedMax 사이에서 파티클이 가질 수 있는 속도 간격. 예) Min=5, Max=8, Step=1이면 각 파티클은 5, 6, 7, 8 중 하나의 속도를 무작위로 배정받아 태어날 때부터 죽을 때까지 그 속도를 유지합니다.")]
+    public float speedStep = 1f;
 
     [Header("Stretch By Speed")]
     [Tooltip("체크하면 동그란 파티클 하나를 Stretched Billboard로 렌더링해서, 파티클 속도(=밀려나는 세기)에 비례해 길쭉하게 늘어나 보이게 합니다. 별도의 길쭉한 파티클을 따로 둘 필요가 없습니다.")]
@@ -44,8 +48,23 @@ public class Object_Wind_Particle : MonoBehaviour
     [Tooltip("차단됐을 때 즉시 사라지는 대신, 그 시점의 알파에서 0이 될 때까지 걸리는 시간(초). 0이면 기존처럼 즉시 사라집니다.")]
     public float blockedFadeOutDuration = 0.15f;
 
-    private Vector2 power;
+    [Header("Wind Link (다른 Wind_Particle로 연결)")]
+    [Tooltip("이 지점 반경 안에 들어온 파티클은 속도(크기)는 유지한 채 방향만 Connection Target Point 쪽으로 꺾입니다. 비워두면 연결 기능을 사용하지 않습니다.")]
+    public Transform connectionPoint;
+
+    [Tooltip("연결 시 파티클이 향할 지점. 보통 연결하려는 다른 Wind_Particle의 시작 지점에 배치합니다. 이 지점에 도달한 뒤로는 그 Wind_Particle이 자기 콜라이더 안에서 알아서 밀어줍니다.")]
+    public Transform connectionTargetPoint;
+
+    [Tooltip("Connection Point로부터 이 반경(유닛) 안에 들어오면 방향 전환이 시작됩니다.")]
+    public float connectionRadius = 0.5f;
+
+    [Header("Release (파티클 생성을 멈출 때)")]
+    [Tooltip("Release()가 호출되면(예: CoreObjectToggle에서 바람을 끌 때), 그 순간 살아있는 파티클은 더 이상 바람에 밀리지 않고 그 시점의 속도 그대로 직진합니다. Release된 지점부터 이 거리(유닛)만큼 날아가는 동안 알파가 1에서 0으로 선형 감소하다가 사라집니다.")]
+    public float releaseFadeDistance = 5f;
+
+    private Vector2 windDir;
     private Collider2D windCollider;
+    private bool released;
 
     private struct BlockedFadeState
     {
@@ -55,6 +74,8 @@ public class Object_Wind_Particle : MonoBehaviour
 
     private readonly Dictionary<ParticleSystem, Dictionary<uint, BlockedFadeState>> blockedFadeStates =
         new Dictionary<ParticleSystem, Dictionary<uint, BlockedFadeState>>();
+    private readonly Dictionary<ParticleSystem, Dictionary<uint, Vector2>> releaseOrigins =
+        new Dictionary<ParticleSystem, Dictionary<uint, Vector2>>();
     private ParticleSystem.Particle[] particleBuffer = new ParticleSystem.Particle[0];
 
     private void Start()
@@ -64,13 +85,49 @@ public class Object_Wind_Particle : MonoBehaviour
 
     public void Init()
     {
-        Vector2 direction = Object_Wind.GetDirectionVector(windDirection);
-        power = direction * windPower;
-
+        windDir = Object_Wind.GetDirectionVector(windDirection);
         windCollider = GetComponent<Collider2D>();
+
+        released = false;
+        releaseOrigins.Clear();
 
         ApplyStretchSettings();
         ApplyLifetimeFadeSettings();
+    }
+
+    // 파티클 생성을 막 멈췄을 때 호출한다. 그 순간 살아있는 파티클은 더 이상 바람에 밀리지 않고
+    // (PushParticlesInRange가 속도를 건드리지 않으므로 지금 속도 그대로 직진), release 지점부터의
+    // 이동 거리에 비례해 개별적으로 페이드아웃된다. 수명 기반 페이드(Color Over Lifetime)와
+    // 거리 기반 페이드가 곱해져 이중으로 어두워지지 않도록 그 모듈은 꺼둔다.
+    public void Release()
+    {
+        released = true;
+
+        if (affectedParticleSystems == null)
+            return;
+
+        foreach (var ps in affectedParticleSystems)
+        {
+            if (ps == null)
+                continue;
+
+            ParticleSystem.ColorOverLifetimeModule colorOverLifetime = ps.colorOverLifetime;
+            colorOverLifetime.enabled = false;
+        }
+    }
+
+    // 파티클의 randomSeed로부터 결정론적으로 목표 속도를 골라낸다. seed는 파티클이 태어날 때
+    // 정해져 평생 바뀌지 않으므로, 별도의 상태 추적(Dictionary) 없이도 같은 파티클은 항상 같은
+    // 속도를 유지한다. windSpeedMin~windSpeedMax를 speedStep 간격으로 나눈 값들 중 하나로 고정된다.
+    private float GetAssignedSpeed(uint seed)
+    {
+        int steps = speedStep > 0f
+            ? Mathf.FloorToInt((windSpeedMax - windSpeedMin) / speedStep + 0.0001f) + 1
+            : 1;
+        steps = Mathf.Max(steps, 1);
+
+        int index = (int)(seed % (uint)steps);
+        return windSpeedMin + index * speedStep;
     }
 
     public void SetEmissionEnabled(bool value)
@@ -210,11 +267,16 @@ public class Object_Wind_Particle : MonoBehaviour
 
         count = ps.GetParticles(particleBuffer);
         bool isWorldSpace = ps.main.simulationSpace == ParticleSystemSimulationSpace.World;
-        Vector2 windDir = power.normalized;
-        float maxSpeed = power.magnitude * 0.1f;
 
         blockedFadeStates.TryGetValue(ps, out Dictionary<uint, BlockedFadeState> previousBlocked);
         Dictionary<uint, BlockedFadeState> currentBlocked = null;
+
+        Dictionary<uint, Vector2> origins = null;
+        if (released && !releaseOrigins.TryGetValue(ps, out origins))
+        {
+            origins = new Dictionary<uint, Vector2>();
+            releaseOrigins[ps] = origins;
+        }
 
         for (int i = 0; i < count; i++)
         {
@@ -273,17 +335,62 @@ public class Object_Wind_Particle : MonoBehaviour
                 continue;
             }
 
+            if (released)
+            {
+                // 속도는 건드리지 않는다 - 그대로 두면 release되기 직전 속도로 계속 직진한다("고정").
+                uint seed = particleBuffer[i].randomSeed;
+                Vector2 pos2D = worldPos;
+
+                if (!origins.TryGetValue(seed, out Vector2 origin))
+                {
+                    origin = pos2D;
+                    origins[seed] = origin;
+                }
+
+                float distance = Vector2.Distance(pos2D, origin);
+                float alpha = releaseFadeDistance > 0f
+                    ? Mathf.Clamp01(1f - distance / releaseFadeDistance)
+                    : 0f;
+
+                Color32 releaseColor = particleBuffer[i].startColor;
+                releaseColor.a = (byte)Mathf.RoundToInt(alpha * 255f);
+                particleBuffer[i].startColor = releaseColor;
+
+                if (alpha <= 0f)
+                    particleBuffer[i].remainingLifetime = 0f;
+
+                continue;
+            }
+
+            if (connectionPoint != null && connectionTargetPoint != null)
+            {
+                Vector2 particlePos2D = worldPos;
+                float connectionDistSqr = ((Vector2)connectionPoint.position - particlePos2D).sqrMagnitude;
+
+                if (connectionDistSqr <= connectionRadius * connectionRadius)
+                {
+                    // 방향만 새 목표(연결된 Wind의 시작 지점)로 바꾸고 속도 크기는 그대로 유지한다.
+                    Vector2 toTarget = (Vector2)connectionTargetPoint.position - particlePos2D;
+                    if (toTarget.sqrMagnitude > 0.0001f)
+                    {
+                        float speed = particleBuffer[i].velocity.magnitude;
+                        particleBuffer[i].velocity = toTarget.normalized * speed;
+                    }
+
+                    continue;
+                }
+            }
+
             if (windDir != Vector2.zero && windCollider != null && windCollider.OverlapPoint(worldPos))
             {
-                // 매 프레임 힘을 누적(+=)하면 오래/멀리 밀린 파티클일수록 속도가 계속 쌓여
-                // 오히려 먼 파티클이 더 빨라지는 문제가 있었다. 그 대신 바람 방향 속도 성분을
-                // "현재 거리에서의 목표 속도"로 매 프레임 직접 대입한다 (누적 없음, 거리만이
-                // 속도를 결정). 바람과 무관한 축의 속도(중력 낙하 등)는 그대로 보존한다.
-                float falloff = GetFalloffMultiplier(worldPos);
+                // 매 프레임 힘을 누적(+=)하면 시간이 지날수록 속도가 계속 쌓이는 문제가 있었다.
+                // 그 대신 바람 방향 속도 성분을 파티클마다 고정된 목표 속도로 매 프레임 직접
+                // 대입한다 (누적 없음). 바람과 무관한 축의 속도(중력 낙하 등)는 그대로 보존한다.
+                float targetSpeed = GetAssignedSpeed(particleBuffer[i].randomSeed) * powerScale;
                 Vector2 currentVelocity = particleBuffer[i].velocity;
                 Vector2 alongWind = Vector2.Dot(currentVelocity, windDir) * windDir;
                 Vector2 perpendicular = currentVelocity - alongWind;
-                particleBuffer[i].velocity = perpendicular + windDir * (maxSpeed * falloff);
+                particleBuffer[i].velocity = perpendicular + windDir * targetSpeed;
             }
         }
 
@@ -293,15 +400,6 @@ public class Object_Wind_Particle : MonoBehaviour
             blockedFadeStates[ps] = currentBlocked;
         else
             blockedFadeStates.Remove(ps);
-    }
-
-    private float GetFalloffMultiplier(Vector2 targetPosition)
-    {
-        if (distanceFalloff <= 0f)
-            return 1f;
-
-        float distance = Vector2.Distance(transform.position, targetPosition);
-        return 1f / (1f + distanceFalloff * distance);
     }
 
     private bool IsBlocked(Vector2 targetPosition)
@@ -318,5 +416,17 @@ public class Object_Wind_Particle : MonoBehaviour
 
         Vector2 direction = toTarget / distance;
         return Physics2D.Raycast(origin, direction, distance, blockingLayer);
+    }
+
+    private void OnDrawGizmosSelected()
+    {
+        if (connectionPoint == null)
+            return;
+
+        Gizmos.color = Color.cyan;
+        Gizmos.DrawWireSphere(connectionPoint.position, connectionRadius);
+
+        if (connectionTargetPoint != null)
+            Gizmos.DrawLine(connectionPoint.position, connectionTargetPoint.position);
     }
 }
