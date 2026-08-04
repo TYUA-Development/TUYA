@@ -31,6 +31,9 @@ public class Object_Wind : MonoBehaviour, ICoreEvent
     [Tooltip("이 레이어의 콜라이더가 바람 오브젝트와 대상 사이를 가로막으면(Box 형태로 경로 체크) 그 대상은 바람 영향을 받지 않습니다. 예: Wall, Floor")]
     public LayerMask blockingLayer;
 
+    [Tooltip("blockingLayer에 속해 있어도 차단 판정에서 제외할 오브젝트(들). 예: 레벨 기본 바닥처럼 항상 존재해서 바람과 대상 사이를 가로막지만 실제로는 바람을 막으면 안 되는 오브젝트. 해당 GameObject의 콜라이더만 예외 처리되며, 자식 오브젝트의 콜라이더는 포함되지 않습니다.")]
+    public List<GameObject> blockingExceptions = new List<GameObject>();
+
     [Tooltip("이 레이어의 오브젝트는 바람 영역에 들어와도 영향을 받지 않습니다.")]
     public LayerMask ignoredLayer;
 
@@ -52,6 +55,36 @@ public class Object_Wind : MonoBehaviour, ICoreEvent
     private readonly HashSet<Collider2D> fallThroughExempt = new HashSet<Collider2D>();
 
     private Collider2D selfCollider;
+    private float? baseWindPower;
+
+    // CoreObjectToggle이 여러 인스턴스로 나뉘어(예: 끄는 스위치/켜는 스위치) 같은 바람을 함께
+    // 다룰 수 있어, "원래 windPower"를 외부(CoreObjectToggle)가 개별적으로 기억하면 서로 다른
+    // 인스턴스가 이미 0으로 꺼진 값을 원본으로 잘못 캐싱할 수 있다. 그래서 이 컴포넌트 자신이
+    // 원본값을 한 번만 캡처해 진실 소스로 둔다.
+    //
+    // Awake만으로는 부족하다 - GameObject가 처음부터 비활성화된 채로 배치된 바람은 Awake가
+    // 아예 실행되지 않으므로, BaseWindPower가 처음 조회되는 시점(그때까지 아무도 windPower를
+    // 건드리지 않았다면 여전히 원본값)에 지연 캡처하는 걸 폴백으로 둔다. 두 캡처 경로 모두
+    // "아직 값이 없을 때만" 쓰도록 가드해야 한다 - 처음 꺼진 바람을 켤 때는 지연 캡처로 먼저
+    // 원본값을 확보한 뒤 windPower를 0으로 만들고 나서 SetActive(true)를 호출하는데, 이
+    // SetActive(true) 호출 안에서 Awake가 그제서야 동기적으로 처음 실행되기 때문에, Awake가
+    // 무조건 덮어쓰면 방금 0으로 만든 값을 다시 캡처해 지연 캡처 결과를 망가뜨리게 된다.
+    void Awake()
+    {
+        if (!baseWindPower.HasValue)
+            baseWindPower = windPower;
+    }
+
+    public float BaseWindPower
+    {
+        get
+        {
+            if (!baseWindPower.HasValue)
+                baseWindPower = windPower;
+
+            return baseWindPower.Value;
+        }
+    }
 
     // Start is called before the first frame update
     void Start()
@@ -77,6 +110,21 @@ public class Object_Wind : MonoBehaviour, ICoreEvent
 
         if (selfCollider != null)
             selfCollider.enabled = value;
+    }
+
+    // CoreObjectToggle이 이 바람이 "지금 켜져 있는지"를 판단할 때 쓴다. 같은 바람 오브젝트를
+    // 서로 다른 CoreObjectToggle 인스턴스(예: 끄는 스위치 하나, 켜는 스위치 하나)가 함께
+    // 타겟팅할 수 있으므로, 별도 상태 변수를 각자 들고 있기보다 콜라이더의 실제 활성 여부를
+    // 그때그때 조회하는 쪽이 항상 정확하다.
+    public bool IsColliderEnabled
+    {
+        get
+        {
+            if (selfCollider == null)
+                selfCollider = GetComponent<Collider2D>();
+
+            return selfCollider != null && selfCollider.enabled;
+        }
     }
 
     public static Vector2 GetDirectionVector(WindDirection dir)
@@ -168,7 +216,19 @@ public class Object_Wind : MonoBehaviour, ICoreEvent
         float edgeOffset = vertical ? bounds.extents.y : bounds.extents.x;
         Vector2 probeCenter = (Vector2)bounds.center + checkDirection.normalized * (edgeOffset + probeDepth * 0.5f);
 
-        return Physics2D.OverlapBox(probeCenter, probeSize, 0f, blockingLayer) != null;
+        Collider2D[] hits = Physics2D.OverlapBoxAll(probeCenter, probeSize, 0f, blockingLayer);
+        foreach (Collider2D hit in hits)
+        {
+            if (hit == null)
+                continue;
+
+            if (blockingExceptions != null && blockingExceptions.Contains(hit.gameObject))
+                continue;
+
+            return true;
+        }
+
+        return false;
     }
 
     private void OnTriggerEnter2D(Collider2D collision)

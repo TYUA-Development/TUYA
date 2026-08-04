@@ -16,8 +16,6 @@ public class CoreObjectToggle : MonoBehaviour
     [Tooltip("대상에 Object_Wind/Object_Wind_Particle이 자식으로 있으면 즉시 켜고 끄는 대신 WindPower를 이 시간(초) 동안 서서히 올리고 내린다.")]
     public float windFadeDuration = 1f;
 
-    private readonly Dictionary<Object_Wind, float> originalWindPower = new Dictionary<Object_Wind, float>();
-    private readonly Dictionary<Object_Wind_Particle, float> originalWindParticlePowerScale = new Dictionary<Object_Wind_Particle, float>();
     private readonly Dictionary<GameObject, Coroutine> windFadeCoroutines = new Dictionary<GameObject, Coroutine>();
 
     void Start()
@@ -51,6 +49,12 @@ public class CoreObjectToggle : MonoBehaviour
                 continue;
             }
 
+            if (obj.TryGetComponent<EnableObject>(out var enableObject))
+            {
+                enableObject.Toggle();
+                continue;
+            }
+
             Object_Wind[] winds = obj.GetComponentsInChildren<Object_Wind>(true);
             Object_Wind_Particle[] windParticles = obj.GetComponentsInChildren<Object_Wind_Particle>(true);
 
@@ -60,11 +64,33 @@ public class CoreObjectToggle : MonoBehaviour
                 continue;
             }
 
+            bool turningOn = !IsWindCurrentlyOn(obj, winds, windParticles);
+
             if (windFadeCoroutines.TryGetValue(obj, out var running) && running != null)
                 StopCoroutine(running);
 
-            windFadeCoroutines[obj] = StartCoroutine(FadeWindAndToggle(obj, winds, windParticles, !obj.activeSelf));
+            windFadeCoroutines[obj] = StartCoroutine(FadeWindAndToggle(obj, winds, windParticles, turningOn));
         }
+    }
+
+    // 같은 바람 오브젝트를 서로 다른 CoreObjectToggle 인스턴스(예: 끄는 스위치와 켜는 스위치가
+    // 분리된 경우)가 함께 타겟팅할 수 있어, on/off 여부를 이 컴포넌트가 별도로 기억하면 다른
+    // 인스턴스가 먼저 바꾼 상태를 놓칠 수 있다. 그래서 항상 컴포넌트의 실제 현재 상태를 조회한다.
+    // obj.activeSelf를 1차로 먼저 보는 이유는, 레벨에 처음부터 GameObject 자체가 비활성화된
+    // 채로 배치된("시작부터 꺼진") 바람의 경우 콜라이더/이미션 값 자체는 기본값(활성)으로
+    // 저장돼 있을 수 있어 그것만으로는 꺼진 상태로 판단할 수 없기 때문이다.
+    private static bool IsWindCurrentlyOn(GameObject obj, Object_Wind[] winds, Object_Wind_Particle[] windParticles)
+    {
+        if (!obj.activeSelf)
+            return false;
+
+        if (winds.Length > 0)
+            return winds[0].IsColliderEnabled;
+
+        if (windParticles.Length > 0)
+            return windParticles[0].IsEmissionEnabled;
+
+        return false;
     }
 
     private IEnumerator FadeWindAndToggle(GameObject obj, Object_Wind[] winds, Object_Wind_Particle[] windParticles, bool turningOn)
@@ -76,11 +102,8 @@ public class CoreObjectToggle : MonoBehaviour
         {
             Object_Wind wind = winds[i];
 
-            if (!originalWindPower.ContainsKey(wind))
-                originalWindPower[wind] = wind.windPower;
-
             windStart[i] = turningOn ? 0f : wind.windPower;
-            windTarget[i] = turningOn ? originalWindPower[wind] : 0f;
+            windTarget[i] = turningOn ? wind.BaseWindPower : 0f;
         }
 
         float[] particleStart = null;
@@ -95,11 +118,8 @@ public class CoreObjectToggle : MonoBehaviour
             {
                 Object_Wind_Particle windParticle = windParticles[i];
 
-                if (!originalWindParticlePowerScale.ContainsKey(windParticle))
-                    originalWindParticlePowerScale[windParticle] = windParticle.powerScale;
-
                 particleStart[i] = 0f;
-                particleTarget[i] = originalWindParticlePowerScale[windParticle];
+                particleTarget[i] = windParticle.BasePowerScale;
 
                 windParticle.powerScale = 0f;
                 windParticle.Init();

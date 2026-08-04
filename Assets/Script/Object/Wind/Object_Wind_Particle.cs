@@ -78,6 +78,29 @@ public class Object_Wind_Particle : MonoBehaviour
         new Dictionary<ParticleSystem, Dictionary<uint, Vector2>>();
     private ParticleSystem.Particle[] particleBuffer = new ParticleSystem.Particle[0];
 
+    private float? basePowerScale;
+
+    // Object_Wind.baseWindPower와 같은 이유 및 같은 지연 캡처 폴백이 필요하다 - 처음부터
+    // GameObject가 비활성화된 파티클 바람은 Awake가 실행되지 않으므로, BasePowerScale이 처음
+    // 조회되는 시점에 캡처하는 경로도 함께 둔다. 두 경로 모두 "아직 값이 없을 때만" 캡처하도록
+    // 가드해야 SetActive(true) 안에서 뒤늦게 실행되는 Awake가 지연 캡처 결과를 덮어쓰지 않는다.
+    private void Awake()
+    {
+        if (!basePowerScale.HasValue)
+            basePowerScale = powerScale;
+    }
+
+    public float BasePowerScale
+    {
+        get
+        {
+            if (!basePowerScale.HasValue)
+                basePowerScale = powerScale;
+
+            return basePowerScale.Value;
+        }
+    }
+
     private void Start()
     {
         Init();
@@ -142,6 +165,26 @@ public class Object_Wind_Particle : MonoBehaviour
 
             ParticleSystem.EmissionModule emission = ps.emission;
             emission.enabled = value;
+        }
+    }
+
+    // CoreObjectToggle이 이 파티클 바람이 "지금 켜져 있는지"를 판단할 때 쓴다. Object_Wind의
+    // IsColliderEnabled와 같은 이유로, 별도 상태 변수 대신 첫 번째 파티클 시스템의 emission
+    // 활성 여부를 그때그때 조회한다.
+    public bool IsEmissionEnabled
+    {
+        get
+        {
+            if (affectedParticleSystems == null)
+                return false;
+
+            foreach (var ps in affectedParticleSystems)
+            {
+                if (ps != null)
+                    return ps.emission.enabled;
+            }
+
+            return false;
         }
     }
 
