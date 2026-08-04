@@ -32,6 +32,10 @@ public class FixedMoveObject_Rope : MonoBehaviour
     [Tooltip("자세를 맞추는 보간 진행 곡선 (0=트리거 시점, 1=목표 위치/각도 도달)")]
     public AnimationCurve settleCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
 
+    [Header("Chaining")]
+    [Tooltip("이 정착이 끝난 뒤 이어서 정착시킬 FixedMoveObject (선택). 이 스크립트가 오브젝트를 Kinematic으로 바꾼 뒤에는 FixedMoveObject의 OnCollisionEnter2D가 발생하지 않아 스스로 트리거되지 못하므로, 여기서 직접 이어서 실행시켜준다.")]
+    public FixedMoveObject nextMove;
+
     private Rigidbody2D rb;
     private bool hasTriggered;
 
@@ -88,6 +92,8 @@ public class FixedMoveObject_Rope : MonoBehaviour
         }
 
         ApplyPose(startPivotWorldPos, targetPivotWorldPos, startAngle, localOffset, startZ, 1f);
+
+        nextMove?.TriggerSettle();
     }
 
     private void ApplyPose(Vector2 startPivotWorldPos, Vector2 targetPivotWorldPos, float startAngle, Vector2 localOffset, float startZ, float t)

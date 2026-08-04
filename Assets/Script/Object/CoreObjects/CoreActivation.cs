@@ -36,6 +36,7 @@ public class CoreActivation : MonoBehaviour, IArrowHit, ICoreEvent
     public float hitFlashTime = 0.25f;
     public float delayBeforeActivate = 0.25f;
     public float activateGlowTime = 1f;
+    public float activateGlowFadeOutTime = 1f;
 
     [Header("State")]
     public bool isActivated;
@@ -141,6 +142,7 @@ public class CoreActivation : MonoBehaviour, IArrowHit, ICoreEvent
 
         yield return StartCoroutine(FadeRendererAlpha(activateGlowRenderer, 0f, activateGlowAlpha, activateGlowTime));
         yield return StartCoroutine(FadeRendererAlpha(stableGlowRenderer, 0f, stableGlowAlpha, 0.25f));
+        yield return StartCoroutine(FadeRendererAlpha(activateGlowRenderer, activateGlowAlpha, 0f, activateGlowFadeOutTime));
 
         UnlockPlayer();
 

@@ -5,51 +5,52 @@ public class MissionAreaCamera : MonoBehaviour
     public enum MissionCameraMode
     {
         HorizontalByPlayerX,
-        FixedAreaPan
+        FixedAreaPan,
+        HorizontalByPlayerXWithExit
     }
 
     [Header("Mode")]
-    [Tooltip("±âÁ¸ ÁÂ¿ì ÁøÇà ±¸¿ªÀº HorizontalByPlayerX, ±¸¸§ À§ »ó½Â ±¸¿ªÀº FixedAreaPan")]
+    [Tooltip("ï¿½ï¿½ï¿½ï¿½ ï¿½Â¿ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ HorizontalByPlayerX, ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ FixedAreaPan")]
     public MissionCameraMode cameraMode = MissionCameraMode.HorizontalByPlayerX;
 
     [Header("Target")]
     public Vector3 targetPos;
 
-    [Tooltip("targetPos.x ±âÁØ ÁÂ¿ì °Å¸®. HorizontalByPlayerX ¸ğµå¿¡¼­ »ç¿ë")]
+    [Tooltip("targetPos.x ï¿½ï¿½ï¿½ï¿½ ï¿½Â¿ï¿½ ï¿½Å¸ï¿½. HorizontalByPlayerX ï¿½ï¿½å¿¡ï¿½ï¿½ ï¿½ï¿½ï¿½")]
     public float maxSizeXPos = 5f;
 
     [Header("Zoom")]
     public float finalZoomSize;
 
-    [Tooltip("Ä«¸Ş¶ó¿Í ¹Ù´Ú ±âÁØ Z °Å¸®")]
+    [Tooltip("Ä«ï¿½Ş¶ï¿½ï¿½ ï¿½Ù´ï¿½ ï¿½ï¿½ï¿½ï¿½ Z ï¿½Å¸ï¿½")]
     public float groundDistance = 28f;
 
     [Header("Y Follow - Horizontal Mode")]
     public bool fixPosY = false;
 
-    [Tooltip("±âÁ¸ ÁÂ¿ì ÁøÇà ¸ğµå¿¡¼­ ÇÃ·¹ÀÌ¾îº¸´Ù Ä«¸Ş¶ó°¡ ¾ó¸¶³ª À§¸¦ º¼Áö")]
+    [Tooltip("ï¿½ï¿½ï¿½ï¿½ ï¿½Â¿ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½å¿¡ï¿½ï¿½ ï¿½Ã·ï¿½ï¿½Ì¾îº¸ï¿½ï¿½ Ä«ï¿½Ş¶ï¿½ ï¿½ó¸¶³ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½")]
     public float playerYOffset = 15.13f;
 
-    [Tooltip("Ã¼Å©ÇÑ ±¸¿ª¿¡¼­¸¸ ÇÃ·¹ÀÌ¾î Y°ªÀ» ºÎµå·´°Ô µû¶ó°©´Ï´Ù.")]
+    [Tooltip("Ã¼Å©ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ã·ï¿½ï¿½Ì¾ï¿½ Yï¿½ï¿½ï¿½ï¿½ ï¿½Îµå·´ï¿½ï¿½ ï¿½ï¿½ï¿½ó°©´Ï´ï¿½.")]
     public bool useSmoothYFollow = false;
 
     public float yFollowSmoothTime = 0.35f;
     public float yMaxFollowSpeed = 50f;
 
     [Header("Fixed Area Pan Mode")]
-    [Tooltip("FixedAreaPan ¸ğµå¿¡¼­ targetPos·Î ÀÌµ¿ÇÏ´Â ½Ã°£")]
+    [Tooltip("FixedAreaPan ï¿½ï¿½å¿¡ï¿½ï¿½ targetPosï¿½ï¿½ ï¿½Ìµï¿½ï¿½Ï´ï¿½ ï¿½Ã°ï¿½")]
     public float fixedPanMoveTime = 1.8f;
 
-    [Tooltip("FixedAreaPan ¸ğµå¿¡¼­ ÁÜÀÌ º¯ÇÏ´Â ½Ã°£")]
+    [Tooltip("FixedAreaPan ï¿½ï¿½å¿¡ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ï´ï¿½ ï¿½Ã°ï¿½")]
     public float fixedPanZoomTime = 1.8f;
 
-    [Tooltip("FixedAreaPan ¸ğµå¿¡¼­ Ä«¸Ş¶ó ÀÌµ¿ °î¼±")]
+    [Tooltip("FixedAreaPan ï¿½ï¿½å¿¡ï¿½ï¿½ Ä«ï¿½Ş¶ï¿½ ï¿½Ìµï¿½ ï¿½î¼±")]
     public AnimationCurve fixedPanCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
 
-    [Tooltip("±¸¿ªÀ» ³ª°¥ ¶§ Ä«¸Ş¶ó¸¦ ÁøÀÔ Àü À§Ä¡·Î ºÎµå·´°Ô µÇµ¹¸±Áö")]
+    [Tooltip("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ Ä«ï¿½Ş¶ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½Ä¡ï¿½ï¿½ ï¿½Îµå·´ï¿½ï¿½ ï¿½Çµï¿½ï¿½ï¿½ï¿½ï¿½")]
     public bool smoothReturnOnExit = false;
 
-    [Tooltip("±¸¿ªÀ» ³ª°¥ ¶§ µÇµ¹¾Æ°¡´Â ½Ã°£")]
+    [Tooltip("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½Çµï¿½ï¿½Æ°ï¿½ï¿½ï¿½ ï¿½Ã°ï¿½")]
     public float returnMoveTime = 1f;
 
     private bool isCameraControl;
@@ -100,6 +101,12 @@ public class MissionAreaCamera : MonoBehaviour
     {
         if (isReturning)
         {
+            // CameraMovement.isMovingEventëŠ” ì—¬ëŸ¬ ìŠ¤í¬ë¦½íŠ¸ê°€ ê³µìœ í•˜ëŠ” ì „ì—­ í”Œë˜ê·¸ë¼ ë‹¤ë¥¸
+            // ìŠ¤í¬ë¦½íŠ¸ê°€ ì¤‘ê°„ì— falseë¡œ ë˜ëŒë¦´ ìˆ˜ ìˆë‹¤. ì´ ì»´í¬ë„ŒíŠ¸ê°€ ì¹´ë©”ë¼ë¥¼ ë¶™ì¡ê³  ìˆëŠ”
+            // ë™ì•ˆì€ ë§¤ í”„ë ˆì„ ë‹¤ì‹œ trueë¡œ ì¬í™•ì¸í•´ì„œ ì¦‰ì‹œ ë˜ì°¾ì•„ì˜¨ë‹¤.
+            if (CameraMovement.Instance != null)
+                CameraMovement.Instance.isMovingEvent = true;
+
             UpdateReturnCamera();
             return;
         }
@@ -107,9 +114,16 @@ public class MissionAreaCamera : MonoBehaviour
         if (!isCameraControl || player == null)
             return;
 
+        if (CameraMovement.Instance != null)
+            CameraMovement.Instance.isMovingEvent = true;
+
         if (cameraMode == MissionCameraMode.FixedAreaPan)
         {
             ControlFixedAreaPan();
+        }
+        else if (cameraMode == MissionCameraMode.HorizontalByPlayerXWithExit)
+        {
+            ControlHorizontalCameraWithExit();
         }
         else
         {
@@ -222,6 +236,29 @@ public class MissionAreaCamera : MonoBehaviour
         }
     }
 
+    private void ControlHorizontalCameraWithExit()
+    {
+        if (cameraRig == null || targetCamera == null)
+            return;
+
+        Vector3 activeTargetPos = GetActiveTargetPos();
+
+        float playerX = player.position.x;
+
+        // isLeftToRightì— ë”°ë¼ ì§„ì… ê²½ê³„ -> ì´íƒˆ ê²½ê³„ ë°©í–¥ì„ ì •í•˜ê³ , ì¤‘ì•™ ë°´ë“œ ì—†ì´
+        // ì´ ì „ì²´ êµ¬ê°„ì„ í•˜ë‚˜ì˜ ì—°ì†ëœ ë³´ê°„ìœ¼ë¡œ ì²˜ë¦¬í•œë‹¤ (ì´íƒˆ ì§ì „ê¹Œì§€ ê³„ì† targetPos/finalZoomSizeì— ê°€ê¹Œì›Œì§).
+        float entryBoundX = isLeftToRight ? enterX : exitX;
+        float exitBoundX = isLeftToRight ? exitX : enterX;
+
+        float t = Mathf.InverseLerp(entryBoundX, exitBoundX, playerX);
+        float smoothT = Smooth(t);
+
+        ApplyCamera(
+            Vector3.Lerp(enterCameraPos, activeTargetPos, smoothT),
+            smoothT
+        );
+    }
+
     private Vector3 GetActiveTargetPos()
     {
         if (fixPosY)
@@ -272,7 +309,7 @@ public class MissionAreaCamera : MonoBehaviour
 
         float yOffset = currentHalfHeight - startHalfHeight;
 
-        // ÇÊ¿äÇÒ ¶§¸¸ »ç¿ë
+        // ï¿½Ê¿ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½
         // basePos.y += yOffset;
 
         cameraRig.transform.position = basePos;
@@ -338,7 +375,8 @@ public class MissionAreaCamera : MonoBehaviour
 
         fixedPanTimer = 0f;
 
-        if (cameraMode == MissionCameraMode.HorizontalByPlayerX)
+        if (cameraMode == MissionCameraMode.HorizontalByPlayerX ||
+            cameraMode == MissionCameraMode.HorizontalByPlayerXWithExit)
         {
             smoothTargetPos = targetPos;
 

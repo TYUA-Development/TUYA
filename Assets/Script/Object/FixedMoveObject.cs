@@ -45,6 +45,19 @@ public class FixedMoveObject : MonoBehaviour
         if (((1 << collision.gameObject.layer) & floorLayer.value) == 0)
             return;
 
+        TriggerSettle();
+    }
+
+    // 물리 충돌(OnCollisionEnter2D)이 아니라 외부 코드(예: FixedMoveObject_Rope)가 직접 정착을
+    // 시작시키고 싶을 때 쓴다. Kinematic Rigidbody2D는 Static 콜라이더(바닥)와 충돌/트리거
+    // 이벤트를 만들지 않으므로(Unity 2D 충돌 매트릭스), 다른 정착 스크립트가 이미 이 오브젝트를
+    // Kinematic으로 바꿔놓은 뒤에는 OnCollisionEnter2D가 애초에 발생하지 않아 스스로 트리거되지
+    // 못한다.
+    public void TriggerSettle()
+    {
+        if (hasLanded)
+            return;
+
         hasLanded = true;
         StartCoroutine(SettleRoutine());
     }

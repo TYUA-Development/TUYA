@@ -27,6 +27,20 @@ public abstract class PlayerState
     public virtual void HandleInput() { }
     public abstract void LogicUpdate();
     public abstract void PhysicsUpdate();
+
+    // 같은 위치에 솔리드 바닥과 트리거(예: RunwayObject 감지용 트리거)가 겹쳐 있을 때
+    // OverlapBox 단일 결과만으로는 어느 쪽이 반환될지 보장되지 않으므로,
+    // OverlapBoxAll로 받은 후보들 중 트리거가 아닌 것을 우선으로 찾는다.
+    protected static Collider2D FindSolidGround(Collider2D[] hits)
+    {
+        foreach (Collider2D hit in hits)
+        {
+            if (!hit.isTrigger)
+                return hit;
+        }
+
+        return null;
+    }
 }
 
 
@@ -230,9 +244,9 @@ public class PlayerMoveState : PlayerState
             0.5f
         );
 
-        Collider2D hit = Physics2D.OverlapBox(checkPos, checkSize, 0f, groundLayer);
+        Collider2D[] hits = Physics2D.OverlapBoxAll(checkPos, checkSize, 0f, groundLayer);
 
-        return hit == null || hit.isTrigger;
+        return FindSolidGround(hits) == null;
     }
 
     private bool CheckRunWayFromFront()
@@ -726,15 +740,14 @@ public class PlayerFallState : PlayerState
             0.5f
         );
 
-        Collider2D hit = Physics2D.OverlapBox(
+        Collider2D[] hits = Physics2D.OverlapBoxAll(
             checkPos,
             checkSize,
             0f,
             groundLayer
         );
 
-        if (hit != null && hit.isTrigger)
-            hit = null;
+        Collider2D hit = FindSolidGround(hits);
 
         if (hit == null && !controller.isGround)
             return;
