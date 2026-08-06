@@ -685,6 +685,13 @@ public class PlayerAttackState : PlayerState
                 // IsAiming을 다시 켜서 Animator의 AttackEnd -> Aiming 전환이 이어받게 한다.
                 if (firedThisAim && InputData.aimingPressed)
                 {
+                    // AttackEnd.anim의 0% 지점 애니메이션 이벤트(HideUpperBody)에만 의존하지
+                    // 않고 코드에서 직접 확실히 꺼준다 - OnIdle() 경로는 OnIdle() 내부에서
+                    // HideUpperBody()를 코드로 보장하는데, 이 경로(조준 버튼을 계속 누르고
+                    // 있어 Idle로 안 나가는 경우)만 애니메이션 이벤트 하나에 전적으로
+                    // 의존하고 있어서, IsAiming=true로 전환되는 타이밍에 따라 이벤트가
+                    // 샘플링되지 않고 넘어가면 UpperBody가 계속 켜진 채로 남는 문제가 있었다.
+                    controller.HideUpperBody();
                     controller.animator.SetBool("IsAiming", true);
                     return;
                 }

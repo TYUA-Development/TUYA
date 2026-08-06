@@ -43,6 +43,9 @@ public class Rope : MonoBehaviour
     [Header("Rendering")]
     [SerializeField] private int segmentOrderInLayer = 0;
 
+    [Tooltip("생성되는 각 RopeSegment GameObject(및 그 Visual 자식)에 적용할 유니티 레이어. 여러 레이어를 체크해도 그 중 가장 낮은 번호의 레이어 하나만 실제로 적용됩니다(GameObject는 레이어를 하나만 가질 수 있음).")]
+    [SerializeField] private LayerMask segmentLayer = 1;
+
     [Header("Initial Settle")]
     [Tooltip("생성 직후 중력+Joint에 의해 자연스럽게 늘어진 최종 자세가 될 때까지 물리 시뮬레이션을 미리 빨리 감는다. 꺼두면 기존처럼 생성된 직선 자세에서 실제 프레임을 거치며 서서히 늘어진다.")]
     [SerializeField] private bool settleOnBuild = true;
@@ -206,6 +209,7 @@ public class Rope : MonoBehaviour
         Rigidbody2D previousBody = anchorBody;
 
         segments = new RopeSegment[segmentCount];
+        int resolvedSegmentLayer = ResolveSingleLayer(segmentLayer);
 
         for (int i = 0; i < segmentCount; i++)
         {
@@ -213,10 +217,12 @@ public class Rope : MonoBehaviour
             segmentObject.transform.SetParent(generatedRoot, false);
             segmentObject.transform.position = startPosition + (Vector3)(dir * actualSegmentLength * (i + 1));
             segmentObject.transform.rotation = segmentRotation;
+            segmentObject.layer = resolvedSegmentLayer;
 
             GameObject visualObject = new GameObject("Visual");
             visualObject.transform.SetParent(segmentObject.transform, false);
             visualObject.transform.localScale = new Vector3(segmentSpriteScale.x, segmentSpriteScale.y, 1f);
+            visualObject.layer = resolvedSegmentLayer;
 
             SpriteRenderer renderer = visualObject.AddComponent<SpriteRenderer>();
             renderer.sprite = segmentSprite;
@@ -443,6 +449,22 @@ public class Rope : MonoBehaviour
 
         body.bodyType = RigidbodyType2D.Static;
         return body;
+    }
+
+    // GameObject.layer는 레이어를 하나만 가질 수 있는데 Inspector 편의상 LayerMask로 받으므로,
+    // 체크된 레이어들 중 가장 낮은 번호 하나를 골라 실제로 적용할 레이어로 쓴다. 아무 것도
+    // 체크하지 않았으면(value == 0) 0(Default)로 대체한다.
+    private static int ResolveSingleLayer(LayerMask mask)
+    {
+        int value = mask.value;
+
+        for (int i = 0; i < 32; i++)
+        {
+            if ((value & (1 << i)) != 0)
+                return i;
+        }
+
+        return 0;
     }
 
     // 끊어진 지점(가장 앵커에 가까운 IsCut 세그먼트)을 기준으로 양쪽으로 한 단계씩
