@@ -63,14 +63,8 @@ public class RiseObject : MonoBehaviour
     [Tooltip("상승 시작 소리")]
     public AudioSource riseStartAudio;
 
-    [Tooltip("상승 중 반복되는 마찰 소리 / 로프 등")]
-    public AudioSource riseLoopAudio;
-
-    [Tooltip("돌 부스러기 소리")]
-    public AudioSource debrisAudio;
-
-    [Tooltip("상승 완료 소리")]
-    public AudioSource completeAudio;
+    [Tooltip("상승 중 반복되는 마찰 소리 / 로프 등. AudioAssist의 Volume Curve로 상승 중 볼륨 변화를 설정할 수 있고, Loop를 켜두어야 상승이 끝날 때까지 계속 반복 재생됩니다.")]
+    public AudioAssist riseLoopAudio;
 
     private Coroutine riseCoroutine;
     private bool hasRisen;
@@ -81,12 +75,6 @@ public class RiseObject : MonoBehaviour
         StopParticle(lightParticle);
         StopParticle(debrisParticle);
         StopParticle(completeParticle);
-
-        if (riseLoopAudio != null)
-        {
-            riseLoopAudio.loop = true;
-            riseLoopAudio.Stop();
-        }
     }
 
     public void Rise()
@@ -117,7 +105,6 @@ public class RiseObject : MonoBehaviour
         PlayParticle(debrisParticle);
 
         PlayAudio(riseStartAudio);
-        PlayAudio(debrisAudio);
 
         if (riseLoopAudio != null)
             riseLoopAudio.Play();
@@ -132,7 +119,6 @@ public class RiseObject : MonoBehaviour
             riseLoopAudio.Stop();
 
         PlayParticle(completeParticle);
-        PlayAudio(completeAudio);
 
         if (enableReturn)
         {
@@ -141,7 +127,6 @@ public class RiseObject : MonoBehaviour
 
             PlayParticle(dustParticle);
             PlayParticle(debrisParticle);
-            PlayAudio(debrisAudio);
 
             if (riseLoopAudio != null)
                 riseLoopAudio.Play();

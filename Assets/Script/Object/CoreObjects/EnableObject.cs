@@ -7,8 +7,8 @@ public class EnableObject : MonoBehaviour
     [Tooltip("켜질 때 재생할 파티클")]
     public ParticleSystem activateParticle;
 
-    [Tooltip("켜질 때 재생할 오디오")]
-    public AudioSource activateAudio;
+    [Tooltip("켜질 때 AudioAssist로 재생할 효과음.")]
+    public AudioAssist activate_Object;
 
     [Tooltip("켜질 때 알파값을 0에서 1로 서서히 올리는 시간(초). 0이면 즉시 표시된다.")]
     public float activateFadeDuration = 0f;
@@ -17,8 +17,8 @@ public class EnableObject : MonoBehaviour
     [Tooltip("꺼질 때 재생할 파티클")]
     public ParticleSystem deactivateParticle;
 
-    [Tooltip("꺼질 때 재생할 오디오")]
-    public AudioSource deactivateAudio;
+    [Tooltip("꺼질 때 AudioAssist로 재생할 효과음.")]
+    public AudioAssist deactivate_Object;
 
     [Tooltip("꺼짐 이펙트가 재생될 시간(초). 이 시간 동안 알파값을 1에서 0으로 서서히 내리고, 끝나면 오브젝트를 실제로 비활성화한다.")]
     public float deactivateDelay = 0f;
@@ -48,7 +48,7 @@ public class EnableObject : MonoBehaviour
             gameObject.SetActive(true);
             SetRenderersAlpha(0f);
             PlayParticle(activateParticle);
-            PlayAudio(activateAudio);
+            PlayAudioAssist(activate_Object);
             toggleCoroutine = StartCoroutine(ActivateRoutine());
         }
     }
@@ -62,7 +62,7 @@ public class EnableObject : MonoBehaviour
     private IEnumerator DeactivateRoutine()
     {
         PlayParticle(deactivateParticle);
-        PlayAudio(deactivateAudio);
+        PlayAudioAssist(deactivate_Object);
 
         yield return FadeAlpha(0f, deactivateDelay);
 
@@ -130,12 +130,9 @@ public class EnableObject : MonoBehaviour
         particle.Play();
     }
 
-    private void PlayAudio(AudioSource audioSource)
+    private void PlayAudioAssist(AudioAssist audio)
     {
-        if (audioSource == null)
-            return;
-
-        audioSource.Stop();
-        audioSource.Play();
+        if (audio != null)
+            audio.Play();
     }
 }
