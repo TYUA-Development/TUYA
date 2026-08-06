@@ -6,7 +6,8 @@ public class MissionAreaCamera : MonoBehaviour
     {
         HorizontalByPlayerX,
         FixedAreaPan,
-        HorizontalByPlayerXWithExit
+        HorizontalByPlayerXWithExit,
+        FixedByPlayer
     }
 
     [Header("Mode")]
@@ -125,6 +126,10 @@ public class MissionAreaCamera : MonoBehaviour
         {
             ControlHorizontalCameraWithExit();
         }
+        else if (cameraMode == MissionCameraMode.FixedByPlayer)
+        {
+            ControlFixedByPlayer();
+        }
         else
         {
             ControlHorizontalCamera();
@@ -153,6 +158,40 @@ public class MissionAreaCamera : MonoBehaviour
         cameraRig.transform.position = Vector3.Lerp(
             enterCameraPos,
             fixedTarget,
+            curvedMoveT
+        );
+
+        targetCamera.fieldOfView = Mathf.Lerp(
+            startZoomSize,
+            finalZoomSize,
+            curvedZoomT
+        );
+    }
+
+    // FixedAreaPan과 같은 fixedPanMoveTime/fixedPanZoomTime/fixedPanCurve 타이밍을 쓰지만,
+    // 목표 위치가 Inspector에 고정된 targetPos가 아니라 플레이어의 현재 위치다. moveT가
+    // fixedPanMoveTime 뒤에 1로 클램프된 이후에도 이 메서드는 Update()에서 매 프레임
+    // 계속 호출되므로, Lerp(enterCameraPos, playerFollowPos, 1) == playerFollowPos가 되어
+    // 그 이후로는 플레이어를 그대로 따라간다 - 영역을 벗어나 OnTriggerExit2D가 호출될
+    // 때까지 계속.
+    private void ControlFixedByPlayer()
+    {
+        if (cameraRig == null || targetCamera == null)
+            return;
+
+        fixedPanTimer += Time.deltaTime;
+
+        float moveT = fixedPanMoveTime <= 0f ? 1f : Mathf.Clamp01(fixedPanTimer / fixedPanMoveTime);
+        float zoomT = fixedPanZoomTime <= 0f ? 1f : Mathf.Clamp01(fixedPanTimer / fixedPanZoomTime);
+
+        float curvedMoveT = fixedPanCurve.Evaluate(moveT);
+        float curvedZoomT = fixedPanCurve.Evaluate(zoomT);
+
+        Vector3 playerFollowPos = new Vector3(player.position.x, player.position.y, enterCameraPos.z);
+
+        cameraRig.transform.position = Vector3.Lerp(
+            enterCameraPos,
+            playerFollowPos,
             curvedMoveT
         );
 
@@ -407,7 +446,17 @@ public class MissionAreaCamera : MonoBehaviour
         isCameraControl = false;
         player = null;
 
-        if (cameraMode == MissionCameraMode.FixedAreaPan && smoothReturnOnExit)
+        // HorizontalByPlayerX(WithExit)는 경계까지 연속 보간이 이미 끝나 있어서(경계=줌 0%
+        // 지점) 나갈 때 이미 원래 상태나 다름없다. FixedAreaPan은 연출용으로 나간 뒤에도
+        // 그 자리에 머무는 걸 의도적으로 선택할 수 있어 smoothReturnOnExit로 켜고 끈다.
+        // 반면 FixedByPlayer는 플레이어를 그대로 따라다니다가 끊기는 방식이라 자체적으로
+        // "원래대로 돌아간" 상태가 존재하지 않는다 - 되돌리지 않으면 플레이어가 걸어나가는
+        // 동안 카메라가 마지막 위치/줌에 그대로 멈춰있게 되므로, 이 모드는 항상 되돌린다.
+        bool shouldSmoothReturn =
+            (cameraMode == MissionCameraMode.FixedAreaPan && smoothReturnOnExit) ||
+            cameraMode == MissionCameraMode.FixedByPlayer;
+
+        if (shouldSmoothReturn)
         {
             isReturning = true;
             returnTimer = 0f;

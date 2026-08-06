@@ -284,12 +284,19 @@ public class PlayerJumpState : PlayerState
     private float moveSpeed;
     private float jumpPower;
 
+    private CapsuleCollider2D col;
+    private LayerMask groundLayer;
+
+    private float groundCheckGraceTimer;
+    private const float GroundCheckGracePeriod = 0.08f;
 
     public PlayerJumpState(PlayerController controller) : base(controller)
     {
         moveSpeed = controller.moveSpeed;
         jumpPower = controller.jumpPower;
 
+        col = controller.GetComponent<CapsuleCollider2D>();
+        groundLayer = LayerMask.GetMask("Floor") | LayerMask.GetMask("Default") | LayerMask.GetMask("Runway");
     }
 
     public override void Enter()
@@ -306,6 +313,8 @@ public class PlayerJumpState : PlayerState
         Debug.Log("점프 활성화 " + jumpPower);
 
         controller.isGround = false;
+
+        groundCheckGraceTimer = GroundCheckGracePeriod;
 
         //if(controller.animator.GetBool("IsJump"))
         //{
@@ -336,7 +345,11 @@ public class PlayerJumpState : PlayerState
 
     public override void PhysicsUpdate()
     {
-        if (controller.isGround || controller.Rigidbody2D.velocity.y <= 0.01f)
+        if (groundCheckGraceTimer > 0f)
+            groundCheckGraceTimer -= Time.fixedDeltaTime;
+
+        if (controller.isGround || controller.Rigidbody2D.velocity.y <= 0.01f ||
+            (groundCheckGraceTimer <= 0f && CheckGrounded()))
         {
             controller.OnFall();
             return;
@@ -350,6 +363,26 @@ public class PlayerJumpState : PlayerState
         velocity.x = moveDirect * controller.moveSpeed;
         controller.Rigidbody2D.velocity = velocity;
 
+    }
+
+    // 경사로에 몸이 파고들며 물리 솔버가 velocity.y를 계속 밀어올려서
+    // isGround/velocity.y 조건만으로는 Fall 전환이 안 되는 경우를 잡기 위한 보조 지면 감지.
+    // PlayerMoveState.CheckFall() / PlayerFallState.CheckLanding()과 동일한 방식.
+    private bool CheckGrounded()
+    {
+        Vector2 checkPos = new Vector2(
+            col.bounds.center.x,
+            col.bounds.min.y - 0.05f
+        );
+
+        Vector2 checkSize = new Vector2(
+            col.bounds.size.x * 0.9f,
+            0.5f
+        );
+
+        Collider2D[] hits = Physics2D.OverlapBoxAll(checkPos, checkSize, 0f, groundLayer);
+
+        return FindSolidGround(hits) != null;
     }
 }
 
