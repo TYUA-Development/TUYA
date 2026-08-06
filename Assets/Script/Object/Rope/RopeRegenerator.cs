@@ -166,6 +166,8 @@ public class RopeRegenerator : MonoBehaviour
 
         if (box.TryGetComponent(out DisappearMethod disappear))
             disappear.PlayAndDestroy();
+        else if (box.TryGetComponent(out BoxObject boxObject))
+            boxObject.PlayDisappearSoundAndDestroy();
         else
             Destroy(box);
     }

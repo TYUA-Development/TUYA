@@ -58,6 +58,9 @@ public class Object_Wind : MonoBehaviour, ICoreEvent
     [Tooltip("바람이 켜져 있다가 꺼지는 순간 한 번 재생할 효과음.")]
     public AudioAssist stop_Wind;
 
+    [Tooltip("바람이 꺼질 때 loop_Wind를 즉시 정지하지 않고 이 시간(초) 동안 볼륨을 서서히 줄이며 정지시킵니다.")]
+    public float loopWindFadeOutDuration = 0.5f;
+
     private Vector2 direction;
     private Vector2 power;
 
@@ -138,7 +141,7 @@ public class Object_Wind : MonoBehaviour, ICoreEvent
             if (isWindAudioPlaying)
             {
                 if (loop_Wind != null)
-                    loop_Wind.Stop();
+                    loop_Wind.FadeOut(loopWindFadeOutDuration);
 
                 isWindAudioPlaying = false;
 
