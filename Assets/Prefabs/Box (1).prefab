@@ -189,10 +189,6 @@ MonoBehaviour:
   maxPitch: 1
   loop: 0
   playOnAwake: 0
-  spatial3D: 0
-  minDistance: 3
-  maxDistance: 20
-  rolloffMode: 1
 --- !u!1 &3210563319396066033
 GameObject:
   m_ObjectHideFlags: 0
@@ -382,10 +378,6 @@ MonoBehaviour:
   maxPitch: 1
   loop: 0
   playOnAwake: 0
-  spatial3D: 0
-  minDistance: 3
-  maxDistance: 20
-  rolloffMode: 1
 --- !u!1 &4834562047527860234
 GameObject:
   m_ObjectHideFlags: 0
@@ -575,10 +567,6 @@ MonoBehaviour:
   maxPitch: 1
   loop: 0
   playOnAwake: 0
-  spatial3D: 0
-  minDistance: 3
-  maxDistance: 20
-  rolloffMode: 1
 --- !u!1 &7535540638311585861
 GameObject:
   m_ObjectHideFlags: 0
@@ -729,6 +717,7 @@ MonoBehaviour:
   boxCollider2D: {fileID: 238328230490472321}
   fall_Box: {fileID: 2204528101022585408}
   hit_Box: {fileID: 1492294173965802284}
+  hitSoundStopVelocity: 0.05
   disappear_Box: {fileID: 9014753039897150232}
   disappearDestroyDelay: 1
 --- !u!114 &7921397085178993480
@@ -879,7 +868,7 @@ BoxCollider2D:
   m_IsTrigger: 1
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: -0.00004759431, y: 0.30168205}
+  m_Offset: {x: -0.00004759431, y: -0.0342194}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0, y: 0}
@@ -890,7 +879,7 @@ BoxCollider2D:
     adaptiveTiling: 0
   m_AutoTiling: 0
   serializedVersion: 2
-  m_Size: {x: 0.89078134, y: 0.13106644}
+  m_Size: {x: 0.89078134, y: 0.8028693}
   m_EdgeRadius: 0
 --- !u!1 &7937474337598380324
 GameObject:

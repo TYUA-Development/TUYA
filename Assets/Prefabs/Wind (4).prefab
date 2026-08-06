@@ -19505,6 +19505,7 @@ MonoBehaviour:
   loop_Wind: {fileID: 7921011304631773764}
   start_Wind: {fileID: 817942277606571583}
   stop_Wind: {fileID: 3635457162067108078}
+  loopWindFadeOutDuration: 2
 --- !u!50 &4873184293508192052
 Rigidbody2D:
   serializedVersion: 4
@@ -19585,7 +19586,7 @@ AudioSource:
   SpatializePostEffects: 0
   Priority: 128
   DopplerLevel: 1
-  MinDistance: 1
+  MinDistance: 81.013115
   MaxDistance: 500
   Pan2D: 0
   rolloffMode: 0
@@ -19774,7 +19775,7 @@ AudioSource:
   SpatializePostEffects: 0
   Priority: 128
   DopplerLevel: 1
-  MinDistance: 1
+  MinDistance: 81.45686
   MaxDistance: 500
   Pan2D: 0
   rolloffMode: 0
@@ -20004,8 +20005,8 @@ AudioSource:
   SpatializePostEffects: 0
   Priority: 128
   DopplerLevel: 1
-  MinDistance: 1
-  MaxDistance: 500
+  MinDistance: 50
+  MaxDistance: 100
   Pan2D: 0
   rolloffMode: 0
   BypassEffects: 0
@@ -20040,7 +20041,7 @@ AudioSource:
     m_Curve:
     - serializedVersion: 3
       time: 0
-      value: 0
+      value: 1
       inSlope: 0
       outSlope: 0
       tangentMode: 0
@@ -20094,8 +20095,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   clips:
   - clip: {fileID: 8300000, guid: 773de06c4a9363b48831168213191773, type: 3}
-    volume: 0.027
-  volume: 0.1
+    volume: 0.15
+  volume: 0.312
   volumeCurve:
     serializedVersion: 2
     m_Curve:
