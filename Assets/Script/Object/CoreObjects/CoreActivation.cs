@@ -142,7 +142,12 @@ public class CoreActivation : MonoBehaviour, IArrowHit, ICoreEvent
 
         yield return StartCoroutine(FadeRendererAlpha(activateGlowRenderer, 0f, activateGlowAlpha, activateGlowTime));
         yield return StartCoroutine(FadeRendererAlpha(stableGlowRenderer, 0f, stableGlowAlpha, 0.25f));
-        yield return StartCoroutine(FadeRendererAlpha(activateGlowRenderer, activateGlowAlpha, 0f, activateGlowFadeOutTime));
+
+        // activateOnlyOnce면 이 활성화가 마지막이자 영구적인 상태이므로 activateGlowRenderer도
+        // stableGlowRenderer처럼 켜진 채로 유지한다. 다시 활성화될 수 있는 코어만 원래 강한
+        // 활성 플래시(activateGlowRenderer)를 페이드아웃해 은은한 stableGlow만 남긴다.
+        if (!activateOnlyOnce)
+            yield return StartCoroutine(FadeRendererAlpha(activateGlowRenderer, activateGlowAlpha, 0f, activateGlowFadeOutTime));
 
         UnlockPlayer();
 

@@ -102,11 +102,17 @@ public class MissionAreaCamera : MonoBehaviour
     {
         if (isReturning)
         {
-            // CameraMovement.isMovingEvent는 여러 스크립트가 공유하는 전역 플래그라 다른
-            // 스크립트가 중간에 false로 되돌릴 수 있다. 이 컴포넌트가 카메라를 붙잡고 있는
-            // 동안은 매 프레임 다시 true로 재확인해서 즉시 되찾아온다.
+            // FixedByPlayer는 나가는 순간까지 카메라가 플레이어를 1:1로 계속 따라오고 있었으므로
+            // 이미 정상 위치 근처다. 위치를 여기서 붙잡고 있으면 오히려 진입 당시의 옛 위치로
+            // 갔다가(플레이어에게서 멀어짐) 반환이 끝난 뒤 CameraMovement가 다시 따라잡는
+            // 부자연스러운 왕복이 생긴다. 그래서 이 모드만 위치 제어를 즉시 CameraMovement에게
+            // 돌려주고 줌만 서서히 되돌린다. 다른 모드는 위치 자체를 enterCameraPos로 되돌려야
+            // 하므로 그동안 계속 CameraMovement.isMovingEvent를 true로 재확인해서 follow를 막는다
+            // (여러 스크립트가 공유하는 전역 플래그라 중간에 false로 되돌아갈 수 있어서).
+            bool holdCameraPosition = cameraMode != MissionCameraMode.FixedByPlayer;
+
             if (CameraMovement.Instance != null)
-                CameraMovement.Instance.isMovingEvent = true;
+                CameraMovement.Instance.isMovingEvent = holdCameraPosition;
 
             UpdateReturnCamera();
             return;
@@ -187,7 +193,8 @@ public class MissionAreaCamera : MonoBehaviour
         float curvedMoveT = fixedPanCurve.Evaluate(moveT);
         float curvedZoomT = fixedPanCurve.Evaluate(zoomT);
 
-        Vector3 playerFollowPos = new Vector3(player.position.x, player.position.y, enterCameraPos.z);
+        float followY = fixPosY ? targetPos.y : player.position.y;
+        Vector3 playerFollowPos = new Vector3(player.position.x, followY, enterCameraPos.z);
 
         cameraRig.transform.position = Vector3.Lerp(
             enterCameraPos,
@@ -367,11 +374,16 @@ public class MissionAreaCamera : MonoBehaviour
         float t = returnMoveTime <= 0f ? 1f : Mathf.Clamp01(returnTimer / returnMoveTime);
         float curvedT = fixedPanCurve.Evaluate(t);
 
-        cameraRig.transform.position = Vector3.Lerp(
-            returnStartPos,
-            enterCameraPos,
-            curvedT
-        );
+        // FixedByPlayer는 위치를 여기서 되돌리지 않는다 - CameraMovement.isMovingEvent가 이미
+        // false로 풀려 있어(Update() 참고) 그 자체 SmoothDamp follow가 계속 플레이어를 따라간다.
+        if (cameraMode != MissionCameraMode.FixedByPlayer)
+        {
+            cameraRig.transform.position = Vector3.Lerp(
+                returnStartPos,
+                enterCameraPos,
+                curvedT
+            );
+        }
 
         targetCamera.fieldOfView = Mathf.Lerp(
             returnStartZoom,
