@@ -19574,7 +19574,7 @@ AudioSource:
   m_GameObject: {fileID: 5360750390459896849}
   m_Enabled: 1
   serializedVersion: 4
-  OutputAudioMixerGroup: {fileID: 0}
+  OutputAudioMixerGroup: {fileID: 8669485888338598558, guid: d4f31df908b683344a03048914daa958, type: 2}
   m_audioClip: {fileID: 0}
   m_PlayOnAwake: 1
   m_Volume: 1
@@ -19763,7 +19763,7 @@ AudioSource:
   m_GameObject: {fileID: 5704483035196213791}
   m_Enabled: 1
   serializedVersion: 4
-  OutputAudioMixerGroup: {fileID: 0}
+  OutputAudioMixerGroup: {fileID: 8669485888338598558, guid: d4f31df908b683344a03048914daa958, type: 2}
   m_audioClip: {fileID: 0}
   m_PlayOnAwake: 1
   m_Volume: 1
@@ -19862,7 +19862,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2ba3c9f38548e7145b8580ffda9ee9be, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  clips: []
+  clips:
+  - clip: {fileID: 8300000, guid: 3d1b10d648e52744b95fea29587238bc, type: 3}
+    volume: 0.205
   volume: 1
   volumeCurve:
     serializedVersion: 2
@@ -19991,7 +19993,7 @@ AudioSource:
   m_GameObject: {fileID: 8595710035862140327}
   m_Enabled: 1
   serializedVersion: 4
-  OutputAudioMixerGroup: {fileID: 0}
+  OutputAudioMixerGroup: {fileID: 8669485888338598558, guid: d4f31df908b683344a03048914daa958, type: 2}
   m_audioClip: {fileID: 0}
   m_PlayOnAwake: 1
   m_Volume: 1
@@ -20090,46 +20092,30 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2ba3c9f38548e7145b8580ffda9ee9be, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  clips: []
-  volume: 1
+  clips:
+  - clip: {fileID: 8300000, guid: 773de06c4a9363b48831168213191773, type: 3}
+    volume: 0.027
+  volume: 0.1
   volumeCurve:
     serializedVersion: 2
     m_Curve:
     - serializedVersion: 3
-      time: 0.0041666673
-      value: -0.003990233
-      inSlope: 0.75174934
-      outSlope: 0.75174934
-      tangentMode: 0
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 34
       weightedMode: 0
       inWeight: 0
-      outWeight: 1
+      outWeight: 0
     - serializedVersion: 3
-      time: 0.21030906
-      value: 1.0016114
-      inSlope: 0.047852244
-      outSlope: 0.047852244
-      tangentMode: 0
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 34
       weightedMode: 0
-      inWeight: 1
-      outWeight: 0.3959338
-    - serializedVersion: 3
-      time: 0.6986201
-      value: 0.9994189
-      inSlope: 0.00063334854
-      outSlope: 0.00063334854
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.33333334
-      outWeight: 0.77631134
-    - serializedVersion: 3
-      time: 1.0009288
-      value: 0.00037875772
-      inSlope: -1.421491
-      outSlope: -1.421491
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.26340732
+      inWeight: 0
       outWeight: 0
     m_PreInfinity: 2
     m_PostInfinity: 2
