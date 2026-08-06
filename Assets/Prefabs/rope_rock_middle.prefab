@@ -191,10 +191,6 @@ MonoBehaviour:
   maxPitch: 1
   loop: 0
   playOnAwake: 0
-  spatial3D: 0
-  minDistance: 3
-  maxDistance: 20
-  rolloffMode: 1
 --- !u!1 &1235747783960662651
 GameObject:
   m_ObjectHideFlags: 0
@@ -541,10 +537,6 @@ MonoBehaviour:
   maxPitch: 1
   loop: 0
   playOnAwake: 0
-  spatial3D: 0
-  minDistance: 3
-  maxDistance: 20
-  rolloffMode: 1
 --- !u!1 &8506648383947369980
 GameObject:
   m_ObjectHideFlags: 0
@@ -736,10 +728,6 @@ MonoBehaviour:
   maxPitch: 1
   loop: 0
   playOnAwake: 0
-  spatial3D: 0
-  minDistance: 3
-  maxDistance: 20
-  rolloffMode: 1
 --- !u!1 &8666532238974513267
 GameObject:
   m_ObjectHideFlags: 0
@@ -924,6 +912,7 @@ MonoBehaviour:
   boxCollider2D: {fileID: 1452602622172879843}
   fall_Box: {fileID: 6144265377445820229}
   hit_Box: {fileID: 2118474137844823594}
+  hitSoundStopVelocity: 0.05
   disappear_Box: {fileID: 8254540398885814473}
   disappearDestroyDelay: 1
 --- !u!114 &5529608457170820869

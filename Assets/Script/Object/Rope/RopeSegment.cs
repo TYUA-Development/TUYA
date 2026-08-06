@@ -9,6 +9,7 @@ public class RopeSegment : MonoBehaviour, IArrowPassThrough
     [SerializeField] private HingeJoint2D joint;
 
     public Rigidbody2D Body => body;
+    public Rope Owner => owner;
     public bool IsCut => joint == null;
 
     public void Initialize(Rope owner, Rigidbody2D body, HingeJoint2D joint)
