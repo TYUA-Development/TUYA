@@ -38,6 +38,10 @@ public class RopeRegenerator : MonoBehaviour
     [Header("Glow")]
     [SerializeField] private Color glowColor = Color.white;
 
+    [Header("Audio")]
+    [Tooltip("로프가 끊어져 붕괴된 뒤 재생성(박스 교체 + 로프 재생성)이 시작되는 순간 한 번 재생할 효과음.")]
+    [SerializeField] private AudioAssist regenerate_Rope;
+
     private static readonly int FlashColorId = Shader.PropertyToID("_FlashColor");
     private static readonly int FlashAmountId = Shader.PropertyToID("_FlashAmount");
 
@@ -96,6 +100,9 @@ public class RopeRegenerator : MonoBehaviour
     private IEnumerator RegenerateRoutine()
     {
         isRegenerating = true;
+
+        if (regenerate_Rope != null)
+            regenerate_Rope.Play();
 
         List<GameObject> newlySpawnedBoxes = AdvanceHangingBoxes();
 

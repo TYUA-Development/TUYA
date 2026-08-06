@@ -7,10 +7,10 @@ public class PlayerCutsceneLocker2D : MonoBehaviour
     public Rigidbody2D playerRigidbody;
 
     [Header("Lock Settings")]
-    [Tooltip("Ã¼Å©ÇÏ¸é ¿¬Ãâ Áß PlayerController¸¦ Àá±ñ ²¨¼­ ÀÔ·Â/ÀÌµ¿À» ¿ÏÀüÈ÷ ¸·½À´Ï´Ù.")]
+    [Tooltip("Ã¼Å©ï¿½Ï¸ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ PlayerControllerï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ô·ï¿½/ï¿½Ìµï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½.")]
     public bool disablePlayerControllerDuringLock = true;
 
-    [Tooltip("Ã¼Å©ÇÏ¸é Rigidbody2D¸¦ ¿ÏÀüÈ÷ °íÁ¤ÇÕ´Ï´Ù.")]
+    [Tooltip("Ã¼Å©ï¿½Ï¸ï¿½ Rigidbody2Dï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Õ´Ï´ï¿½.")]
     public bool freezeRigidbodyDuringLock = true;
 
     [Header("State")]
@@ -56,6 +56,9 @@ public class PlayerCutsceneLocker2D : MonoBehaviour
         CacheOriginalValues();
 
         isLocked = true;
+
+        if (playerController != null && playerController.currentState != playerController.idleState)
+            playerController.OnIdle();
 
         if (playerRigidbody != null)
         {

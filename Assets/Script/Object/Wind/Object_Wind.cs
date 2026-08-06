@@ -48,6 +48,16 @@ public class Object_Wind : MonoBehaviour, ICoreEvent
     [Tooltip("차단 판정 최소 검사 깊이(유닛). 실제 검사 범위는 대상 위치부터 이 바람 콜라이더 자신의 경계까지 자동으로 늘어나므로(점프 등으로 차단벽에서 떨어져도 같은 바람 구역 안이면 계속 보호됨), 이 값은 그 여유분(그리고 콜라이더가 없을 때의 기본값) 역할만 합니다.")]
     public float blockingCheckDepth = 0.3f;
 
+    [Header("Audio")]
+    [Tooltip("이 바람이 켜져 있는 동안(콜라이더가 활성 상태인 동안) 재생할 바람 소리. AudioAssist의 Loop를 켜두면 계속 반복 재생됩니다.")]
+    public AudioAssist loop_Wind;
+
+    [Tooltip("바람이 꺼져 있다가 켜지는 순간(활성화 직후) 한 번 재생할 효과음.")]
+    public AudioAssist start_Wind;
+
+    [Tooltip("바람이 켜져 있다가 꺼지는 순간 한 번 재생할 효과음.")]
+    public AudioAssist stop_Wind;
+
     private Vector2 direction;
     private Vector2 power;
 
@@ -56,6 +66,9 @@ public class Object_Wind : MonoBehaviour, ICoreEvent
 
     private Collider2D selfCollider;
     private float? baseWindPower;
+
+    private bool wantsWindAudio;
+    private bool isWindAudioPlaying;
 
     // CoreObjectToggle이 여러 인스턴스로 나뉘어(예: 끄는 스위치/켜는 스위치) 같은 바람을 함께
     // 다룰 수 있어, "원래 windPower"를 외부(CoreObjectToggle)가 개별적으로 기억하면 서로 다른
@@ -91,6 +104,61 @@ public class Object_Wind : MonoBehaviour, ICoreEvent
     {
         selfCollider = GetComponent<Collider2D>();
         Init();
+
+        UpdateWindAudio(selfCollider == null || selfCollider.enabled);
+    }
+
+    // GameObject가 다시 활성화될 때(예: CoreObjectToggle이 SetColliderEnabled(true)를
+    // SetActive(true)보다 먼저 호출하는 순서라, 그 시점엔 아직 비활성 상태라 Play()를 걸 수
+    // 없었던 경우) 마지막으로 원했던 재생 상태(wantsWindAudio)를 다시 반영한다.
+    private void OnEnable()
+    {
+        if (wantsWindAudio)
+            UpdateWindAudio(true);
+    }
+
+    // GameObject가 비활성화되면 AudioSource도 같이 멈추므로(Unity가 자동으로 처리),
+    // 재생 중 플래그만 초기화해서 다음 OnEnable/SetColliderEnabled(true) 때 다시 재생되게 한다.
+    private void OnDisable()
+    {
+        isWindAudioPlaying = false;
+    }
+
+    // shouldPlay=false면 즉시 정지, true면 재생을 "원한다"는 의도(wantsWindAudio)를 기록하고
+    // GameObject가 활성 상태일 때만 실제로 Play()를 건다 - 비활성 오브젝트에서 AudioAssist.Play()를
+    // 호출하면 Unity가 "Coroutines can't be started on inactive GameObjects" 에러를 낸다.
+    // isWindAudioPlaying이 실제로 바뀌는 시점(꺼짐↔켜짐 전환)에만 start_Wind/stop_Wind
+    // 원샷 효과음을 재생한다 - 매번 호출될 때마다 재생되는 게 아니라 딱 그 전환 순간에만.
+    private void UpdateWindAudio(bool shouldPlay)
+    {
+        wantsWindAudio = shouldPlay;
+
+        if (!shouldPlay)
+        {
+            if (isWindAudioPlaying)
+            {
+                if (loop_Wind != null)
+                    loop_Wind.Stop();
+
+                isWindAudioPlaying = false;
+
+                if (gameObject.activeInHierarchy && stop_Wind != null)
+                    stop_Wind.Play();
+            }
+
+            return;
+        }
+
+        if (!gameObject.activeInHierarchy || isWindAudioPlaying)
+            return;
+
+        isWindAudioPlaying = true;
+
+        if (loop_Wind != null)
+            loop_Wind.Play();
+
+        if (start_Wind != null)
+            start_Wind.Play();
     }
 
     public void Init()
@@ -110,6 +178,8 @@ public class Object_Wind : MonoBehaviour, ICoreEvent
 
         if (selfCollider != null)
             selfCollider.enabled = value;
+
+        UpdateWindAudio(value);
     }
 
     // CoreObjectToggle이 이 바람이 "지금 켜져 있는지"를 판단할 때 쓴다. 같은 바람 오브젝트를

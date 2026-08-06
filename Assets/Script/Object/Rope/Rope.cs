@@ -43,12 +43,12 @@ public class Rope : MonoBehaviour
     [Header("Rendering")]
     [SerializeField] private int segmentOrderInLayer = 0;
 
-    [Header("Cut FX")]
-    [SerializeField] private GameObject cutFXPrefab;
-    [SerializeField] private AudioSource audioSource;
-    [SerializeField] private AudioClip cutClip;
-    [Range(0f, 1f)]
-    [SerializeField] private float cutVolume = 1f;
+    [Header("Audio")]
+    [Tooltip("세그먼트가 끊어지는 순간 한 번 재생할 효과음.")]
+    [SerializeField] private AudioAssist cut_Rope;
+
+    [Tooltip("로프가 끊어지지 않고 온전한(팽팽한) 동안 반복 재생할 소리. AudioAssist의 Loop를 켜두어야 합니다. 로프가 끊어지는 순간 멈추고, 재생성되어 다시 지어지면 다시 재생됩니다.")]
+    [SerializeField] private AudioAssist loop_Rope;
 
     [Header("Hanging Objects")]
     [SerializeField] private RopeHangingAttachment[] hangingAttachments;
@@ -103,6 +103,13 @@ public class Rope : MonoBehaviour
         if (!isCollapsing && !isWaitingToCollapse && IsCut)
         {
             isWaitingToCollapse = true;
+
+            // 끊어진 순간(붕괴가 시작되기 전, collapseDelay를 기다리는 동안 포함) 더 이상
+            // 팽팽하지 않으므로 즉시 멈춘다 - 세그먼트가 실제로 사라지는 건 그보다 한참
+            // 뒤(collapseDelay + 순차 페이드)라서 그때까지 기다리면 늦다.
+            if (loop_Rope != null)
+                loop_Rope.Stop();
+
             StartCoroutine(WaitThenCollapseRoutine());
         }
     }
@@ -166,11 +173,8 @@ public class Rope : MonoBehaviour
 
     public void NotifySegmentCut(RopeSegment segment, Vector2 cutPoint)
     {
-        if (cutFXPrefab != null)
-            Instantiate(cutFXPrefab, cutPoint, Quaternion.identity);
-
-        if (audioSource != null && cutClip != null)
-            audioSource.PlayOneShot(cutClip, cutVolume);
+        if (cut_Rope != null)
+            cut_Rope.Play();
     }
 
     [ContextMenu("Build Rope")]
@@ -230,6 +234,11 @@ public class Rope : MonoBehaviour
         }
 
         AttachHangingObjects();
+
+        // 에디터에서 [ContextMenu("Build Rope")]로 플레이 모드 밖에서 호출될 수도 있는데,
+        // Play()는 코루틴을 시작하므로 플레이 모드가 아니면 실행할 수 없다.
+        if (Application.isPlaying && loop_Rope != null)
+            loop_Rope.Play();
     }
 
     [ContextMenu("Clear Rope")]

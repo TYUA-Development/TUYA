@@ -327,55 +327,69 @@ public class Object_Wind_Particle : MonoBehaviour
                 ? particleBuffer[i].position
                 : ps.transform.TransformPoint(particleBuffer[i].position);
 
-            if (killOnCollisionLayer.value != 0 && Physics2D.OverlapPoint(worldPos, killOnCollisionLayer))
-            {
-                particleBuffer[i].remainingLifetime = 0f;
-                continue;
-            }
+            // 킬/차단 판정은 이 파티클이 지금 이 Wind와 실제로 관련 있는 위치에 있을 때만 한다
+            // (이 Wind 자신의 콜라이더 안이거나, 막 리다이렉트하려는 connectionPoint 반경 안).
+            // 이 조건이 없으면 Wind Link로 같은 파티클 시스템을 두 Wind의 affectedParticleSystems에
+            // 함께 넣었을 때, 아직 반대편 Wind 근처에도 안 간 파티클까지 "내 위치에서 시야가
+            // 막혔다"고 즉시 죽여버리는 문제가 생긴다 (연결이 필요했던 이유 자체가 두 Wind
+            // 사이를 막는 지형이라, 멀리 있는 파티클은 십중팔구 차단 판정에 걸린다).
+            bool relevantToThisWind =
+                (windCollider != null && windCollider.OverlapPoint(worldPos)) ||
+                (connectionPoint != null &&
+                    ((Vector2)connectionPoint.position - (Vector2)worldPos).sqrMagnitude <= connectionRadius * connectionRadius);
 
-            if (IsBlocked(worldPos))
+            if (relevantToThisWind)
             {
-                // 즉시 제거하는 대신, 차단되기 시작한 시점의 알파를 기준으로 blockedFadeOutDuration
-                // 동안 0까지 서서히 투명해지다가 사라지게 한다. randomSeed로 파티클 개체를 프레임 간
-                // 추적하며, 이번 프레임에 차단된 파티클만 currentBlocked에 다시 담아 매 프레임 새로
-                // 구성한다 (죽거나 더 이상 차단되지 않은 파티클의 기록은 자동으로 버려져 누수되지 않는다).
-                if (blockedFadeOutDuration <= 0f)
+                if (killOnCollisionLayer.value != 0 && Physics2D.OverlapPoint(worldPos, killOnCollisionLayer))
                 {
                     particleBuffer[i].remainingLifetime = 0f;
                     continue;
                 }
 
-                uint seed = particleBuffer[i].randomSeed;
-                BlockedFadeState state;
-                if (previousBlocked != null && previousBlocked.TryGetValue(seed, out state))
+                if (IsBlocked(worldPos))
                 {
-                    state.elapsed += Time.deltaTime;
+                    // 즉시 제거하는 대신, 차단되기 시작한 시점의 알파를 기준으로 blockedFadeOutDuration
+                    // 동안 0까지 서서히 투명해지다가 사라지게 한다. randomSeed로 파티클 개체를 프레임 간
+                    // 추적하며, 이번 프레임에 차단된 파티클만 currentBlocked에 다시 담아 매 프레임 새로
+                    // 구성한다 (죽거나 더 이상 차단되지 않은 파티클의 기록은 자동으로 버려져 누수되지 않는다).
+                    if (blockedFadeOutDuration <= 0f)
+                    {
+                        particleBuffer[i].remainingLifetime = 0f;
+                        continue;
+                    }
+
+                    uint seed = particleBuffer[i].randomSeed;
+                    BlockedFadeState state;
+                    if (previousBlocked != null && previousBlocked.TryGetValue(seed, out state))
+                    {
+                        state.elapsed += Time.deltaTime;
+                    }
+                    else
+                    {
+                        state.elapsed = 0f;
+                        state.baselineAlpha = particleBuffer[i].startColor.a;
+                    }
+
+                    float fadeT = Mathf.Clamp01(state.elapsed / blockedFadeOutDuration);
+
+                    Color32 color = particleBuffer[i].startColor;
+                    color.a = (byte)Mathf.RoundToInt(Mathf.Lerp(state.baselineAlpha, 0f, fadeT));
+                    particleBuffer[i].startColor = color;
+
+                    if (fadeT >= 1f)
+                    {
+                        particleBuffer[i].remainingLifetime = 0f;
+                    }
+                    else
+                    {
+                        if (currentBlocked == null)
+                            currentBlocked = new Dictionary<uint, BlockedFadeState>();
+
+                        currentBlocked[seed] = state;
+                    }
+
+                    continue;
                 }
-                else
-                {
-                    state.elapsed = 0f;
-                    state.baselineAlpha = particleBuffer[i].startColor.a;
-                }
-
-                float fadeT = Mathf.Clamp01(state.elapsed / blockedFadeOutDuration);
-
-                Color32 color = particleBuffer[i].startColor;
-                color.a = (byte)Mathf.RoundToInt(Mathf.Lerp(state.baselineAlpha, 0f, fadeT));
-                particleBuffer[i].startColor = color;
-
-                if (fadeT >= 1f)
-                {
-                    particleBuffer[i].remainingLifetime = 0f;
-                }
-                else
-                {
-                    if (currentBlocked == null)
-                        currentBlocked = new Dictionary<uint, BlockedFadeState>();
-
-                    currentBlocked[seed] = state;
-                }
-
-                continue;
             }
 
             if (released)
@@ -412,13 +426,18 @@ public class Object_Wind_Particle : MonoBehaviour
 
                 if (connectionDistSqr <= connectionRadius * connectionRadius)
                 {
-                    // 방향만 새 목표(연결된 Wind의 시작 지점)로 바꾸고 속도 크기는 그대로 유지한다.
-                    Vector2 toTarget = (Vector2)connectionTargetPoint.position - particlePos2D;
-                    if (toTarget.sqrMagnitude > 0.0001f)
-                    {
-                        float speed = particleBuffer[i].velocity.magnitude;
-                        particleBuffer[i].velocity = toTarget.normalized * speed;
-                    }
+                    // 방향을 꺾어서 날아가게 하면 그 이동 경로가 부자연스러워 보이므로,
+                    // 목표 지점(연결된 Wind의 시작 지점)으로 즉시 순간이동시킨다. 이때 모든
+                    // 파티클을 같은 좌표로 모으면 부자연스러우므로, connectionPoint 대비
+                    // 어긋나 있던 만큼(발사 폭에 따른 Y 편차 등)을 connectionTargetPoint에도
+                    // 그대로 유지한다. 속도는 건드리지 않고 그대로 유지해서, 도착 직후
+                    // 반대편 Wind가 이어받아 밀어줄 때(또는 관성으로 계속 날아갈 때) 부드럽게
+                    // 이어지도록 한다.
+                    Vector2 offsetFromConnectionPoint = particlePos2D - (Vector2)connectionPoint.position;
+                    Vector3 targetWorldPos = connectionTargetPoint.position + (Vector3)offsetFromConnectionPoint;
+                    particleBuffer[i].position = isWorldSpace
+                        ? targetWorldPos
+                        : ps.transform.InverseTransformPoint(targetWorldPos);
 
                     continue;
                 }
