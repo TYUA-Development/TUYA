@@ -333,6 +333,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   knockbackForce: 20
   boxCollider2D: {fileID: 1452602622172879843}
+  fall_Box: {fileID: 0}
+  hit_Box: {fileID: 0}
+  disappear_Box: {fileID: 0}
+  disappearDestroyDelay: 1
 --- !u!114 &5529608457170820869
 MonoBehaviour:
   m_ObjectHideFlags: 0
