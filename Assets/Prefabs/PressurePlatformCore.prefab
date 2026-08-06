@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 1700618721658417004}
   - component: {fileID: 5632631835367002928}
   - component: {fileID: 7540950760615984116}
+  - component: {fileID: 2273939016126336631}
   m_Layer: 6
   m_Name: PressurePlate_top 1
   m_TagString: Floor
@@ -202,6 +203,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 29b15978ee53ac54d8cca61411f43a15, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &2273939016126336631
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 844268039484974732}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 994c6e28fe41c614fa5744e010923575, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  attachedObjects: []
 --- !u!1 &1756586738037306935
 GameObject:
   m_ObjectHideFlags: 0
@@ -442,6 +456,7 @@ GameObject:
   - component: {fileID: 1292566485740039135}
   - component: {fileID: 8473327462375061737}
   - component: {fileID: 7349464286454486887}
+  - component: {fileID: 8135813738984616630}
   m_Layer: 6
   m_Name: PressurePlate_top 1
   m_TagString: Floor
@@ -631,6 +646,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 29b15978ee53ac54d8cca61411f43a15, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &8135813738984616630
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2865016568820328159}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 994c6e28fe41c614fa5744e010923575, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  attachedObjects: []
 --- !u!1 &3540902356730190661
 GameObject:
   m_ObjectHideFlags: 0
@@ -822,6 +850,10 @@ MonoBehaviour:
   maxPitch: 1
   loop: 0
   playOnAwake: 0
+  spatial3D: 1
+  minDistance: 3
+  maxDistance: 20
+  rolloffMode: 1
 --- !u!1 &3578046869540585342
 GameObject:
   m_ObjectHideFlags: 0
@@ -1188,6 +1220,10 @@ MonoBehaviour:
   maxPitch: 1
   loop: 1
   playOnAwake: 0
+  spatial3D: 1
+  minDistance: 3
+  maxDistance: 20
+  rolloffMode: 1
 --- !u!1 &4894072180274447455
 GameObject:
   m_ObjectHideFlags: 0
@@ -1639,6 +1675,10 @@ MonoBehaviour:
   maxPitch: 1
   loop: 0
   playOnAwake: 0
+  spatial3D: 1
+  minDistance: 3
+  maxDistance: 20
+  rolloffMode: 1
 --- !u!1 &6726953723219411233
 GameObject:
   m_ObjectHideFlags: 0
@@ -1821,6 +1861,10 @@ MonoBehaviour:
   maxPitch: 1
   loop: 1
   playOnAwake: 0
+  spatial3D: 1
+  minDistance: 3
+  maxDistance: 20
+  rolloffMode: 1
 --- !u!1 &6748194613387642436
 GameObject:
   m_ObjectHideFlags: 0
@@ -2189,6 +2233,10 @@ MonoBehaviour:
   maxPitch: 1
   loop: 0
   playOnAwake: 0
+  spatial3D: 1
+  minDistance: 3
+  maxDistance: 20
+  rolloffMode: 1
 --- !u!1 &8989511564090390275
 GameObject:
   m_ObjectHideFlags: 0
@@ -2375,3 +2423,7 @@ MonoBehaviour:
   maxPitch: 1
   loop: 0
   playOnAwake: 0
+  spatial3D: 1
+  minDistance: 3
+  maxDistance: 20
+  rolloffMode: 1
