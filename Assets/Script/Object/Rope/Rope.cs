@@ -43,6 +43,16 @@ public class Rope : MonoBehaviour
     [Header("Rendering")]
     [SerializeField] private int segmentOrderInLayer = 0;
 
+    [Header("Initial Settle")]
+    [Tooltip("생성 직후 중력+Joint에 의해 자연스럽게 늘어진 최종 자세가 될 때까지 물리 시뮬레이션을 미리 빨리 감는다. 꺼두면 기존처럼 생성된 직선 자세에서 실제 프레임을 거치며 서서히 늘어진다.")]
+    [SerializeField] private bool settleOnBuild = true;
+
+    [Tooltip("빨리 감기할 최대 물리 스텝 수(Time.fixedDeltaTime 단위). 세그먼트 속도가 충분히 잦아들면 이보다 먼저 멈춘다.")]
+    [SerializeField] private int maxSettleSteps = 120;
+
+    [Tooltip("세그먼트(+매달린 오브젝트)의 속도가 전부 이 값 이하로 떨어지면 다 늘어진 것으로 보고 빨리 감기를 멈춘다 (유닛/초).")]
+    [SerializeField] private float settleVelocityThreshold = 0.02f;
+
     [Header("Audio")]
     [Tooltip("세그먼트가 끊어지는 순간 한 번 재생할 효과음.")]
     [SerializeField] private AudioAssist cut_Rope;
@@ -235,10 +245,98 @@ public class Rope : MonoBehaviour
 
         AttachHangingObjects();
 
+        SettleRopePhysics();
+
         // 에디터에서 [ContextMenu("Build Rope")]로 플레이 모드 밖에서 호출될 수도 있는데,
         // Play()는 코루틴을 시작하므로 플레이 모드가 아니면 실행할 수 없다.
         if (Application.isPlaying && loop_Rope != null)
             loop_Rope.Play();
+    }
+
+    // 세그먼트를 직선으로 배치한 직후 그대로 두면, 실제 게임 프레임을 거치며 중력+Joint가
+    // 서서히 로프를 늘어뜨리는 게 눈에 보인다(수 초간 "출렁"거리며 자리를 잡음). 그 대신
+    // Physics2D.Simulate()로 물리 시간을 미리 빨리 감아서, 처음 렌더링되는 프레임부터 이미
+    // 최종적으로 늘어진 자세이도록 만든다.
+    //
+    // Physics2D.Simulate()는 씬 전체의 물리를 진행시키는 전역 함수라, 그대로 두면 이
+    // 로프와 무관한 플레이어/다른 박스 등도 이 한 프레임 안에서 실제로 몇 초치를
+    // 낙하/이동해버리는 부작용이 생긴다. 그래서 로프 세그먼트(+매달린 오브젝트)를 뺀
+    // 씬의 나머지 모든 Rigidbody2D는 빨리 감기 동안 Simulated를 꺼서 물리에서 완전히
+    // 제외했다가 끝나면 원래대로 되돌린다.
+    private void SettleRopePhysics()
+    {
+        if (!settleOnBuild || !Application.isPlaying || segments == null || segments.Length == 0)
+            return;
+
+        var keep = new List<Rigidbody2D>();
+
+        foreach (RopeSegment segment in segments)
+        {
+            if (segment != null && segment.Body != null)
+                keep.Add(segment.Body);
+        }
+
+        if (hangingAttachments != null)
+        {
+            foreach (RopeHangingAttachment attachment in hangingAttachments)
+            {
+                if (attachment != null && attachment.target != null)
+                    keep.Add(attachment.target);
+            }
+        }
+
+        if (keep.Count == 0)
+            return;
+
+        var keepSet = new HashSet<Rigidbody2D>(keep);
+        var excluded = new List<Rigidbody2D>();
+
+        foreach (Rigidbody2D body in FindObjectsOfType<Rigidbody2D>())
+        {
+            if (body == null || keepSet.Contains(body) || !body.simulated)
+                continue;
+
+            body.simulated = false;
+            excluded.Add(body);
+        }
+
+        SimulationMode2D originalMode = Physics2D.simulationMode;
+        Physics2D.simulationMode = SimulationMode2D.Script;
+
+        try
+        {
+            float dt = Time.fixedDeltaTime;
+            float stopThresholdSqr = settleVelocityThreshold * settleVelocityThreshold;
+
+            for (int step = 0; step < maxSettleSteps; step++)
+            {
+                Physics2D.Simulate(dt);
+
+                float maxSqrSpeed = 0f;
+                foreach (Rigidbody2D body in keep)
+                {
+                    if (body == null)
+                        continue;
+
+                    float sqrSpeed = body.velocity.sqrMagnitude;
+                    if (sqrSpeed > maxSqrSpeed)
+                        maxSqrSpeed = sqrSpeed;
+                }
+
+                if (maxSqrSpeed <= stopThresholdSqr)
+                    break;
+            }
+        }
+        finally
+        {
+            Physics2D.simulationMode = originalMode;
+
+            foreach (Rigidbody2D body in excluded)
+            {
+                if (body != null)
+                    body.simulated = true;
+            }
+        }
     }
 
     [ContextMenu("Clear Rope")]

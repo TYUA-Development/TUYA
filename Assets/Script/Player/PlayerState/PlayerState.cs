@@ -460,6 +460,12 @@ public class PlayerAttackState : PlayerState
     private bool isFinishingAttack;
     private bool attackQueued;
 
+    // 이번 조준에서 실제로 화살을 쐈는지. AttackEnd에서 조준 버튼을 계속/다시 누르고 있을 때만
+    // Idle을 거치지 않고 바로 재조준으로 이어가기 위해 필요하다 - 쏘지 않고 조준만 취소한
+    // 경우(aimingPressed가 false가 되어 StartAttackEnd가 불린 경우)까지 재조준으로 이어지면
+    // 안 되기 때문에 "발사했는가"를 별도로 구분한다.
+    private bool firedThisAim;
+
     private float minAngle;
     private float maxAngle;
 
@@ -495,6 +501,7 @@ public class PlayerAttackState : PlayerState
         isAiming = true;
         isFinishingAttack = false;
         attackQueued = false;
+        firedThisAim = false;
 
         controller.Rigidbody2D.velocity = new Vector2(0f, controller.Rigidbody2D.velocity.y);
 
@@ -626,6 +633,7 @@ public class PlayerAttackState : PlayerState
             if (InputData.attackPressed && controller.attackTimer <= 0)
             {
                 controller.ShootArrow(direction);
+                firedThisAim = true;
                 StartAttackEnd();
             }
 
@@ -656,10 +664,33 @@ public class PlayerAttackState : PlayerState
 
         AnimatorStateInfo info = controller.animator.GetCurrentAnimatorStateInfo(0);
 
+        if (info.IsName("Aiming"))
+        {
+            // AttackEnd -> Aiming으로 바로 이어져 재조준이 시작된 경우. ChangeState 없이(Idle을
+            // 거치지 않고) 같은 attackState 안에서 Enter()와 동일하게 내부 상태만 리셋한다.
+            // 기존 흐름(Idle -> Aiming)과 달리, 여기서는 조준 버튼을 계속 누르고 있어 UpperBody가
+            // 발사 시점부터 계속 꺼져 있었으므로 Aiming 애니메이션이 다시 시작되는 이 시점에
+            // 바로 켜줘야 어색하게 안 보인다 (원래는 Attack.anim의 애니메이션 이벤트가 Aiming이
+            // 다 끝난 뒤에야 켠다).
+            controller.ShowUpperBody();
+            RestartAiming();
+            return;
+        }
+
         if (info.IsName("AttackEnd"))
         {
             if (info.normalizedTime >= 0.1f)
+            {
+                // 화살을 쐈고, 조준 버튼을 계속(또는 다시) 누르고 있으면 Idle로 나가지 않고
+                // IsAiming을 다시 켜서 Animator의 AttackEnd -> Aiming 전환이 이어받게 한다.
+                if (firedThisAim && InputData.aimingPressed)
+                {
+                    controller.animator.SetBool("IsAiming", true);
+                    return;
+                }
+
                 controller.OnIdle();
+            }
 
             return;
         }
@@ -675,6 +706,16 @@ public class PlayerAttackState : PlayerState
             controller.HideUpperBody();
             controller.animator.Play("AttackEnd", 0, 0f);
         }
+    }
+
+    private void RestartAiming()
+    {
+        isAiming = true;
+        isFinishingAttack = false;
+        attackQueued = false;
+        firedThisAim = false;
+
+        controller.Rigidbody2D.velocity = new Vector2(0f, controller.Rigidbody2D.velocity.y);
     }
 
     public override void PhysicsUpdate()
