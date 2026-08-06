@@ -141,8 +141,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2ba3c9f38548e7145b8580ffda9ee9be, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  clips: []
-  volume: 1
+  clips:
+  - clip: {fileID: 8300000, guid: 9a2f6ed7a30f20645bcf97889f164a70, type: 3}
+    volume: 0
+  volume: 0.063
   volumeCurve:
     serializedVersion: 2
     m_Curve:
@@ -504,7 +506,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2ba3c9f38548e7145b8580ffda9ee9be, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  clips: []
+  clips:
+  - clip: {fileID: 8300000, guid: 02c0f249404c66a4ebb187a96e2b7c62, type: 3}
+    volume: 0.042
   volume: 1
   volumeCurve:
     serializedVersion: 2
@@ -918,7 +922,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2ba3c9f38548e7145b8580ffda9ee9be, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  clips: []
+  clips:
+  - clip: {fileID: 8300000, guid: 0e4ec6a718c2c294999bbd87abe6afc7, type: 3}
+    volume: 0.046
   volume: 1
   volumeCurve:
     serializedVersion: 2
