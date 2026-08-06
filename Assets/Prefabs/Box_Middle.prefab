@@ -142,41 +142,32 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   clips:
-  - clip: {fileID: 8300000, guid: 9a2f6ed7a30f20645bcf97889f164a70, type: 3}
-    volume: 0
-  volume: 0.063
+  - clip: {fileID: 8300000, guid: 02c0f249404c66a4ebb187a96e2b7c62, type: 3}
+    volume: 0.04
+  volume: 1
   volumeCurve:
     serializedVersion: 2
     m_Curve:
     - serializedVersion: 3
-      time: 0.0041666673
-      value: -0.003990233
-      inSlope: 0.75174934
-      outSlope: 0.75174934
+      time: 0.000012462027
+      value: 1.0025368
+      inSlope: -0.06322107
+      outSlope: -0.06322107
       tangentMode: 0
       weightedMode: 0
       inWeight: 0
-      outWeight: 1
+      outWeight: 0.28548008
     - serializedVersion: 3
-      time: 0.21030906
-      value: 1.0016114
-      inSlope: 0.047852244
-      outSlope: 0.047852244
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 1
-      outWeight: 0.3959338
-    - serializedVersion: 3
-      time: 0.6986201
-      value: 0.9994189
-      inSlope: 0.00063334854
-      outSlope: 0.00063334854
+      time: 0.85118484
+      value: 0.7613708
+      inSlope: -1.1511097
+      outSlope: -1.1511097
       tangentMode: 0
       weightedMode: 0
       inWeight: 0.33333334
-      outWeight: 0.77631134
+      outWeight: 0.33333334
     - serializedVersion: 3
-      time: 1.0009288
+      time: 1.0092448
       value: 0.00037875772
       inSlope: -1.421491
       outSlope: -1.421491
@@ -191,10 +182,6 @@ MonoBehaviour:
   maxPitch: 1
   loop: 0
   playOnAwake: 0
-  spatial3D: 0
-  minDistance: 3
-  maxDistance: 20
-  rolloffMode: 1
 --- !u!1 &2510172065078131378
 GameObject:
   m_ObjectHideFlags: 0
@@ -507,7 +494,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   clips:
-  - clip: {fileID: 8300000, guid: 02c0f249404c66a4ebb187a96e2b7c62, type: 3}
+  - clip: {fileID: 8300000, guid: 9a2f6ed7a30f20645bcf97889f164a70, type: 3}
     volume: 0.042
   volume: 1
   volumeCurve:
@@ -556,10 +543,6 @@ MonoBehaviour:
   maxPitch: 1
   loop: 0
   playOnAwake: 0
-  spatial3D: 0
-  minDistance: 3
-  maxDistance: 20
-  rolloffMode: 1
 --- !u!1 &6243685293066885193
 GameObject:
   m_ObjectHideFlags: 0
@@ -710,6 +693,7 @@ MonoBehaviour:
   boxCollider2D: {fileID: 473674080519912773}
   fall_Box: {fileID: 3794054979734838646}
   hit_Box: {fileID: 2429391573811213319}
+  hitSoundCooldown: 0.3
   disappear_Box: {fileID: 5163554663670344162}
   disappearDestroyDelay: 1
 --- !u!114 &7339859409564263651
@@ -972,7 +956,3 @@ MonoBehaviour:
   maxPitch: 1
   loop: 0
   playOnAwake: 0
-  spatial3D: 0
-  minDistance: 3
-  maxDistance: 20
-  rolloffMode: 1

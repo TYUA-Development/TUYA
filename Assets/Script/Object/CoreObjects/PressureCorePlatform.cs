@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class PressureCorePlatform : MonoBehaviour
+public class PressureCorePlatform : MonoBehaviour, IBoxKnockbackFree
 {
     private enum PlatformState { Up, Down }
 
