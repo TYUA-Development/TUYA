@@ -17,11 +17,8 @@ public class RiseObject : MonoBehaviour
     public AnimationCurve riseCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
 
     [Header("Return")]
-    [Tooltip("목표 좌표에 도달한 뒤 다시 원래 자리로 돌아올지 여부")]
-    public bool enableReturn = false;
-
-    [Tooltip("되돌리기가 켜져있을 때, 목표 좌표에 머무르는 시간(초)")]
-    public float holdDuration = 2f;
+    [Tooltip("이미 올라와 있는 상태에서 Rise()가 다시 호출되면(코어를 다시 맞추는 등) 원래 위치로 돌아올지 여부. 꺼두면 한 번 올라온 뒤로는 다시 호출해도 반응하지 않습니다.")]
+    public bool enableReturn = true;
 
     [Header("Small Shake Before Rise")]
     [Tooltip("상승 시작 전에 살짝 떨리게 할지")]
@@ -66,31 +63,45 @@ public class RiseObject : MonoBehaviour
     [Tooltip("상승 중 반복되는 마찰 소리 / 로프 등. AudioAssist의 Volume Curve로 상승 중 볼륨 변화를 설정할 수 있고, Loop를 켜두어야 상승이 끝날 때까지 계속 반복 재생됩니다.")]
     public AudioAssist riseLoopAudio;
 
-    private Coroutine riseCoroutine;
-    private bool hasRisen;
+    private Coroutine moveCoroutine;
+    private bool isMoving;
+    private bool isUp;
+    private Vector3 restPosition;
 
     private void Awake()
     {
+        restPosition = transform.position;
+
         StopParticle(dustParticle);
         StopParticle(lightParticle);
         StopParticle(debrisParticle);
         StopParticle(completeParticle);
     }
 
+    // 코어를 맞출 때마다(등) 호출된다. 아래에 있으면 올라오고, 이미 올라와 있으면(enableReturn이
+    // 켜져 있을 때) 원래 위치로 돌아간다 - 더 이상 일정 시간 뒤 자동으로 돌아오지 않고,
+    // 다시 호출되어야만 반응한다. 이동 중에 호출되면 무시한다.
     public void Rise()
     {
-        if (hasRisen)
+        if (isMoving)
             return;
 
-        if (riseCoroutine != null)
-            StopCoroutine(riseCoroutine);
+        if (isUp)
+        {
+            if (!enableReturn)
+                return;
 
-        riseCoroutine = StartCoroutine(RiseRoutine());
+            moveCoroutine = StartCoroutine(ReturnDownRoutine());
+        }
+        else
+        {
+            moveCoroutine = StartCoroutine(RiseUpRoutine());
+        }
     }
 
-    private IEnumerator RiseRoutine()
+    private IEnumerator RiseUpRoutine()
     {
-        hasRisen = true;
+        isMoving = true;
 
         if (startDelay > 0f)
             yield return new WaitForSeconds(startDelay);
@@ -98,7 +109,7 @@ public class RiseObject : MonoBehaviour
         if (usePreShake)
             yield return StartCoroutine(PreShakeRoutine());
 
-        Vector3 startPosition = transform.position;
+        Vector3 from = transform.position;
 
         PlayParticle(dustParticle);
         PlayParticle(lightParticle);
@@ -109,7 +120,7 @@ public class RiseObject : MonoBehaviour
         if (riseLoopAudio != null)
             riseLoopAudio.Play();
 
-        yield return StartCoroutine(MoveRoutine(startPosition, targetPosition));
+        yield return StartCoroutine(MoveRoutine(from, targetPosition));
 
         StopParticle(dustParticle);
         StopParticle(lightParticle);
@@ -120,29 +131,34 @@ public class RiseObject : MonoBehaviour
 
         PlayParticle(completeParticle);
 
-        if (enableReturn)
-        {
-            if (holdDuration > 0f)
-                yield return new WaitForSeconds(holdDuration);
+        isUp = true;
+        isMoving = false;
+        moveCoroutine = null;
+    }
 
-            PlayParticle(dustParticle);
-            PlayParticle(debrisParticle);
+    private IEnumerator ReturnDownRoutine()
+    {
+        isMoving = true;
 
-            if (riseLoopAudio != null)
-                riseLoopAudio.Play();
+        Vector3 from = transform.position;
 
-            yield return StartCoroutine(MoveRoutine(targetPosition, startPosition));
+        PlayParticle(dustParticle);
+        PlayParticle(debrisParticle);
 
-            StopParticle(dustParticle);
-            StopParticle(debrisParticle);
+        if (riseLoopAudio != null)
+            riseLoopAudio.Play();
 
-            if (riseLoopAudio != null)
-                riseLoopAudio.Stop();
+        yield return StartCoroutine(MoveRoutine(from, restPosition));
 
-            hasRisen = false;
-        }
+        StopParticle(dustParticle);
+        StopParticle(debrisParticle);
 
-        riseCoroutine = null;
+        if (riseLoopAudio != null)
+            riseLoopAudio.Stop();
+
+        isUp = false;
+        isMoving = false;
+        moveCoroutine = null;
     }
 
     private IEnumerator MoveRoutine(Vector3 from, Vector3 to)

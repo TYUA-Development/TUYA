@@ -466,6 +466,16 @@ public class PlayerAttackState : PlayerState
     // 안 되기 때문에 "발사했는가"를 별도로 구분한다.
     private bool firedThisAim;
 
+    // AttackEnd 정규화 시간이 이 지점을 지나면(아직 조준 버튼을 안 뗐어도) 손을 뗐는지 다시
+    // 확인할 수 있을 만큼 지났다고 보고 Idle 복귀를 허용한다 - 발사와 무관하게 취소한 경우엔
+    // 최대한 빨리 다른 입력을 받을 수 있게 이 시점부터 바로 Idle로 돌아간다.
+    private const float AttackEndEarlyExitNormalizedTime = 0.1f;
+
+    // 발사 직후 곧바로 조준 버튼을 떼려는 반사적인 동작은 사람 반응 속도상 0.1 시점(약 53ms)엔
+    // 아직 반영되지 않는 경우가 많다 - 그 순간만 보고 바로 재장전을 확정하면 의도치 않게 연사로
+    // 이어진다. 정말로 계속 누르고 있을 작정인지 확인할 시간을 좀 더 준 뒤에야 재장전을 확정한다.
+    private const float AttackEndChainCommitNormalizedTime = 0.6f;
+
     private float minAngle;
     private float maxAngle;
 
@@ -689,24 +699,33 @@ public class PlayerAttackState : PlayerState
 
         if (info.IsName("AttackEnd"))
         {
-            if (info.normalizedTime >= 0.1f)
+            // 쏘지 않고 조준만 취소했거나(!firedThisAim), 이 프레임 기준 이미 조준 버튼을 뗀
+            // 상태라면 재장전으로 이어갈 이유가 없다 - 최대한 빨리(AttackEndEarlyExitNormalizedTime)
+            // Idle로 돌아가 다른 입력(이동/점프 등)을 받을 수 있게 한다. 매 프레임 다시 평가되므로,
+            // 아래쪽에서 재장전 확정을 기다리는 동안 언제든 손을 떼면 바로 이 분기로 넘어와
+            // 빠르게 Idle로 복귀한다.
+            if (!firedThisAim || !InputData.aimingPressed)
             {
-                // 화살을 쐈고, 조준 버튼을 계속(또는 다시) 누르고 있으면 Idle로 나가지 않고
-                // IsAiming을 다시 켜서 Animator의 AttackEnd -> Aiming 전환이 이어받게 한다.
-                if (firedThisAim && InputData.aimingPressed)
-                {
-                    // AttackEnd.anim의 0% 지점 애니메이션 이벤트(HideUpperBody)에만 의존하지
-                    // 않고 코드에서 직접 확실히 꺼준다 - OnIdle() 경로는 OnIdle() 내부에서
-                    // HideUpperBody()를 코드로 보장하는데, 이 경로(조준 버튼을 계속 누르고
-                    // 있어 Idle로 안 나가는 경우)만 애니메이션 이벤트 하나에 전적으로
-                    // 의존하고 있어서, IsAiming=true로 전환되는 타이밍에 따라 이벤트가
-                    // 샘플링되지 않고 넘어가면 UpperBody가 계속 켜진 채로 남는 문제가 있었다.
-                    controller.HideUpperBody();
-                    controller.animator.SetBool("IsAiming", true);
-                    return;
-                }
+                if (info.normalizedTime >= AttackEndEarlyExitNormalizedTime)
+                    controller.OnIdle();
 
-                controller.OnIdle();
+                return;
+            }
+
+            // 화살을 쐈고 이 프레임 기준으로는 아직 조준 버튼이 눌려있지만, 발사 직후 반사적으로
+            // 떼려는 경우 사람 반응 속도상 이르게(AttackEndEarlyExitNormalizedTime) 확정하면
+            // 놓치기 쉽다. 좀 더 지켜본 뒤(AttackEndChainCommitNormalizedTime)에도 여전히
+            // 누르고 있어야만 진짜로 계속 쏠 작정이라 보고 재장전을 확정한다.
+            if (info.normalizedTime >= AttackEndChainCommitNormalizedTime)
+            {
+                // AttackEnd.anim의 0% 지점 애니메이션 이벤트(HideUpperBody)에만 의존하지
+                // 않고 코드에서 직접 확실히 꺼준다 - OnIdle() 경로는 OnIdle() 내부에서
+                // HideUpperBody()를 코드로 보장하는데, 이 경로(조준 버튼을 계속 누르고
+                // 있어 Idle로 안 나가는 경우)만 애니메이션 이벤트 하나에 전적으로
+                // 의존하고 있어서, IsAiming=true로 전환되는 타이밍에 따라 이벤트가
+                // 샘플링되지 않고 넘어가면 UpperBody가 계속 켜진 채로 남는 문제가 있었다.
+                controller.HideUpperBody();
+                controller.animator.SetBool("IsAiming", true);
             }
 
             return;
