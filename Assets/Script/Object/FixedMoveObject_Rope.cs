@@ -36,8 +36,16 @@ public class FixedMoveObject_Rope : MonoBehaviour
     [Tooltip("이 정착이 끝난 뒤 이어서 정착시킬 FixedMoveObject (선택). 이 스크립트가 오브젝트를 Kinematic으로 바꾼 뒤에는 FixedMoveObject의 OnCollisionEnter2D가 발생하지 않아 스스로 트리거되지 못하므로, 여기서 직접 이어서 실행시켜준다.")]
     public FixedMoveObject nextMove;
 
+    [Header("Audio")]
+    [Tooltip("Rope가 끊어지는 순간 재생을 시작해서 settleDuration이 끝날 때 정지시킬 AudioAssist (선택).")]
+    public AudioAssist cutAudio;
+
+    [Tooltip("Rope가 끊어진 시점부터 cutAudio 재생이 시작되기까지의 지연 시간(초).")]
+    public float cutAudioDelay = 0f;
+
     private Rigidbody2D rb;
     private bool hasTriggered;
+    private Coroutine cutAudioDelayRoutine;
 
     private void Awake()
     {
@@ -53,6 +61,10 @@ public class FixedMoveObject_Rope : MonoBehaviour
             return;
 
         hasTriggered = true;
+
+        if (cutAudio != null)
+            cutAudioDelayRoutine = StartCoroutine(PlayCutAudioDelayed());
+
         StartCoroutine(SettleRoutine());
     }
 
@@ -94,6 +106,15 @@ public class FixedMoveObject_Rope : MonoBehaviour
         ApplyPose(startPivotWorldPos, targetPivotWorldPos, startAngle, localOffset, startZ, 1f);
 
         nextMove?.TriggerSettle();
+    }
+
+    private IEnumerator PlayCutAudioDelayed()
+    {
+        if (cutAudioDelay > 0f)
+            yield return new WaitForSeconds(cutAudioDelay);
+
+        cutAudio.Play();
+        cutAudioDelayRoutine = null;
     }
 
     private void ApplyPose(Vector2 startPivotWorldPos, Vector2 targetPivotWorldPos, float startAngle, Vector2 localOffset, float startZ, float t)

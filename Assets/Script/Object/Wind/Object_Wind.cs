@@ -292,7 +292,7 @@ public class Object_Wind : MonoBehaviour, ICoreEvent
         Collider2D[] hits = Physics2D.OverlapBoxAll(probeCenter, probeSize, 0f, blockingLayer);
         foreach (Collider2D hit in hits)
         {
-            if (hit == null)
+            if (hit == null || hit == targetCollider)
                 continue;
 
             if (blockingExceptions != null && blockingExceptions.Contains(hit.gameObject))
@@ -335,11 +335,26 @@ public class Object_Wind : MonoBehaviour, ICoreEvent
 
     private void OnTriggerStay2D(Collider2D collision)
     {
-        if (!collision.CompareTag("Player") || fallThroughExempt.Contains(collision))
+        if (collision.CompareTag("Player"))
+        {
+            if (!fallThroughExempt.Contains(collision) && blockPlayer)
+                BlockPlayer(collision);
+
+            return;
+        }
+
+        // 대상이 씬 시작부터 이미 이 바람의 트리거 범위 안에 겹쳐 있었다면(예: 로프에 매달린
+        // Box가 처음부터 바람 구역 안에서 쉬고 있는 경우), 유니티는 이미 겹친 상태로 시작한
+        // 콜라이더에는 OnTriggerEnter2D를 호출하지 않으므로 colliderList에 등록될 기회가
+        // 없다. 여기서도 등록되어 있지 않으면 추가해서, 그런 경우에도 바람 힘을 받게 한다.
+        if (colliderList.ContainsKey(collision))
             return;
 
-        if (blockPlayer)
-            BlockPlayer(collision);
+        if (((1 << collision.gameObject.layer) & ignoredLayer.value) != 0)
+            return;
+
+        if (collision.TryGetComponent(out Rigidbody2D rb))
+            colliderList[collision] = rb;
     }
 
     private void OnTriggerExit2D(Collider2D collision)

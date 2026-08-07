@@ -66,6 +66,13 @@ public class Rope : MonoBehaviour
     [Header("Hanging Objects")]
     [SerializeField] private RopeHangingAttachment[] hangingAttachments;
 
+    [Tooltip("매달린 오브젝트(Box 등)의 Joint에도 세그먼트와 같은 각도 제한(Use Joint Limits/Joint Limit Angle)을 적용할지. 로프 자체는 뻣뻣하게(예: RiseObject로 들어올리기 위해 각도 0으로) 만들어도, 매달린 오브젝트까지 덩달아 회전이 잠겨서 바람 등 외부 힘에 전혀 흔들리지 못하는 걸 막으려면 꺼두세요(기본값).")]
+    [SerializeField] private bool hangingUsesSegmentJointLimits = false;
+
+    [Header("Rigid Movement Follow")]
+    [Tooltip("Rope 자신(또는 RiseObject 등 상위 오브젝트)이 이동할 때, 세그먼트와 매달린 오브젝트가 Joint 물리로 서서히 따라잡지 않고 이동한 만큼 그대로 같이 옮겨져서 간격이 흐트러지지 않게 합니다. 로프가 끊어진 뒤에는 적용되지 않습니다.")]
+    [SerializeField] private bool followRopeMovementRigidly = true;
+
     [Header("Segment Collapse")]
     [Tooltip("끊어짐이 감지된 뒤 세그먼트가 사라지기 시작하기까지 대기하는 시간(초). Rope 스스로 IsCut을 감시해서 이 시간 뒤에 자동으로 사라집니다.")]
     [SerializeField] private float collapseDelay = 3f;
@@ -83,6 +90,7 @@ public class Rope : MonoBehaviour
     private readonly List<HingeJoint2D> hangingJoints = new List<HingeJoint2D>();
     private bool isCollapsing;
     private bool isWaitingToCollapse;
+    private Vector3 lastFollowPosition;
 
     public RopeSegment[] Segments => segments;
 
@@ -93,6 +101,11 @@ public class Rope : MonoBehaviour
     // 세그먼트가 다 사라진 직후(재생성 여부와 무관하게) 매번 호출된다. RopeRegenerator처럼
     // "사라진 다음 무엇을 할지"를 담당하는 외부 스크립트가 이 이벤트를 구독해서 이어받는다.
     public event System.Action onCollapsed;
+
+    // onCollapsed보다 훨씬 이른 시점 - 끊어짐이 감지된 바로 그 프레임에 한 번만 호출된다
+    // (collapseDelay를 기다리지도, 세그먼트가 실제로 사라지길 기다리지도 않는다). 매달려 있던
+    // 박스를 Rope의 자식에서 즉시 떼어내는 등, "끊어진 순간" 반응해야 하는 외부 스크립트용.
+    public event System.Action onCut;
 
     // true를 대입하면(또는 Inspector에서 체크하면) 대기 없이 즉시 세그먼트가 바깥쪽으로
     // 한 단계씩 순차적으로 페이드아웃되며 사라진다. 실제 트리거는 다음 Update()에서 일어난다.
@@ -123,7 +136,60 @@ public class Rope : MonoBehaviour
             if (loop_Rope != null)
                 loop_Rope.Stop();
 
+            onCut?.Invoke();
+
             StartCoroutine(WaitThenCollapseRoutine());
+        }
+    }
+
+    // Rope가 이동하는 동안(RiseObject 등) 세그먼트를 물리(Joint 솔버)에 맡기면, 한 프레임의
+    // 물리 스텝 안에서 46개짜리 조인트 체인이 완전히 수렴하지 못해 순간적으로 간격이 벌어졌다가
+    // 멈추고 나서야 서서히 다시 맞춰진다(델타만 더해주는 이전 방식으로 실측 확인됨: 정지 상태
+    // 간격 0.518~0.519 -> 이동 중 최대 1.271). 이 로프는 jointLimitAngle 등으로 애초에 항상
+    // 앵커 기준 일직선이어야 하므로, 물리가 따라잡길 기다리지 않고 BuildRope와 동일한 배치
+    // 공식으로 매 프레임 위치를 직접 재계산해서 못 박듯이 세그먼트를 배치한다 - 그러면 이동
+    // 중에도 간격이 원천적으로 벌어질 수가 없다. 이동이 멈추면(delta==0) 더 이상 개입하지
+    // 않으므로 정지 중 로프 자체의 물리(흔들림 등)는 그대로 유지된다.
+    private void LateUpdate()
+    {
+        if (!followRopeMovementRigidly || segments == null || segments.Length == 0)
+            return;
+
+        Vector3 delta = transform.position - lastFollowPosition;
+        lastFollowPosition = transform.position;
+
+        if (delta.sqrMagnitude <= 0f || isCollapsing || IsCut)
+            return;
+
+        Transform anchorTransform = anchor != null ? anchor : transform;
+        Vector2 dir = direction.sqrMagnitude > 0.0001f ? direction.normalized : Vector2.down;
+        Quaternion segmentRotation = Quaternion.FromToRotation(Vector2.down, dir);
+        Vector3 startPosition = anchorTransform.position;
+        float actualSegmentLength = ropeLength / segments.Length;
+
+        for (int i = 0; i < segments.Length; i++)
+        {
+            if (segments[i] == null || segments[i].Body == null)
+                continue;
+
+            segments[i].Body.position = startPosition + (Vector3)(dir * actualSegmentLength * (i + 1));
+            segments[i].Body.rotation = segmentRotation.eulerAngles.z;
+
+            // 위치만 못 박고 기존 속도를 그대로 두면, 바로 다음 물리 스텝에서 그 잔여
+            // 속도(스윙 관성 등)만큼 다시 밀려나서 매 프레임 재정렬해도 계속 어긋나 보인다.
+            segments[i].Body.velocity = Vector2.zero;
+            segments[i].Body.angularVelocity = 0f;
+        }
+
+        Vector2 delta2D = delta;
+
+        if (hangingAttachments != null)
+        {
+            foreach (RopeHangingAttachment attachment in hangingAttachments)
+            {
+                if (attachment != null && attachment.target != null)
+                    attachment.target.position += delta2D;
+            }
         }
     }
 
@@ -252,6 +318,8 @@ public class Rope : MonoBehaviour
         AttachHangingObjects();
 
         SettleRopePhysics();
+
+        lastFollowPosition = transform.position;
 
         // 에디터에서 [ContextMenu("Build Rope")]로 플레이 모드 밖에서 호출될 수도 있는데,
         // Play()는 코루틴을 시작하므로 플레이 모드가 아니면 실행할 수 없다.
@@ -383,7 +451,7 @@ public class Rope : MonoBehaviour
                 continue;
 
             HingeJoint2D joint = attachment.target.gameObject.AddComponent<HingeJoint2D>();
-            ConfigureJoint(joint, segment.Body, attachment.targetAnchor, attachment.segmentAnchor);
+            ConfigureJoint(joint, segment.Body, attachment.targetAnchor, attachment.segmentAnchor, hangingUsesSegmentJointLimits);
             hangingJoints.Add(joint);
         }
     }
@@ -413,15 +481,17 @@ public class Rope : MonoBehaviour
         hangingJoints.Clear();
     }
 
-    private void ConfigureJoint(HingeJoint2D joint, Rigidbody2D connectedBody, Vector2 jointAnchor, Vector2 connectedAnchor)
+    private void ConfigureJoint(HingeJoint2D joint, Rigidbody2D connectedBody, Vector2 jointAnchor, Vector2 connectedAnchor, bool applyLimits = true)
     {
         joint.connectedBody = connectedBody;
         joint.autoConfigureConnectedAnchor = false;
         joint.anchor = jointAnchor;
         joint.connectedAnchor = connectedAnchor;
-        joint.useLimits = useJointLimits;
 
-        if (useJointLimits)
+        bool useLimits = applyLimits && useJointLimits;
+        joint.useLimits = useLimits;
+
+        if (useLimits)
         {
             joint.limits = new JointAngleLimits2D
             {
@@ -441,13 +511,18 @@ public class Rope : MonoBehaviour
         generatedRoot = root.transform;
     }
 
+    // Static이 아니라 Kinematic이어야 한다. Static Body2D는 "런타임에 절대 움직이지 않는다"는
+    // 전제로 최적화되어 있어서, RiseObject 등이 Transform.position을 스크립트로 계속 바꿔도
+    // 조인트 솔버가 그 새 위치를 매 스텝 정확히 추적하지 못한다(세그먼트가 계속 옛 anchor
+    // 위치 쪽으로 끌려가면서 간격이 벌어지는 원인이었다). Kinematic은 스크립트로 이동시키는
+    // 용도로 설계되어 있어 조인트가 위치 변화를 정확히 따라간다.
     private Rigidbody2D EnsureAnchorRigidbody(Transform anchorTransform)
     {
         Rigidbody2D body = anchorTransform.GetComponent<Rigidbody2D>();
         if (body == null)
             body = anchorTransform.gameObject.AddComponent<Rigidbody2D>();
 
-        body.bodyType = RigidbodyType2D.Static;
+        body.bodyType = RigidbodyType2D.Kinematic;
         return body;
     }
 

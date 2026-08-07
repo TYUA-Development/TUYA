@@ -46,13 +46,22 @@ public class RopeRegenerator : MonoBehaviour
     private static readonly int FlashAmountId = Shader.PropertyToID("_FlashAmount");
 
     private Material flashMaterial;
+
+    // 소멸시키는(이전에 떨어진) 박스의 흰색 발광->페이드아웃용 머티리얼. 새로 생성된 박스가
+    // 재생성 발광(flashMaterial, PlayGlowFade)을 동시에 재생 중일 수 있는데, 같은 머티리얼
+    // 인스턴스를 공유하면 _FlashAmount를 서로 덮어써버리므로 별도로 둔다.
+    private Material disappearFlashMaterial;
+
     private bool isRegenerating;
 
     private void Awake()
     {
         Shader flashShader = Shader.Find("Custom/SpriteFlash");
         if (flashShader != null)
+        {
             flashMaterial = new Material(flashShader);
+            disappearFlashMaterial = new Material(flashShader);
+        }
     }
 
     private void Start()
@@ -80,13 +89,19 @@ public class RopeRegenerator : MonoBehaviour
         }
 
         if (rope != null)
+        {
             rope.onCollapsed += HandleRopeCollapsed;
+            rope.onCut += HandleRopeCut;
+        }
     }
 
     private void OnDestroy()
     {
         if (rope != null)
+        {
             rope.onCollapsed -= HandleRopeCollapsed;
+            rope.onCut -= HandleRopeCut;
+        }
     }
 
     private void HandleRopeCollapsed()
@@ -95,6 +110,22 @@ public class RopeRegenerator : MonoBehaviour
             return;
 
         StartCoroutine(RegenerateRoutine());
+    }
+
+    // 로프가 끊어진 그 순간, 매달려 있던 박스를 Rope의 자식에서 즉시 떼어낸다
+    // (월드 좌표/회전은 그대로 유지). 세그먼트가 사라지는 연출이 끝나기도 전에
+    // 박스는 이미 독립된 오브젝트로 낙하해야 하기 때문에 onCollapsed가 아니라
+    // 훨씬 이른 onCut 시점에서 처리한다.
+    private void HandleRopeCut()
+    {
+        if (hangingBoxes == null)
+            return;
+
+        foreach (HangingBoxSlot slot in hangingBoxes)
+        {
+            if (slot != null && slot.currentBox != null)
+                slot.currentBox.transform.SetParent(null, true);
+        }
     }
 
     private IEnumerator RegenerateRoutine()
@@ -156,7 +187,7 @@ public class RopeRegenerator : MonoBehaviour
             return null;
         }
 
-        return Instantiate(slot.boxPrefab, slot.spawnPosition, slot.spawnRotation);
+        return Instantiate(slot.boxPrefab, slot.spawnPosition, slot.spawnRotation, rope.transform);
     }
 
     private void RemoveBox(GameObject box)
@@ -164,11 +195,67 @@ public class RopeRegenerator : MonoBehaviour
         if (box == null)
             return;
 
-        if (box.TryGetComponent(out DisappearMethod disappear))
-            disappear.PlayAndDestroy();
-        else if (box.TryGetComponent(out BoxObject boxObject))
-            boxObject.PlayDisappearSoundAndDestroy();
-        else
+        // 소리는 박스 자신의 설정을 그대로 존중하되(있으면), 시각적으로는 재생성 발광과
+        // 동일한 방식(흰색으로 밝아졌다가 서서히 사라짐)으로 통일한다.
+        if (box.TryGetComponent(out BoxObject boxObject) && boxObject.disappear_Box != null)
+            boxObject.disappear_Box.Play();
+
+        StartCoroutine(FadeOutAndDestroyBox(box));
+    }
+
+    // PlayGlowFade(흰색 발광 -> 원래 색으로 페이드)와 반대 방향으로, 흰색으로 밝아졌다가
+    // 서서히 투명해지며 사라진다. 셰이더의 _FlashAmount는 RGB만 섞고 알파는 그대로
+    // SpriteRenderer.color.a를 따르므로(SpriteFlash.shader 참고), 알파를 같이 0으로 내리면
+    // "사라짐"이 된다.
+    private IEnumerator FadeOutAndDestroyBox(GameObject box)
+    {
+        if (box == null)
+            yield break;
+
+        if (disappearFlashMaterial == null)
+        {
+            Destroy(box);
+            yield break;
+        }
+
+        SpriteRenderer[] renderers = box.GetComponentsInChildren<SpriteRenderer>(true);
+        if (renderers.Length == 0)
+        {
+            Destroy(box);
+            yield break;
+        }
+
+        var originalColors = new Color[renderers.Length];
+        for (int i = 0; i < renderers.Length; i++)
+        {
+            originalColors[i] = renderers[i].color;
+            renderers[i].sharedMaterial = disappearFlashMaterial;
+        }
+
+        disappearFlashMaterial.SetColor(FlashColorId, glowColor);
+
+        float elapsed = 0f;
+        while (elapsed < glowFadeDuration && box != null)
+        {
+            elapsed += Time.deltaTime;
+            float t = Mathf.Clamp01(elapsed / glowFadeDuration);
+
+            disappearFlashMaterial.SetFloat(FlashAmountId, 1f - t);
+
+            for (int i = 0; i < renderers.Length; i++)
+            {
+                if (renderers[i] == null)
+                    continue;
+
+                Color c = originalColors[i];
+                c.a = Mathf.Lerp(originalColors[i].a, 0f, t);
+                renderers[i].color = c;
+            }
+
+            yield return null;
+        }
+
+        if (box != null)
             Destroy(box);
     }
 
