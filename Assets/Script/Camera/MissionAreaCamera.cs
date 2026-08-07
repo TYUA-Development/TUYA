@@ -140,7 +140,16 @@ public class MissionAreaCamera : MonoBehaviour
             bool holdCameraPosition = cameraMode != MissionCameraMode.FixedByPlayer;
 
             if (CameraMovement.Instance != null)
+            {
+                // CameraMovement가 다시 팔로우를 시작하기 전에, 그 내부 목표 Y(CameraPosY)를
+                // 지금 카메라 리그가 실제로 있는 위치로 동기화한다. 안 하면 CameraPosY가
+                // 이 영역에 들어오기 이전의 오래된 값을 그대로 들고 있다가, isMovingEvent가
+                // false가 되는 순간 그 낡은 Y로 확 튀는 SmoothDamp가 발생한다.
+                if (!holdCameraPosition && cameraRig != null)
+                    CameraMovement.Instance.SetCameraRigY(cameraRig.transform.position.y);
+
                 CameraMovement.Instance.isMovingEvent = holdCameraPosition;
+            }
 
             UpdateReturnCamera();
             return;
@@ -254,8 +263,15 @@ public class MissionAreaCamera : MonoBehaviour
 
         Vector3 activeExitCameraPos = exitCameraPos;
 
-        if (useSmoothYFollow && !fixPosY)
-            activeExitCameraPos.y = activeTargetPos.y;
+        // exitCameraPos.x/.y는 OnTriggerEnter2D 시점에 딱 한 번 계산된 스냅샷이다 (X는
+        // "진입 시 카메라 위치를 targetPos 기준으로 반사"한 추정치, Y는 진입 직전 카메라 Y).
+        // targetPos가 콜라이더 중심과 정확히 일치하지 않거나 진입 시점 카메라 팔로우가
+        // 조금이라도 지연되어 있으면 이 추정이 어긋나고, 미러링 특성상 그 오차가 배로
+        // 증폭되어 이탈 경계 근처에서 플레이어 위치와 무관한 곳으로 튀어 보인다. 매 프레임
+        // 실제 플레이어의 현재 위치로 덮어써서, 경계에 닿는 순간(t=1) 항상 정확히 플레이어
+        // 위치로 수렴하도록 한다.
+        activeExitCameraPos.x = playerX;
+        activeExitCameraPos.y = activeTargetPos.y;
 
         if (isLeftToRight)
         {
@@ -436,7 +452,13 @@ public class MissionAreaCamera : MonoBehaviour
                 activeInstance = null;
 
             if (CameraMovement.Instance != null)
+            {
+                // 위와 동일한 이유로, 제어를 넘기기 직전에 CameraPosY를 지금 리그 위치로 맞춘다.
+                if (cameraRig != null)
+                    CameraMovement.Instance.SetCameraRigY(cameraRig.transform.position.y);
+
                 CameraMovement.Instance.isMovingEvent = false;
+            }
         }
     }
 
@@ -485,7 +507,12 @@ public class MissionAreaCamera : MonoBehaviour
                 cameraRig.transform.position = enterCameraPos;
 
             if (CameraMovement.Instance != null)
+            {
+                if (cameraRig != null)
+                    CameraMovement.Instance.SetCameraRigY(cameraRig.transform.position.y);
+
                 CameraMovement.Instance.isMovingEvent = false;
+            }
         }
 
         if (isExitingToDefaultZoom)
@@ -601,7 +628,12 @@ public class MissionAreaCamera : MonoBehaviour
         else
         {
             if (CameraMovement.Instance != null)
+            {
+                if (cameraRig != null)
+                    CameraMovement.Instance.SetCameraRigY(cameraRig.transform.position.y);
+
                 CameraMovement.Instance.isMovingEvent = false;
+            }
         }
 
         // smoothReturnOnExit/shouldSmoothReturn과 완전히 독립적으로 동작한다 - 위치 복귀

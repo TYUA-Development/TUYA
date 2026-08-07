@@ -20,6 +20,12 @@ public class RiseObject : MonoBehaviour
     [Tooltip("이미 올라와 있는 상태에서 Rise()가 다시 호출되면(코어를 다시 맞추는 등) 원래 위치로 돌아올지 여부. 꺼두면 한 번 올라온 뒤로는 다시 호출해도 반응하지 않습니다.")]
     public bool enableReturn = true;
 
+    [Tooltip("켜면 TargetPosition까지 올라간 뒤 DelayTime만큼 머물렀다가 Rise()를 다시 호출하지 않아도 자동으로 원래 위치까지 복귀합니다. 기본값은 꺼짐(false)입니다.")]
+    public bool useDelayReturn = false;
+
+    [Tooltip("자동 복귀 전 TargetPosition에서 머무는 시간(초)")]
+    public float delayTime = 1f;
+
     [Header("Small Shake Before Rise")]
     [Tooltip("상승 시작 전에 살짝 떨리게 할지")]
     public bool usePreShake = true;
@@ -132,8 +138,19 @@ public class RiseObject : MonoBehaviour
         PlayParticle(completeParticle);
 
         isUp = true;
-        isMoving = false;
-        moveCoroutine = null;
+
+        if (useDelayReturn)
+        {
+            if (delayTime > 0f)
+                yield return new WaitForSeconds(delayTime);
+
+            yield return ReturnDownRoutine();
+        }
+        else
+        {
+            isMoving = false;
+            moveCoroutine = null;
+        }
     }
 
     private IEnumerator ReturnDownRoutine()
