@@ -689,7 +689,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d9076220d53de15449a4209fddd5ae2d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  knockbackForce: 30
+  knockbackForce: 20
   boxCollider2D: {fileID: 473674080519912773}
   fall_Box: {fileID: 3794054979734838646}
   hit_Box: {fileID: 2429391573811213319}

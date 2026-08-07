@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class MissionAreaCamera : MonoBehaviour
@@ -13,6 +14,10 @@ public class MissionAreaCamera : MonoBehaviour
     [Header("Mode")]
     [Tooltip("���� �¿� ���� ������ HorizontalByPlayerX, ���� �� ��� ������ FixedAreaPan")]
     public MissionCameraMode cameraMode = MissionCameraMode.HorizontalByPlayerX;
+
+    [Header("Priority")]
+    [Tooltip("여러 MissionArea가 겹쳐서 플레이어가 동시에 여러 트리거 안에 있을 때, 이 값이 가장 큰 영역이 카메라를 소유합니다. 동점이면 먼저 겹친(활성화된) 쪽이 유지됩니다.")]
+    public int priority = 0;
 
     [Header("Target")]
     public Vector3 targetPos;
@@ -64,13 +69,15 @@ public class MissionAreaCamera : MonoBehaviour
     [Tooltip("영역을 나간 뒤 FieldOfView가 defaultFieldOfView에 도달하기까지 걸리는 시간(초).")]
     public float exitCameraDefaultZoomDuration = 1f;
 
-    // 레벨에 MissionAreaCamera 영역이 경계 없이 바로 이어 붙어 배치된 경우(예: MissionArea_Start
-    // 직후 바로 다음 영역), 이전 영역이 아직 원래 줌으로 되돌아오는 중(isReturning)일 때 다음
-    // 영역의 OnTriggerEnter2D가 그 "덜 풀린" targetCamera.fieldOfView를 자신의 startZoomSize로
-    // 잘못 캡처해버릴 수 있다 - 그러면 그 이후 줌 계산이 전부 이 잘못된 기준값을 물고 가게 되어
-    // 이전 영역의 줌이 계속 남아있는 것처럼 보인다. 새 영역이 활성화될 때 이전에 활성화됐던
-    // 영역의 복귀를 먼저 즉시 끝내서 이 문제를 막는다.
+    // 현재 카메라를 소유 중인 인스턴스. activeAreas 중 priority가 가장 높은 쪽으로
+    // ReevaluateOwnership()이 갱신한다.
     private static MissionAreaCamera activeInstance;
+
+    // 지금 플레이어와 겹쳐 있는(트리거 안에 있는) 모든 MissionAreaCamera. 두 영역이 겹쳐
+    // 배치되어 플레이어가 동시에 여러 트리거 안에 있을 수 있는 상황을 다루기 위한 목록이다 -
+    // 소유권은 항상 이 목록 중 priority가 가장 높은 쪽에게 있고, 진입/이탈로 목록이 바뀔
+    // 때마다 ReevaluateOwnership()이 다시 계산한다.
+    private static readonly List<MissionAreaCamera> activeAreas = new List<MissionAreaCamera>();
 
     private bool isCameraControl;
     private bool isReturning;
@@ -140,13 +147,26 @@ public class MissionAreaCamera : MonoBehaviour
             bool holdCameraPosition = cameraMode != MissionCameraMode.FixedByPlayer;
 
             if (CameraMovement.Instance != null)
+            {
+                // CameraMovement가 다시 팔로우를 시작하기 전에, 그 내부 목표 Y(CameraPosY)를
+                // 지금 카메라 리그가 실제로 있는 위치로 동기화한다. 안 하면 CameraPosY가
+                // 이 영역에 들어오기 이전의 오래된 값을 그대로 들고 있다가, isMovingEvent가
+                // false가 되는 순간 그 낡은 Y로 확 튀는 SmoothDamp가 발생한다.
+                if (!holdCameraPosition && cameraRig != null)
+                    CameraMovement.Instance.SetCameraRigY(cameraRig.transform.position.y);
+
                 CameraMovement.Instance.isMovingEvent = holdCameraPosition;
+            }
 
             UpdateReturnCamera();
             return;
         }
 
-        if (!isCameraControl || player == null)
+        // activeInstance != this: 이 인스턴스가 자기 트리거 안에 여전히 있어도(isCameraControl
+        // true), 겹쳐 있는 다른 MissionArea가 priority 경쟁에서 이겨 소유권을 가져갔다면 더
+        // 이상 카메라에 쓰지 않는다 - 두 스크립트가 같은 카메라를 매 프레임 서로 덮어써서
+        // 떨리는 것을 막기 위함.
+        if (!isCameraControl || player == null || activeInstance != this)
             return;
 
         if (CameraMovement.Instance != null)
@@ -254,8 +274,15 @@ public class MissionAreaCamera : MonoBehaviour
 
         Vector3 activeExitCameraPos = exitCameraPos;
 
-        if (useSmoothYFollow && !fixPosY)
-            activeExitCameraPos.y = activeTargetPos.y;
+        // exitCameraPos.x/.y는 OnTriggerEnter2D 시점에 딱 한 번 계산된 스냅샷이다 (X는
+        // "진입 시 카메라 위치를 targetPos 기준으로 반사"한 추정치, Y는 진입 직전 카메라 Y).
+        // targetPos가 콜라이더 중심과 정확히 일치하지 않거나 진입 시점 카메라 팔로우가
+        // 조금이라도 지연되어 있으면 이 추정이 어긋나고, 미러링 특성상 그 오차가 배로
+        // 증폭되어 이탈 경계 근처에서 플레이어 위치와 무관한 곳으로 튀어 보인다. 매 프레임
+        // 실제 플레이어의 현재 위치로 덮어써서, 경계에 닿는 순간(t=1) 항상 정확히 플레이어
+        // 위치로 수렴하도록 한다.
+        activeExitCameraPos.x = playerX;
+        activeExitCameraPos.y = activeTargetPos.y;
 
         if (isLeftToRight)
         {
@@ -436,7 +463,13 @@ public class MissionAreaCamera : MonoBehaviour
                 activeInstance = null;
 
             if (CameraMovement.Instance != null)
+            {
+                // 위와 동일한 이유로, 제어를 넘기기 직전에 CameraPosY를 지금 리그 위치로 맞춘다.
+                if (cameraRig != null)
+                    CameraMovement.Instance.SetCameraRigY(cameraRig.transform.position.y);
+
                 CameraMovement.Instance.isMovingEvent = false;
+            }
         }
     }
 
@@ -485,7 +518,12 @@ public class MissionAreaCamera : MonoBehaviour
                 cameraRig.transform.position = enterCameraPos;
 
             if (CameraMovement.Instance != null)
+            {
+                if (cameraRig != null)
+                    CameraMovement.Instance.SetCameraRigY(cameraRig.transform.position.y);
+
                 CameraMovement.Instance.isMovingEvent = false;
+            }
         }
 
         if (isExitingToDefaultZoom)
@@ -497,27 +535,23 @@ public class MissionAreaCamera : MonoBehaviour
         }
     }
 
-    private void OnTriggerEnter2D(Collider2D collision)
+    // OnTriggerEnter2D로 처음 들어올 때뿐 아니라, 겹쳐 있던 더 높은 priority의 MissionArea가
+    // 이탈해서 이 인스턴스에게 소유권이 "다시" 넘어올 때도 반드시 호출해야 한다 - 매번 "지금
+    // 이 순간의 실제 카메라 위치"를 enterCameraPos로 새로 캡처해야만, 이전 소유자가 카메라를
+    // 어디에 두고 갔든 상관없이 튐 없이 이어서 시작할 수 있다. (이전 소유자가 애초에 자기
+    // enterCameraPos 근처로 되돌아가는 걸 기다렸다가 넘겨받는 게 아니라, 그 순간 그대로의
+    // 위치/줌을 자기 시작점으로 삼는다는 뜻.)
+    private void BeginCameraControl()
     {
-        if (!collision.CompareTag("Player"))
-            return;
-
         if (cameraRig == null && CameraMovement.Instance != null)
             cameraRig = CameraMovement.Instance.gameObject;
 
         if (targetCamera == null)
             targetCamera = Camera.main;
 
-        if (cameraRig == null || targetCamera == null)
+        if (cameraRig == null || targetCamera == null || player == null)
             return;
 
-        if (activeInstance != null && activeInstance != this)
-            activeInstance.ForceFinishReturn();
-
-        activeInstance = this;
-
-        player = collision.transform;
-        isCameraControl = true;
         isReturning = false;
 
         enterCameraPos = cameraRig.transform.position;
@@ -527,6 +561,9 @@ public class MissionAreaCamera : MonoBehaviour
         // 다른 MissionAreaCamera가 아직 복귀 중이라 값이 덜 풀린 상태를 "원래 상태"로 잘못
         // 저장할 수 있기 때문이다. 다만 이 경우 진입 순간 실제 FOV와 다르면 살짝 튈 수 있으므로,
         // 그게 더 거슬리는 영역은 이 옵션을 꺼서 기존처럼 그 순간의 실제 FOV를 그대로 쓰게 한다.
+        // 겹친 영역끼리 소유권을 주고받는 체인을 구성할 때는, 두 번째 이후 영역은 이 옵션을
+        // 꺼서 실제 순간 FOV(이전 소유자가 만들어둔 줌)를 그대로 이어받게 해야 줌도 끊기지
+        // 않는다.
         startZoomSize = (useCameraMovementDefaultZoom && CameraMovement.Instance != null && CameraMovement.Instance.defaultFieldOfView > 0f)
             ? CameraMovement.Instance.defaultFieldOfView
             : targetCamera.fieldOfView;
@@ -572,13 +609,95 @@ public class MissionAreaCamera : MonoBehaviour
             CameraMovement.Instance.isMovingEvent = true;
     }
 
+    // activeAreas(지금 플레이어와 겹쳐 있는 모든 MissionArea) 중 priority가 가장 높은 쪽을
+    // 소유자로 정한다. 동점이면 먼저 activeAreas에 들어온 쪽이 유지된다(이미 소유자였다면
+    // 그대로, 아니라면 먼저 겹친 쪽). 소유자가 바뀔 때만 새 소유자의 BeginCameraControl()을
+    // 호출해 "지금" 상태를 새로 캡처한다 - 밀려나는 쪽은 다음 Update()의 activeInstance 가드에
+    // 걸려 자동으로 조용히 멈추므로 별도 처리가 필요 없다.
+    private static void ReevaluateOwnership()
+    {
+        MissionAreaCamera newOwner = null;
+        int bestPriority = int.MinValue;
+
+        for (int i = 0; i < activeAreas.Count; i++)
+        {
+            if (activeAreas[i].priority > bestPriority)
+            {
+                bestPriority = activeAreas[i].priority;
+                newOwner = activeAreas[i];
+            }
+        }
+
+        if (newOwner == activeInstance)
+            return;
+
+        activeInstance = newOwner;
+
+        if (newOwner != null)
+            newOwner.BeginCameraControl();
+    }
+
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        if (!collision.CompareTag("Player"))
+            return;
+
+        if (cameraRig == null && CameraMovement.Instance != null)
+            cameraRig = CameraMovement.Instance.gameObject;
+
+        if (targetCamera == null)
+            targetCamera = Camera.main;
+
+        if (cameraRig == null || targetCamera == null)
+            return;
+
+        // 지금 어떤 MissionArea와도 겹쳐 있지 않은 상태에서 새로 들어오는 경우(레벨에 영역이
+        // 경계 없이 순차적으로 배치된 경우)에만 의미가 있다 - 마지막으로 활성화됐던 인스턴스가
+        // 아직 자기 복귀 애니메이션을 돌리고 있을 수 있으니 즉시 끝낸다. 겹친 상태에서의
+        // 소유권 이전/반환은 ReevaluateOwnership()과 OnTriggerExit2D가 전담하므로 여기서
+        // 건드릴 필요가 없다.
+        if (activeAreas.Count == 0 && activeInstance != null && activeInstance != this)
+            activeInstance.ForceFinishReturn();
+
+        player = collision.transform;
+        isCameraControl = true;
+
+        if (!activeAreas.Contains(this))
+            activeAreas.Add(this);
+
+        ReevaluateOwnership();
+    }
+
     private void OnTriggerExit2D(Collider2D collision)
     {
         if (!collision.CompareTag("Player"))
             return;
 
+        bool wasOwner = activeInstance == this;
+
         isCameraControl = false;
         player = null;
+        activeAreas.Remove(this);
+
+        if (!wasOwner)
+        {
+            // priority 경쟁에서 이미 밀려나 있던 상태였다면(카메라를 쓰고 있지 않았다면)
+            // 전역 카메라 상태를 건드릴 게 없다.
+            return;
+        }
+
+        if (activeAreas.Count > 0)
+        {
+            // 아직 겹쳐 있는 다른 MissionArea가 있다 - 그쪽(들 중 priority가 가장 높은 쪽)으로
+            // 소유권을 넘긴다. 복귀 애니메이션이나 CameraMovement로의 반환 없이, 새 소유자가
+            // BeginCameraControl()로 "지금" 카메라 위치를 그대로 이어받아 시작하므로 튀지 않는다.
+            ReevaluateOwnership();
+            return;
+        }
+
+        // 더 이상 어떤 MissionArea와도 겹쳐 있지 않다 - 여기서만 실제로 CameraMovement에게
+        // 돌려준다.
+        activeInstance = null;
 
         // HorizontalByPlayerX(WithExit)는 경계까지 연속 보간이 이미 끝나 있어서(경계=줌 0%
         // 지점) 나갈 때 이미 원래 상태나 다름없어 이 옵션과 무관하게 항상 되돌릴 필요가 없다.
@@ -601,7 +720,12 @@ public class MissionAreaCamera : MonoBehaviour
         else
         {
             if (CameraMovement.Instance != null)
+            {
+                if (cameraRig != null)
+                    CameraMovement.Instance.SetCameraRigY(cameraRig.transform.position.y);
+
                 CameraMovement.Instance.isMovingEvent = false;
+            }
         }
 
         // smoothReturnOnExit/shouldSmoothReturn과 완전히 독립적으로 동작한다 - 위치 복귀
