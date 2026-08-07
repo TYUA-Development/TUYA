@@ -648,6 +648,16 @@ public class PlayerAttackState : PlayerState
     {
         controller.HideTrajectory();
         controller.HideHeldArrow();
+
+        // Attack -> AttackEnd 전환은 이 프레임엔 아직 Animator에 반영되지 않고 다음 프레임에야
+        // 처리된다 - 그 사이 IsAttack==false 조건의 자동 전환(duration 0.008초)이 UpdateFinishingAttack()이
+        // "Attack" 상태를 한 번도 관찰하기 전에 먼저 끝나버리면, 아래쪽의 폴링 기반 HideUpperBody()
+        // 호출(Attack 분기)이 아예 실행되지 않고 AttackEnd.anim의 0% 애니메이션 이벤트 하나에만
+        // 의존하게 된다. 그 이벤트도 블렌드 전환 중엔 샘플링을 건너뛸 수 있어(AttackEnd -> Aiming
+        // 경로에서 이미 겪은 것과 동일한 문제), 공격이 끝나는 걸 아는 바로 이 시점에 프레임 타이밍과
+        // 무관하게 여기서 직접 확실히 꺼준다.
+        controller.HideUpperBody();
+
         controller.animator.SetBool("IsAiming", false);
         controller.animator.SetBool("IsAttack", false);
         isAiming = false;

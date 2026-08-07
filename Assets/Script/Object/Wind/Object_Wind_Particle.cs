@@ -58,6 +58,12 @@ public class Object_Wind_Particle : MonoBehaviour
     [Tooltip("Connection Point로부터 이 반경(유닛) 안에 들어오면 방향 전환이 시작됩니다.")]
     public float connectionRadius = 0.5f;
 
+    [Tooltip("연결된 반대편 Wind의 Collider. Connection Point 반경 안에 파티클이 있으면 켜지고, 없으면 (Connection Collider Release Grace만큼 유예를 둔 뒤) 꺼집니다. 비워두면 아무 동작도 하지 않습니다.")]
+    public Collider2D connectionCollider;
+
+    [Tooltip("Connection Point 반경 안에서 파티클이 마지막으로 감지된 뒤, Connection Collider를 끄기까지 기다리는 유예 시간(초). 파티클이 반경을 스치듯 드나들 때 콜라이더가 매 프레임 켜졌다 꺼졌다 떨리는 것을 막아준다. 0이면 유예 없이 즉시 꺼진다.")]
+    public float connectionColliderReleaseGrace = 0.2f;
+
     [Header("Release (파티클 생성을 멈출 때)")]
     [Tooltip("Release()가 호출되면(예: CoreObjectToggle에서 바람을 끌 때), 그 순간 살아있는 파티클은 더 이상 바람에 밀리지 않고 그 시점의 속도 그대로 직진합니다. Release된 지점부터 이 거리(유닛)만큼 날아가는 동안 알파가 1에서 0으로 선형 감소하다가 사라집니다.")]
     public float releaseFadeDistance = 5f;
@@ -65,6 +71,7 @@ public class Object_Wind_Particle : MonoBehaviour
     private Vector2 windDir;
     private Collider2D windCollider;
     private bool released;
+    private float lastParticleNearConnectionTime = -Mathf.Infinity;
 
     private struct BlockedFadeState
     {
@@ -297,6 +304,20 @@ public class Object_Wind_Particle : MonoBehaviour
             if (ps != null)
                 PushParticlesInRange(ps);
         }
+
+        UpdateConnectionCollider();
+    }
+
+    // Connection Point 반경 안에 파티클이 있는 동안 connectionCollider를 켜고, 마지막으로
+    // 감지된 뒤 connectionColliderReleaseGrace가 지나면 끈다 (즉시 끄면 파티클이 반경
+    // 경계를 스치듯 드나들 때 매 프레임 켜졌다 꺼졌다 떨릴 수 있어서 유예를 둔다).
+    private void UpdateConnectionCollider()
+    {
+        if (connectionCollider == null)
+            return;
+
+        bool withinGrace = Time.time - lastParticleNearConnectionTime <= connectionColliderReleaseGrace;
+        connectionCollider.enabled = withinGrace;
     }
 
     private void PushParticlesInRange(ParticleSystem ps)
@@ -326,6 +347,14 @@ public class Object_Wind_Particle : MonoBehaviour
             Vector3 worldPos = isWorldSpace
                 ? particleBuffer[i].position
                 : ps.transform.TransformPoint(particleBuffer[i].position);
+
+            // connectionCollider 감지는 실제 리다이렉트(connectionTargetPoint 필요) 여부와
+            // 무관하게, connectionPoint 반경 안에 파티클이 있다는 사실 자체만 본다.
+            if (connectionPoint != null &&
+                ((Vector2)connectionPoint.position - (Vector2)worldPos).sqrMagnitude <= connectionRadius * connectionRadius)
+            {
+                lastParticleNearConnectionTime = Time.time;
+            }
 
             // 킬/차단 판정은 이 파티클이 지금 이 Wind와 실제로 관련 있는 위치에 있을 때만 한다
             // (이 Wind 자신의 콜라이더 안이거나, 막 리다이렉트하려는 connectionPoint 반경 안).

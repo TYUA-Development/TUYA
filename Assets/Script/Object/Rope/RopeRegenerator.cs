@@ -80,13 +80,19 @@ public class RopeRegenerator : MonoBehaviour
         }
 
         if (rope != null)
+        {
             rope.onCollapsed += HandleRopeCollapsed;
+            rope.onCut += HandleRopeCut;
+        }
     }
 
     private void OnDestroy()
     {
         if (rope != null)
+        {
             rope.onCollapsed -= HandleRopeCollapsed;
+            rope.onCut -= HandleRopeCut;
+        }
     }
 
     private void HandleRopeCollapsed()
@@ -95,6 +101,22 @@ public class RopeRegenerator : MonoBehaviour
             return;
 
         StartCoroutine(RegenerateRoutine());
+    }
+
+    // 로프가 끊어진 그 순간, 매달려 있던 박스를 Rope의 자식에서 즉시 떼어낸다
+    // (월드 좌표/회전은 그대로 유지). 세그먼트가 사라지는 연출이 끝나기도 전에
+    // 박스는 이미 독립된 오브젝트로 낙하해야 하기 때문에 onCollapsed가 아니라
+    // 훨씬 이른 onCut 시점에서 처리한다.
+    private void HandleRopeCut()
+    {
+        if (hangingBoxes == null)
+            return;
+
+        foreach (HangingBoxSlot slot in hangingBoxes)
+        {
+            if (slot != null && slot.currentBox != null)
+                slot.currentBox.transform.SetParent(null, true);
+        }
     }
 
     private IEnumerator RegenerateRoutine()
@@ -156,7 +178,7 @@ public class RopeRegenerator : MonoBehaviour
             return null;
         }
 
-        return Instantiate(slot.boxPrefab, slot.spawnPosition, slot.spawnRotation);
+        return Instantiate(slot.boxPrefab, slot.spawnPosition, slot.spawnRotation, rope.transform);
     }
 
     private void RemoveBox(GameObject box)

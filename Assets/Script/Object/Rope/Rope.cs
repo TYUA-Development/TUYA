@@ -94,6 +94,11 @@ public class Rope : MonoBehaviour
     // "사라진 다음 무엇을 할지"를 담당하는 외부 스크립트가 이 이벤트를 구독해서 이어받는다.
     public event System.Action onCollapsed;
 
+    // onCollapsed보다 훨씬 이른 시점 - 끊어짐이 감지된 바로 그 프레임에 한 번만 호출된다
+    // (collapseDelay를 기다리지도, 세그먼트가 실제로 사라지길 기다리지도 않는다). 매달려 있던
+    // 박스를 Rope의 자식에서 즉시 떼어내는 등, "끊어진 순간" 반응해야 하는 외부 스크립트용.
+    public event System.Action onCut;
+
     // true를 대입하면(또는 Inspector에서 체크하면) 대기 없이 즉시 세그먼트가 바깥쪽으로
     // 한 단계씩 순차적으로 페이드아웃되며 사라진다. 실제 트리거는 다음 Update()에서 일어난다.
     // 별도로 아무것도 하지 않아도, Rope는 스스로 IsCut을 감시해서 collapseDelay 뒤에
@@ -122,6 +127,8 @@ public class Rope : MonoBehaviour
             // 뒤(collapseDelay + 순차 페이드)라서 그때까지 기다리면 늦다.
             if (loop_Rope != null)
                 loop_Rope.Stop();
+
+            onCut?.Invoke();
 
             StartCoroutine(WaitThenCollapseRoutine());
         }

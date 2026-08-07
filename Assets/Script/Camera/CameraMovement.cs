@@ -18,6 +18,10 @@ public class CameraMovement : MonoBehaviour
     [SerializeField] private float CameraPosY;
     private bool followPlayerY = false;
 
+    [Header("Default Zoom")]
+    [Tooltip("카메라의 기본(평상시) Field of View. MissionAreaCamera 등 줌을 임시로 바꾸는 스크립트들이 '원래 상태'로 되돌아갈 때 이 값을 기준으로 삼습니다. 0 이하로 두면 씬 시작 시 카메라의 실제 Field of View를 자동으로 캡처해서 씁니다.")]
+    public float defaultFieldOfView = 0f;
+
     public static CameraMovement Instance { get; private set; }
 
     private void Awake()
@@ -34,6 +38,9 @@ public class CameraMovement : MonoBehaviour
     private void Start()
     {
         CameraPosY = Charactor.transform.position.y + 15.13f;
+
+        if (defaultFieldOfView <= 0f && Camera.main != null)
+            defaultFieldOfView = Camera.main.fieldOfView;
     }
 
     public void SetFollowPlayerY(bool follow)

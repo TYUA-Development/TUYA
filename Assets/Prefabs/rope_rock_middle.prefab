@@ -762,7 +762,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -33.1, y: 18.05, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 3.67, y: 3.67, z: 3.67}
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 1121012353916706391}
@@ -908,7 +908,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d9076220d53de15449a4209fddd5ae2d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  knockbackForce: 20
+  knockbackForce: 50
   boxCollider2D: {fileID: 1452602622172879843}
   fall_Box: {fileID: 6144265377445820229}
   hit_Box: {fileID: 2118474137844823594}

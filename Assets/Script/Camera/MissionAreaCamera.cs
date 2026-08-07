@@ -26,6 +26,9 @@ public class MissionAreaCamera : MonoBehaviour
     [Tooltip("ī�޶�� �ٴ� ���� Z �Ÿ�")]
     public float groundDistance = 28f;
 
+    [Tooltip("진입 시 줌의 시작점(startZoomSize)을 CameraMovement.defaultFieldOfView(고정 기준값)로 캡처할지. 켜면 인접한 다른 MissionAreaCamera가 아직 복귀 중이라 값이 덜 풀린 상태를 잘못 캡처하는 걸 막아주지만, 그 순간 실제 카메라 FOV와 defaultFieldOfView가 다르면 진입 시 살짝 튀어 보일 수 있습니다. 끄면 기존처럼 그 순간의 실제 카메라 FOV를 그대로 시작점으로 씁니다.")]
+    public bool useCameraMovementDefaultZoom = true;
+
     [Header("Y Follow - Horizontal Mode")]
     public bool fixPosY = false;
 
@@ -48,11 +51,26 @@ public class MissionAreaCamera : MonoBehaviour
     [Tooltip("FixedAreaPan ��忡�� ī�޶� �̵� �")]
     public AnimationCurve fixedPanCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
 
-    [Tooltip("������ ���� �� ī�޶� ���� �� ��ġ�� �ε巴�� �ǵ�����")]
+    [Tooltip("영역을 나갈 때 카메라 줌(Field of View)과 위치를 원래 상태로 서서히 되돌릴지. FixedAreaPan과 FixedByPlayer 모드에 적용됩니다. FixedByPlayer는 원래 항상 켜진 것처럼 동작했으므로, 그 동작을 유지하려면 이 옵션을 켜두세요.")]
     public bool smoothReturnOnExit = false;
 
     [Tooltip("������ ���� �� �ǵ��ư��� �ð�")]
     public float returnMoveTime = 1f;
+
+    [Header("Exit Zoom To Default")]
+    [Tooltip("영역을 나갈 때 카메라 FieldOfView를 CameraMovement.defaultFieldOfView(전역 고정 기본값)로 되돌릴지. smoothReturnOnExit와는 완전히 독립적으로 동작한다 - smoothReturnOnExit가 꺼져있어도(위치는 안 돌아가도) 줌만 따로 기본값으로 되돌릴 수 있고, 둘 다 켜져 있으면 위치는 smoothReturnOnExit가, 줌은 이 기능이 전담한다(서로 값을 덮어쓰지 않음).")]
+    public bool exitCameraDefaultZoom = false;
+
+    [Tooltip("영역을 나간 뒤 FieldOfView가 defaultFieldOfView에 도달하기까지 걸리는 시간(초).")]
+    public float exitCameraDefaultZoomDuration = 1f;
+
+    // 레벨에 MissionAreaCamera 영역이 경계 없이 바로 이어 붙어 배치된 경우(예: MissionArea_Start
+    // 직후 바로 다음 영역), 이전 영역이 아직 원래 줌으로 되돌아오는 중(isReturning)일 때 다음
+    // 영역의 OnTriggerEnter2D가 그 "덜 풀린" targetCamera.fieldOfView를 자신의 startZoomSize로
+    // 잘못 캡처해버릴 수 있다 - 그러면 그 이후 줌 계산이 전부 이 잘못된 기준값을 물고 가게 되어
+    // 이전 영역의 줌이 계속 남아있는 것처럼 보인다. 새 영역이 활성화될 때 이전에 활성화됐던
+    // 영역의 복귀를 먼저 즉시 끝내서 이 문제를 막는다.
+    private static MissionAreaCamera activeInstance;
 
     private bool isCameraControl;
     private bool isReturning;
@@ -81,6 +99,10 @@ public class MissionAreaCamera : MonoBehaviour
     private Vector3 returnStartPos;
     private float returnStartZoom;
 
+    private bool isExitingToDefaultZoom;
+    private float exitZoomTimer;
+    private float exitZoomStartValue;
+
     private void Start()
     {
         if (CameraMovement.Instance != null)
@@ -100,6 +122,12 @@ public class MissionAreaCamera : MonoBehaviour
 
     private void Update()
     {
+        // isReturning/isCameraControl과 완전히 독립적으로 매 프레임 먼저 처리한다 - isReturning
+        // 블록 아래에 있는 조기 return 때문에 이 갱신이 묻히지 않게 하기 위함. smoothReturnOnExit가
+        // 꺼져 있어도(또는 isReturning이 아예 없어도) 줌만 단독으로 기본값으로 되돌아갈 수 있다.
+        if (isExitingToDefaultZoom)
+            UpdateExitDefaultZoom();
+
         if (isReturning)
         {
             // FixedByPlayer는 나가는 순간까지 카메라가 플레이어를 1:1로 계속 따라오고 있었으므로
@@ -193,7 +221,10 @@ public class MissionAreaCamera : MonoBehaviour
         float curvedMoveT = fixedPanCurve.Evaluate(moveT);
         float curvedZoomT = fixedPanCurve.Evaluate(zoomT);
 
-        float followY = fixPosY ? targetPos.y : player.position.y;
+        // 수평 추적 모드들과 동일하게 GetActiveTargetPos()를 통해 playerYOffset(및
+        // useSmoothYFollow)이 반영된 Y를 구한다. X는 이 모드 특성상 항상 플레이어를
+        // 그대로 따라가므로 GetActiveTargetPos()의 X는 쓰지 않는다.
+        float followY = GetActiveTargetPos().y;
         Vector3 playerFollowPos = new Vector3(player.position.x, followY, enterCameraPos.z);
 
         cameraRig.transform.position = Vector3.Lerp(
@@ -385,18 +416,84 @@ public class MissionAreaCamera : MonoBehaviour
             );
         }
 
-        targetCamera.fieldOfView = Mathf.Lerp(
-            returnStartZoom,
-            startZoomSize,
-            curvedT
-        );
+        // exitCameraDefaultZoom이 켜져 있으면 줌은 UpdateExitDefaultZoom()이 전담한다 -
+        // 여기서 같이 startZoomSize로 덮어쓰면 두 시스템이 매 프레임 서로의 값을 덮어써서
+        // 떨리거나 exitCameraDefaultZoom의 결과가 무시되는 문제가 생긴다.
+        if (!exitCameraDefaultZoom)
+        {
+            targetCamera.fieldOfView = Mathf.Lerp(
+                returnStartZoom,
+                startZoomSize,
+                curvedT
+            );
+        }
 
         if (t >= 1f)
         {
             isReturning = false;
 
+            if (activeInstance == this)
+                activeInstance = null;
+
             if (CameraMovement.Instance != null)
                 CameraMovement.Instance.isMovingEvent = false;
+        }
+    }
+
+    // smoothReturnOnExit(위치+줌 복귀)와 완전히 독립적으로, 줌(FieldOfView)만
+    // CameraMovement.defaultFieldOfView로 되돌린다. exitCameraDefaultZoomDuration으로
+    // 속도를 별도로 지정할 수 있다.
+    private void UpdateExitDefaultZoom()
+    {
+        if (targetCamera == null || CameraMovement.Instance == null)
+        {
+            isExitingToDefaultZoom = false;
+            return;
+        }
+
+        exitZoomTimer += Time.deltaTime;
+
+        float t = exitCameraDefaultZoomDuration <= 0f
+            ? 1f
+            : Mathf.Clamp01(exitZoomTimer / exitCameraDefaultZoomDuration);
+        float curvedT = fixedPanCurve.Evaluate(t);
+
+        targetCamera.fieldOfView = Mathf.Lerp(
+            exitZoomStartValue,
+            CameraMovement.Instance.defaultFieldOfView,
+            curvedT
+        );
+
+        if (t >= 1f)
+            isExitingToDefaultZoom = false;
+    }
+
+    // 다른 MissionAreaCamera가 새로 활성화되면서 이 인스턴스가 아직 원래 상태로 되돌아오는
+    // 중이었다면, 진행 중이던 lerp 값을 새 인스턴스가 "원래 상태"로 잘못 캡처하지 않도록
+    // 즉시(보간 없이) 자신의 원래 위치/줌으로 완료시킨다. isReturning과 isExitingToDefaultZoom은
+    // 서로 독립적인 상태라 각각 따로 확인하고 끝낸다.
+    public void ForceFinishReturn()
+    {
+        if (isReturning)
+        {
+            isReturning = false;
+
+            if (targetCamera != null && !exitCameraDefaultZoom)
+                targetCamera.fieldOfView = startZoomSize;
+
+            if (cameraRig != null && cameraMode != MissionCameraMode.FixedByPlayer)
+                cameraRig.transform.position = enterCameraPos;
+
+            if (CameraMovement.Instance != null)
+                CameraMovement.Instance.isMovingEvent = false;
+        }
+
+        if (isExitingToDefaultZoom)
+        {
+            isExitingToDefaultZoom = false;
+
+            if (targetCamera != null && CameraMovement.Instance != null)
+                targetCamera.fieldOfView = CameraMovement.Instance.defaultFieldOfView;
         }
     }
 
@@ -414,20 +511,38 @@ public class MissionAreaCamera : MonoBehaviour
         if (cameraRig == null || targetCamera == null)
             return;
 
+        if (activeInstance != null && activeInstance != this)
+            activeInstance.ForceFinishReturn();
+
+        activeInstance = this;
+
         player = collision.transform;
         isCameraControl = true;
         isReturning = false;
 
         enterCameraPos = cameraRig.transform.position;
-        startZoomSize = targetCamera.fieldOfView;
+
+        // useCameraMovementDefaultZoom이 켜져 있으면 CameraMovement.defaultFieldOfView(고정된
+        // 기준값)를 우선 쓴다 - 그 순간의 targetCamera.fieldOfView를 그대로 캡처하면, 인접한
+        // 다른 MissionAreaCamera가 아직 복귀 중이라 값이 덜 풀린 상태를 "원래 상태"로 잘못
+        // 저장할 수 있기 때문이다. 다만 이 경우 진입 순간 실제 FOV와 다르면 살짝 튈 수 있으므로,
+        // 그게 더 거슬리는 영역은 이 옵션을 꺼서 기존처럼 그 순간의 실제 FOV를 그대로 쓰게 한다.
+        startZoomSize = (useCameraMovementDefaultZoom && CameraMovement.Instance != null && CameraMovement.Instance.defaultFieldOfView > 0f)
+            ? CameraMovement.Instance.defaultFieldOfView
+            : targetCamera.fieldOfView;
 
         startHalfHeight =
             groundDistance * Mathf.Tan(startZoomSize * 0.5f * Mathf.Deg2Rad);
 
         fixedPanTimer = 0f;
 
+        // smoothTargetPos/yVelocity 초기화는 GetActiveTargetPos()를 쓰는 모든 모드(수평 추적
+        // 두 종류 + FixedByPlayer)에 공통으로 필요하다 - 안 해두면 useSmoothYFollow가 켜져
+        // 있을 때 SmoothDamp의 시작값이 이전 상태(또는 기본값 0)로 남아있어 진입 직후 한 프레임
+        // 확 튀어 보인다.
         if (cameraMode == MissionCameraMode.HorizontalByPlayerX ||
-            cameraMode == MissionCameraMode.HorizontalByPlayerXWithExit)
+            cameraMode == MissionCameraMode.HorizontalByPlayerXWithExit ||
+            cameraMode == MissionCameraMode.FixedByPlayer)
         {
             smoothTargetPos = targetPos;
 
@@ -436,7 +551,14 @@ public class MissionAreaCamera : MonoBehaviour
                 smoothTargetPos.y = enterCameraPos.y;
                 yVelocity = 0f;
             }
+        }
 
+        // exitCameraPos/isLeftToRight는 진입-이탈 경계 사이를 보간하는 수평 추적 모드
+        // 둘에서만 쓰인다 (FixedByPlayer는 이탈 경계 보간 없이 계속 플레이어를 따라가다가
+        // 트리거를 벗어나는 방식이라 필요 없음).
+        if (cameraMode == MissionCameraMode.HorizontalByPlayerX ||
+            cameraMode == MissionCameraMode.HorizontalByPlayerXWithExit)
+        {
             exitCameraPos = new Vector3(
                 targetPos.x + (targetPos.x - enterCameraPos.x),
                 enterCameraPos.y,
@@ -459,14 +581,15 @@ public class MissionAreaCamera : MonoBehaviour
         player = null;
 
         // HorizontalByPlayerX(WithExit)는 경계까지 연속 보간이 이미 끝나 있어서(경계=줌 0%
-        // 지점) 나갈 때 이미 원래 상태나 다름없다. FixedAreaPan은 연출용으로 나간 뒤에도
-        // 그 자리에 머무는 걸 의도적으로 선택할 수 있어 smoothReturnOnExit로 켜고 끈다.
-        // 반면 FixedByPlayer는 플레이어를 그대로 따라다니다가 끊기는 방식이라 자체적으로
-        // "원래대로 돌아간" 상태가 존재하지 않는다 - 되돌리지 않으면 플레이어가 걸어나가는
-        // 동안 카메라가 마지막 위치/줌에 그대로 멈춰있게 되므로, 이 모드는 항상 되돌린다.
+        // 지점) 나갈 때 이미 원래 상태나 다름없어 이 옵션과 무관하게 항상 되돌릴 필요가 없다.
+        // FixedAreaPan과 FixedByPlayer는 연출/추적용으로 나간 뒤에도 그 자리에 머무는 걸
+        // 의도적으로 선택할 수 있어 smoothReturnOnExit 하나로 통일해서 켜고 끈다. 이 옵션을
+        // 끄더라도(FixedByPlayer의 경우) 카메라 위치 제어는 아래 else 분기에서 즉시
+        // CameraMovement에게 돌아가므로 위치가 완전히 멈춰있지는 않는다 - 다만 줌은 그 값
+        // 그대로 유지된다.
         bool shouldSmoothReturn =
-            (cameraMode == MissionCameraMode.FixedAreaPan && smoothReturnOnExit) ||
-            cameraMode == MissionCameraMode.FixedByPlayer;
+            smoothReturnOnExit &&
+            (cameraMode == MissionCameraMode.FixedAreaPan || cameraMode == MissionCameraMode.FixedByPlayer);
 
         if (shouldSmoothReturn)
         {
@@ -479,6 +602,15 @@ public class MissionAreaCamera : MonoBehaviour
         {
             if (CameraMovement.Instance != null)
                 CameraMovement.Instance.isMovingEvent = false;
+        }
+
+        // smoothReturnOnExit/shouldSmoothReturn과 완전히 독립적으로 동작한다 - 위치 복귀
+        // 여부와 무관하게 줌만 별도로 기본값으로 되돌릴 수 있다.
+        if (exitCameraDefaultZoom && targetCamera != null && CameraMovement.Instance != null)
+        {
+            isExitingToDefaultZoom = true;
+            exitZoomTimer = 0f;
+            exitZoomStartValue = targetCamera.fieldOfView;
         }
     }
 }
