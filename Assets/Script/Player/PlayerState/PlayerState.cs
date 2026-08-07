@@ -688,11 +688,10 @@ public class PlayerAttackState : PlayerState
         {
             // AttackEnd -> Aiming으로 바로 이어져 재조준이 시작된 경우. ChangeState 없이(Idle을
             // 거치지 않고) 같은 attackState 안에서 Enter()와 동일하게 내부 상태만 리셋한다.
-            // 기존 흐름(Idle -> Aiming)과 달리, 여기서는 조준 버튼을 계속 누르고 있어 UpperBody가
-            // 발사 시점부터 계속 꺼져 있었으므로 Aiming 애니메이션이 다시 시작되는 이 시점에
-            // 바로 켜줘야 어색하게 안 보인다 (원래는 Attack.anim의 애니메이션 이벤트가 Aiming이
-            // 다 끝난 뒤에야 켠다).
-            controller.ShowUpperBody();
+            // UpperBody는 여기서 미리 켜지 않는다 - isAiming == true인 동안에는 LogicUpdate()가
+            // upperBody의 회전을 갱신하지 않으므로, 여기서 켜면 직전 발사 각도로 멈춘 채 보이는
+            // 문제가 있었다. 기존 흐름(Idle -> Aiming)과 동일하게, Attack 상태로 실제 전환된 뒤
+            // Attack.anim의 애니메이션 이벤트가 켜줄 때까지 꺼둔 채로 둔다.
             RestartAiming();
             return;
         }
