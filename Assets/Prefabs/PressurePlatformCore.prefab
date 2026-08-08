@@ -1609,7 +1609,7 @@ MonoBehaviour:
   releaseGraceDuration: 0.3
   upLocalPosition: {x: 0, y: 0.85, z: 0}
   bottomStopper: {fileID: 6642438118796555250}
-  moveSpeed: 1
+  moveSpeed: 2.5
   bottomRunwayCollider: {fileID: 8952602290366576701}
   startsDown: 0
   loop_Down: {fileID: 8762316165193662893}
@@ -1701,7 +1701,7 @@ MonoBehaviour:
   releaseGraceDuration: 0.3
   upLocalPosition: {x: 0, y: 0.85, z: 0}
   bottomStopper: {fileID: 2707281520873673046}
-  moveSpeed: 1
+  moveSpeed: 2.5
   bottomRunwayCollider: {fileID: 1998752639157058010}
   startsDown: 1
   loop_Down: {fileID: 9144314897171640890}
