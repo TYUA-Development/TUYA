@@ -65,7 +65,7 @@ BoxCollider2D:
   m_IsTrigger: 0
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: 0.00298208, y: 0.7437146}
+  m_Offset: {x: 0.00298208, y: 0.727111}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0, y: 0}
@@ -76,7 +76,7 @@ BoxCollider2D:
     adaptiveTiling: 0
   m_AutoTiling: 0
   serializedVersion: 2
-  m_Size: {x: 1.5295962, y: 0.04805374}
+  m_Size: {x: 1.5295962, y: 0.08126098}
   m_EdgeRadius: 0
 --- !u!1 &2059202878704735220
 GameObject:
@@ -707,7 +707,7 @@ BoxCollider2D:
   m_IsTrigger: 1
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: 0.0053253174, y: -0.06457865}
+  m_Offset: {x: 0.0053253174, y: -0.07380298}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0, y: 0}
@@ -718,7 +718,7 @@ BoxCollider2D:
     adaptiveTiling: 0
   m_AutoTiling: 0
   serializedVersion: 2
-  m_Size: {x: 1.7697983, y: 1.6170318}
+  m_Size: {x: 1.7697983, y: 1.5985832}
   m_EdgeRadius: 0
 --- !u!114 &3883887660115923715
 MonoBehaviour:
@@ -745,12 +745,12 @@ GameObject:
   - component: {fileID: 3961945837691451560}
   - component: {fileID: 6293438943357809582}
   - component: {fileID: 1452602622172879843}
-  - component: {fileID: 5251648920706926113}
   - component: {fileID: 2505731530440038261}
   - component: {fileID: 5380828533612650928}
   - component: {fileID: 5529608457170820869}
   - component: {fileID: 5968313349490574411}
   - component: {fileID: 1132367484163409696}
+  - component: {fileID: 1667509712594516331}
   m_Layer: 13
   m_Name: rope_rock_middle
   m_TagString: Untagged
@@ -874,21 +874,6 @@ BoxCollider2D:
   serializedVersion: 2
   m_Size: {x: 1.54, y: 1.54}
   m_EdgeRadius: 0
---- !u!114 &5251648920706926113
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8666532238974513267}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e8974d660a9079c48b414dbba4269490, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  ignoreLayers:
-    serializedVersion: 2
-    m_Bits: 256
 --- !u!114 &2505731530440038261
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -915,12 +900,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   knockbackForce: 50
-  boxCollider2D: {fileID: 1452602622172879843}
   fall_Box: {fileID: 5562892055989497129}
   hit_Box: {fileID: 7718484042099068374}
   hitSoundStopVelocity: 0.05
   disappear_Box: {fileID: 6051729213231059378}
   disappearDestroyDelay: 1
+  landingNormalThreshold: 0.5
+  contactReleaseGraceDuration: 0.15
 --- !u!114 &5529608457170820869
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -958,7 +944,7 @@ Rigidbody2D:
     m_Bits: 0
   m_Interpolate: 0
   m_SleepingMode: 1
-  m_CollisionDetection: 0
+  m_CollisionDetection: 1
   m_Constraints: 4
 --- !u!114 &1132367484163409696
 MonoBehaviour:
@@ -972,3 +958,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 73cc8b19bf73f0f4aac6229a5ffcd7d5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &1667509712594516331
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8666532238974513267}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e8974d660a9079c48b414dbba4269490, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ignoreLayers:
+    serializedVersion: 2
+    m_Bits: 256

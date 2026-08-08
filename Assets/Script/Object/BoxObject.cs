@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -6,10 +7,6 @@ public class BoxObject : MonoBehaviour, IArrowHit, IArrowKnockbackReceiver
     [Header("Knockback")]
     [Tooltip("화살에 맞았을 때 화살이 날아간 방향으로 가해지는 힘의 크기")]
     public float knockbackForce = 10f;
-
-    [Header("Player Collision")]
-    [Tooltip("Player와 충돌을 무시할 콜라이더")]
-    public BoxCollider2D boxCollider2D;
 
     [Header("Audio")]
     [Tooltip("아래로 떨어지는 동안(Rigidbody2D.velocity.y < 0) 반복 재생할 낙하 소리. AudioAssist의 Loop를 켜두어야 합니다.")]
@@ -27,10 +24,19 @@ public class BoxObject : MonoBehaviour, IArrowHit, IArrowKnockbackReceiver
     [Tooltip("disappear_Box 재생 후 실제로 오브젝트를 파괴하기까지 대기하는 시간(초). Destroy가 AudioSource도 같이 없애버리므로, 소리가 끝까지 들리려면 클립 길이 이상으로 설정하세요.")]
     public float disappearDestroyDelay = 1f;
 
+    [Header("Landing")]
+    [Tooltip("착지 시 위에서 떨어져 닿았다고 인정할 접촉면 법선의 최소 Y값. 물리 반발력(bounciness)이 0이어도, 높은 곳에서 빠르게 떨어진 무거운 박스는 Box2D가 한 스텝 만에 관통을 완전히 보정하지 못해 한 번 튀어 보일 수 있다 - 착지 순간 남은 수직 속도를 직접 0으로 정리해서 이 튐을 없앤다.")]
+    [Range(0f, 1f)]
+    public float landingNormalThreshold = 0.5f;
+
+    [Tooltip("접촉이 순간적으로 끊겼다가 이 시간 안에 같은 콜라이더와 다시 닿으면 접촉이 계속 이어진 것으로 처리한다(진짜로 끊긴 게 아니라고 봄). 예를 들어 PressureCorePlatform의 Top이 Bottom에 부딪혀 멈추는 순간처럼 물리적으로 미세하게 떨어졌다 다시 붙는 경우, 이 값이 없으면 그걸 새 충돌로 오인해 착지 사운드가 처음엔 묻히고 멈추는 순간에야 뒤늦게 재생된다.")]
+    public float contactReleaseGraceDuration = 0.15f;
+
     private Rigidbody2D rb;
     private bool isFallAudioPlaying;
     private readonly HashSet<Collider2D> knockbackFreeContacts = new HashSet<Collider2D>();
     private readonly HashSet<Collider2D> currentContacts = new HashSet<Collider2D>();
+    private readonly Dictionary<Collider2D, Coroutine> pendingContactReleases = new Dictionary<Collider2D, Coroutine>();
 
     // 콜라이더별로 "소리가 이미 재생됐고, 아직 정지 대기 중"인지 추적한다. 예전엔 박스
     // 전체에 대해 플래그 하나였는데, 그러면 PressureCorePlatform의 Top처럼 계속 움직이며
@@ -46,7 +52,7 @@ public class BoxObject : MonoBehaviour, IArrowHit, IArrowKnockbackReceiver
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
-        IgnorePlayerCollision();
+        DisableRunwayReactionForceFromPlayer();
     }
 
     private void FixedUpdate()
@@ -119,6 +125,7 @@ public class BoxObject : MonoBehaviour, IArrowHit, IArrowKnockbackReceiver
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
+        StopFallBounce(collision);
         RegisterContact(collision.collider);
     }
 
@@ -131,22 +138,84 @@ public class BoxObject : MonoBehaviour, IArrowHit, IArrowKnockbackReceiver
     // 먼저 발동된 경우엔 Stay가 다시 hit_Box를 재생시키지 않는다.
     private void OnCollisionStay2D(Collision2D collision)
     {
+        // 착지 첫 프레임(Enter) 이후에도, 깊이 파고든 상태를 Box2D가 여러 스텝에 걸쳐
+        // 보정하는 동안 중력이 다시 velocity.y를 음수로 만들 수 있다. Stay에서도 계속
+        // 정리해줘야 그 사이 프레임들에서 다시 튀어 보이는 걸 막을 수 있다.
+        StopFallBounce(collision);
         RegisterContact(collision.collider);
     }
 
     private void OnCollisionExit2D(Collision2D collision)
     {
-        currentContacts.Remove(collision.collider);
-        knockbackFreeContacts.Remove(collision.collider);
+        BeginContactRelease(collision.collider);
+    }
+
+    // 접촉이 끊기자마자 바로 currentContacts 등에서 빼면, PressureCorePlatform의 Top이
+    // Bottom에 부딪혀 멈추는 순간처럼 물리적으로 미세하게 떨어졌다 다시 붙는 걸 "새 충돌"로
+    // 오인한다 - RegisterContact()가 다시 currentContacts.Add()에 성공해버려서, 착지 사운드가
+    // 처음 닿았을 땐 안 나고(방금 재생한 뒤라 아직 settleWaitingContacts에 있어 막힘) 이 재접촉
+    // 시점에야 새로 재생되는 것처럼 보인다. 즉시 빼지 않고 contactReleaseGraceDuration만큼
+    // 기다린 뒤에도 여전히 재접촉이 없을 때만 진짜로 뺀다 (PressureCorePlatform의
+    // releaseGraceDuration과 같은 패턴).
+    private void BeginContactRelease(Collider2D collider)
+    {
+        if (!currentContacts.Contains(collider))
+            return;
+
+        CancelPendingContactRelease(collider);
+        pendingContactReleases[collider] = StartCoroutine(ReleaseContactAfterGrace(collider));
+    }
+
+    private IEnumerator ReleaseContactAfterGrace(Collider2D collider)
+    {
+        yield return new WaitForSeconds(contactReleaseGraceDuration);
+
+        pendingContactReleases.Remove(collider);
+        currentContacts.Remove(collider);
+        settleWaitingContacts.Remove(collider);
+        knockbackFreeContacts.Remove(collider);
+    }
+
+    private void CancelPendingContactRelease(Collider2D collider)
+    {
+        if (pendingContactReleases.TryGetValue(collider, out Coroutine routine))
+        {
+            StopCoroutine(routine);
+            pendingContactReleases.Remove(collider);
+        }
+    }
+
+    // 반발력(bounciness)은 0이지만, 높은 곳에서 떨어진 무거운 박스는 착지 순간 속도가 커서
+    // Box2D가 한 스텝 만에 관통을 완전히 보정하지 못하고 몇 프레임에 걸쳐 밀어내는 과정에서
+    // 튀어 보일 수 있다. 위에서 떨어져 닿은(접촉면 법선이 충분히 위를 향한) 접촉이고 아직
+    // 아래로 움직이는 중이면, 그 잔여 하강 속도를 직접 0으로 정리해서 튐을 막는다.
+    private void StopFallBounce(Collision2D collision)
+    {
+        if (rb == null || rb.velocity.y >= 0f)
+            return;
+
+        for (int i = 0; i < collision.contactCount; i++)
+        {
+            if (collision.GetContact(i).normal.y >= landingNormalThreshold)
+            {
+                Vector2 velocity = rb.velocity;
+                velocity.y = 0f;
+                rb.velocity = velocity;
+                return;
+            }
+        }
     }
 
     private void RegisterContact(Collider2D collider)
     {
-        // 플레이어와는 IgnorePlayerCollision()으로 물리적 충돌 자체를 막아두지만, boxCollider2D가
-        // Inspector에 안 잡혀있거나 플레이어가 다른 콜라이더로 닿는 경우까지 대비해 여기서도
-        // 한 번 더 걸러서 충돌 사운드가 나지 않게 한다.
+        // Runway 콜라이더는 플레이어와 충돌이 그대로 발생하도록 의도적으로 남겨뒀으므로
+        // (DisableRunwayReactionForceFromPlayer() 참고), 여기서 플레이어를 걸러내
+        // 충돌 사운드만 나지 않게 한다.
         if (collider.GetComponentInParent<PlayerController>() != null)
             return;
+
+        // 유예 대기 중(BeginContactRelease)이었다면 실제로는 끊긴 적이 없는 것으로 처리한다.
+        CancelPendingContactRelease(collider);
 
         if (!currentContacts.Add(collider))
             return;
@@ -180,14 +249,30 @@ public class BoxObject : MonoBehaviour, IArrowHit, IArrowKnockbackReceiver
         }
     }
 
-    private void IgnorePlayerCollision()
+    // 박스 "몸체" 콜라이더와 플레이어 사이의 충돌은 ColliderIgnore 컴포넌트(excludeLayers)가
+    // 완전히 배제하는 걸 전제로 하므로 여기서는 다루지 않는다. 여기서 다루는 건 오직
+    // "Runway" 태그가 붙은 발판 콜라이더뿐이다 - 플레이어가 그 위에 정상적으로 설 수 있어야
+    // 하므로 충돌 감지와 "박스 → 플레이어" 방향 힘(플레이어를 떠받치는 힘)은 그대로 두고,
+    // "플레이어 → 박스" 방향 힘만 꺼서 플레이어가 위에서 떨어져도 박스(가벼운 Dynamic
+    // Rigidbody2D)가 흔들리거나 밀리지 않게 한다. forceSendLayers는 기본값(-1, 전 레이어
+    // 포함)을 그대로 둬서 플레이어 쪽은 정상적으로 힘을 받는다.
+    private void DisableRunwayReactionForceFromPlayer()
     {
-        if (boxCollider2D == null)
+        int playerLayer = LayerMask.NameToLayer("Player");
+        if (playerLayer < 0)
             return;
 
-        var player = FindObjectOfType<PlayerController>();
-        if (player != null && player.TryGetComponent<Collider2D>(out var playerCollider))
-            Physics2D.IgnoreCollision(boxCollider2D, playerCollider, true);
+        int excludeMask = ~(1 << playerLayer);
+
+        Collider2D[] ownColliders = GetComponentsInChildren<Collider2D>(true);
+
+        for (int i = 0; i < ownColliders.Length; i++)
+        {
+            Collider2D col = ownColliders[i];
+
+            if (col != null && col.CompareTag("Runway"))
+                col.forceReceiveLayers &= excludeMask;
+        }
     }
 
     public void OnHit()

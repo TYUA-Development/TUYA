@@ -35,6 +35,10 @@ public class PressureCorePlatform : MonoBehaviour, IBoxKnockbackFree
     [Tooltip("이 플랫폼이 내려가는 속도. 무게 비교로 짝이 이동할 때는 항상 무거운(내려가는) 쪽의 moveSpeed가 양쪽에 동일하게 적용되어, 올라가는 속도와 내려가는 속도가 항상 일치합니다.")]
     public float moveSpeed = 1f;
 
+    [Header("Bottom Runway")]
+    [Tooltip("Top이 bottomStopper와 맞닿아 있는 동안 비활성화하고, 떨어지면 다시 활성화할 Bottom 쪽 Runway 콜라이더. 비워두면 아무 동작도 하지 않습니다.")]
+    public Collider2D bottomRunwayCollider;
+
     [Header("Initial State")]
     [Tooltip("씬 배치 상 이 플랫폼이 시작부터 Down 위치(바닥에 닿아 있음)인지 여부. 무게가 같아 판정이 없을 때(히스테리시스) 기준이 됩니다.")]
     public bool startsDown = true;
@@ -64,6 +68,24 @@ public class PressureCorePlatform : MonoBehaviour, IBoxKnockbackFree
     private void Awake()
     {
         currentState = startsDown ? PlatformState.Down : PlatformState.Up;
+    }
+
+    private void FixedUpdate()
+    {
+        UpdateBottomRunwayCollider();
+    }
+
+    // Top이 bottomStopper와 맞닿아 있는 동안(=완전히 눌려 내려간 상태) bottomRunwayCollider를
+    // 끄고, 떨어지면 다시 켠다. MoveDownRoutine/MoveUpRoutine이 도는 도중뿐 아니라 항상(매
+    // FixedUpdate) 거리를 검사하므로, 이동 코루틴 없이 시작부터 눌려있는 초기 상태(startsDown)나
+    // 무게 판정 없이 정지해 있는 상태에서도 정확히 반영된다.
+    private void UpdateBottomRunwayCollider()
+    {
+        if (bottomRunwayCollider == null || topCollider == null || bottomStopper == null)
+            return;
+
+        bool isTouching = topCollider.Distance(bottomStopper).distance <= StopEpsilon;
+        bottomRunwayCollider.enabled = !isTouching;
     }
 
     // Top 콜라이더는 자식 오브젝트에 있어 이 부모는 OnCollision2D 메시지를 직접 받지 못한다.
