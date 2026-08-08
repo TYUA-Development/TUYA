@@ -31,7 +31,17 @@ public class BoxObject : MonoBehaviour, IArrowHit, IArrowKnockbackReceiver
     private bool isFallAudioPlaying;
     private readonly HashSet<Collider2D> knockbackFreeContacts = new HashSet<Collider2D>();
     private readonly HashSet<Collider2D> currentContacts = new HashSet<Collider2D>();
-    private bool isWaitingForHitSoundSettle;
+
+    // 콜라이더별로 "소리가 이미 재생됐고, 아직 정지 대기 중"인지 추적한다. 예전엔 박스
+    // 전체에 대해 플래그 하나였는데, 그러면 PressureCorePlatform의 Top처럼 계속 움직이며
+    // 박스를 실어 나르는 콜라이더에 닿아있는 동안(rb.velocity가 hitSoundStopVelocity 밑으로
+    // 절대 안 떨어짐) 그 사이에 닿는 완전히 다른 새 콜라이더의 소리까지 같이 막혀버렸다 -
+    // Top에 처음 닿을 때는 조용하다가, Top이 bottomStopper에 부딪혀 멈추면서 박스 속도가
+    // 비로소 정착 임계값 아래로 떨어지고 그 충격으로 살짝 재접촉이 일어날 때만 소리가 나는
+    // 원인이었다. 콜라이더별로 나누면 Top처럼 새로 닿는 콜라이더는 박스가 다른 이유로
+    // 계속 움직이고 있어도 즉시 소리가 나고, 같은 콜라이더에서 짧게 여러 번 튕기는 것만
+    // 계속 억눌린다(원래 의도).
+    private readonly HashSet<Collider2D> settleWaitingContacts = new HashSet<Collider2D>();
 
     private void Awake()
     {
@@ -52,11 +62,11 @@ public class BoxObject : MonoBehaviour, IArrowHit, IArrowKnockbackReceiver
     // 재생된다.
     private void UpdateHitSoundSettle()
     {
-        if (!isWaitingForHitSoundSettle || rb == null)
+        if (settleWaitingContacts.Count == 0 || rb == null)
             return;
 
         if (rb.velocity.sqrMagnitude <= hitSoundStopVelocity * hitSoundStopVelocity)
-            isWaitingForHitSoundSettle = false;
+            settleWaitingContacts.Clear();
     }
 
     private void UpdateFallAudio()
@@ -135,9 +145,9 @@ public class BoxObject : MonoBehaviour, IArrowHit, IArrowKnockbackReceiver
         if (!currentContacts.Add(collider))
             return;
 
-        if (hit_Box != null && !isWaitingForHitSoundSettle)
+        if (hit_Box != null && !settleWaitingContacts.Contains(collider))
         {
-            isWaitingForHitSoundSettle = true;
+            settleWaitingContacts.Add(collider);
             hit_Box.Play();
         }
 
