@@ -142,6 +142,12 @@ public class BoxObject : MonoBehaviour, IArrowHit, IArrowKnockbackReceiver
 
     private void RegisterContact(Collider2D collider)
     {
+        // 플레이어와는 IgnorePlayerCollision()으로 물리적 충돌 자체를 막아두지만, boxCollider2D가
+        // Inspector에 안 잡혀있거나 플레이어가 다른 콜라이더로 닿는 경우까지 대비해 여기서도
+        // 한 번 더 걸러서 충돌 사운드가 나지 않게 한다.
+        if (collider.GetComponentInParent<PlayerController>() != null)
+            return;
+
         if (!currentContacts.Add(collider))
             return;
 
