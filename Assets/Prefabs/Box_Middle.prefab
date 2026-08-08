@@ -559,6 +559,7 @@ GameObject:
   - component: {fileID: 7339859409564263651}
   - component: {fileID: 473674080519912773}
   - component: {fileID: 8418211027746605456}
+  - component: {fileID: 5704245113009577797}
   m_Layer: 13
   m_Name: Box_Middle
   m_TagString: Untagged
@@ -666,7 +667,7 @@ Rigidbody2D:
   m_LinearDrag: 0
   m_AngularDrag: 0.05
   m_GravityScale: 1
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 6200000, guid: 302e348200a354e4283ff333a3a253dd, type: 2}
   m_IncludeLayers:
     serializedVersion: 2
     m_Bits: 0
@@ -675,7 +676,7 @@ Rigidbody2D:
     m_Bits: 0
   m_Interpolate: 0
   m_SleepingMode: 1
-  m_CollisionDetection: 0
+  m_CollisionDetection: 1
   m_Constraints: 4
 --- !u!114 &5406760357909579137
 MonoBehaviour:
@@ -690,12 +691,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   knockbackForce: 20
-  boxCollider2D: {fileID: 473674080519912773}
   fall_Box: {fileID: 3794054979734838646}
   hit_Box: {fileID: 2429391573811213319}
   hitSoundStopVelocity: 0.3
   disappear_Box: {fileID: 5163554663670344162}
   disappearDestroyDelay: 1
+  landingNormalThreshold: 1
+  contactReleaseGraceDuration: 0.15
 --- !u!114 &7339859409564263651
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -717,13 +719,13 @@ BoxCollider2D:
   m_GameObject: {fileID: 6243685293066885193}
   m_Enabled: 1
   m_Density: 1
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 6200000, guid: 302e348200a354e4283ff333a3a253dd, type: 2}
   m_IncludeLayers:
     serializedVersion: 2
     m_Bits: 0
   m_ExcludeLayers:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 256
   m_LayerOverridePriority: 0
   m_ForceSendLayers:
     serializedVersion: 2
@@ -765,6 +767,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 73cc8b19bf73f0f4aac6229a5ffcd7d5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &5704245113009577797
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6243685293066885193}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e8974d660a9079c48b414dbba4269490, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ignoreLayers:
+    serializedVersion: 2
+    m_Bits: 256
 --- !u!1 &7095930670302887124
 GameObject:
   m_ObjectHideFlags: 0
