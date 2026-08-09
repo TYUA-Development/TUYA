@@ -49,6 +49,12 @@ public class CoreObjectToggle : MonoBehaviour
                 continue;
             }
 
+            if (obj.TryGetComponent<RiseObject_Traversal>(out var riseTraversal))
+            {
+                riseTraversal.Rise();
+                continue;
+            }
+
             if (obj.TryGetComponent<EnableObject>(out var enableObject))
             {
                 enableObject.Toggle();
