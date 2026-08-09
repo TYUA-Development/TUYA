@@ -76,8 +76,6 @@ public class RiseObject : MonoBehaviour
 
     private void Awake()
     {
-        restPosition = transform.position;
-
         StopParticle(dustParticle);
         StopParticle(lightParticle);
         StopParticle(debrisParticle);
@@ -101,6 +99,7 @@ public class RiseObject : MonoBehaviour
         }
         else
         {
+            restPosition = transform.position;
             moveCoroutine = StartCoroutine(RiseUpRoutine());
         }
     }
