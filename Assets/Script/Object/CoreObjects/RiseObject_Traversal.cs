@@ -28,16 +28,10 @@ public class RiseObject_Traversal : MonoBehaviour
     public AnimationCurve riseCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
 
     [Header("Return")]
-    [Tooltip("이미 마지막 지점까지 이동한 상태에서 Rise()가 다시 호출되면(코어를 다시 맞추는 등) 원래 위치로 돌아올지 여부. 꺼두면 마지막 지점 도달 후로는 다시 호출해도 반응하지 않습니다.")]
+    [Tooltip("순회 중일 때 Rise()가 다시 호출되면(코어를 다시 맞추는 등) 순회를 멈추고 현재 위치에서 원래 위치로 돌아올지 여부. 꺼두면 순회 중에는 다시 호출해도 반응하지 않고 계속 순회합니다.")]
     public bool enableReturn = true;
 
-    [Tooltip("켜면 마지막 지점까지 이동한 뒤 DelayTime만큼 머물렀다가 Rise()를 다시 호출하지 않아도 자동으로 원래 위치까지 복귀합니다. 기본값은 꺼짐(false)입니다.")]
-    public bool useDelayReturn = false;
-
-    [Tooltip("자동 복귀 전 마지막 지점에서 머무는 시간(초)")]
-    public float delayTime = 1f;
-
-    [Tooltip("마지막 지점에서 원래 위치로 복귀하는데 걸리는 시간(초)")]
+    [Tooltip("복귀 시 원래 위치까지 이동하는데 걸리는 시간(초)")]
     public float returnDuration = 2f;
 
     [Header("Small Shake Before Rise")]
@@ -83,49 +77,58 @@ public class RiseObject_Traversal : MonoBehaviour
     [Tooltip("이동 중 반복되는 마찰 소리 / 로프 등. AudioAssist의 Volume Curve로 이동 중 볼륨 변화를 설정할 수 있고, Loop를 켜두어야 전체 이동이 끝날 때까지 계속 반복 재생됩니다.")]
     public AudioAssist riseLoopAudio;
 
-    private Coroutine moveCoroutine;
-    private bool isMoving;
-    private bool isUp;
+    private enum State
+    {
+        Idle,
+        Patrolling,
+        Returning
+    }
+
+    private Coroutine activeCoroutine;
+    private State state = State.Idle;
     private Vector3 restPosition;
 
     private void Awake()
     {
-        restPosition = transform.position;
-
         StopParticle(dustParticle);
         StopParticle(lightParticle);
         StopParticle(debrisParticle);
         StopParticle(completeParticle);
     }
 
-    // 코어를 맞출 때마다(등) 호출된다. 아래에 있으면 목표 지점들을 순서대로 이동하고, 이미 마지막
-    // 지점까지 이동해 있으면(enableReturn이 켜져 있을 때) 원래 위치로 돌아간다. 이동 중에 호출되면
-    // 무시한다.
+    // 코어를 맞출 때마다(등) 호출된다. 정지 상태면 목표 지점들을 순서대로 계속 순회하기 시작하고,
+    // 순회 중이면(enableReturn이 켜져 있을 때) 순회를 멈추고 현재 위치에서 원래 위치로 돌아간다.
+    // 복귀 중에 호출되면 무시한다.
     public void Rise()
     {
-        if (isMoving)
-            return;
-
-        if (isUp)
+        switch (state)
         {
-            if (!enableReturn)
-                return;
+            case State.Idle:
+                if (traversalPoints.Count == 0)
+                    return;
 
-            moveCoroutine = StartCoroutine(ReturnDownRoutine());
-        }
-        else
-        {
-            if (traversalPoints.Count == 0)
-                return;
+                restPosition = transform.position;
+                state = State.Patrolling;
+                activeCoroutine = StartCoroutine(PatrolRoutine());
+                break;
 
-            moveCoroutine = StartCoroutine(TraverseUpRoutine());
+            case State.Patrolling:
+                if (!enableReturn)
+                    return;
+
+                StopAllCoroutines();
+
+                state = State.Returning;
+                activeCoroutine = StartCoroutine(ReturnDownRoutine());
+                break;
+
+            case State.Returning:
+                break;
         }
     }
 
-    private IEnumerator TraverseUpRoutine()
+    private IEnumerator PatrolRoutine()
     {
-        isMoving = true;
-
         if (startDelay > 0f)
             yield return new WaitForSeconds(startDelay);
 
@@ -141,16 +144,27 @@ public class RiseObject_Traversal : MonoBehaviour
         if (riseLoopAudio != null)
             riseLoopAudio.Play();
 
-        for (int i = 0; i < traversalPoints.Count; i++)
+        int index = 0;
+
+        while (true)
         {
-            TraversalPoint point = traversalPoints[i];
+            TraversalPoint point = traversalPoints[index];
             Vector3 from = transform.position;
 
             yield return StartCoroutine(MoveRoutine(from, point.targetPosition, point.moveDuration));
 
+            PlayParticle(completeParticle);
+
             if (point.waitTime > 0f)
                 yield return new WaitForSeconds(point.waitTime);
+
+            index = (index + 1) % traversalPoints.Count;
         }
+    }
+
+    private IEnumerator ReturnDownRoutine()
+    {
+        Vector3 from = transform.position;
 
         StopParticle(dustParticle);
         StopParticle(lightParticle);
@@ -158,30 +172,6 @@ public class RiseObject_Traversal : MonoBehaviour
 
         if (riseLoopAudio != null)
             riseLoopAudio.Stop();
-
-        PlayParticle(completeParticle);
-
-        isUp = true;
-
-        if (useDelayReturn)
-        {
-            if (delayTime > 0f)
-                yield return new WaitForSeconds(delayTime);
-
-            yield return ReturnDownRoutine();
-        }
-        else
-        {
-            isMoving = false;
-            moveCoroutine = null;
-        }
-    }
-
-    private IEnumerator ReturnDownRoutine()
-    {
-        isMoving = true;
-
-        Vector3 from = transform.position;
 
         PlayParticle(dustParticle);
         PlayParticle(debrisParticle);
@@ -197,9 +187,8 @@ public class RiseObject_Traversal : MonoBehaviour
         if (riseLoopAudio != null)
             riseLoopAudio.Stop();
 
-        isUp = false;
-        isMoving = false;
-        moveCoroutine = null;
+        state = State.Idle;
+        activeCoroutine = null;
     }
 
     private IEnumerator MoveRoutine(Vector3 from, Vector3 to, float duration)
