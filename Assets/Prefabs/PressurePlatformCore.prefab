@@ -217,7 +217,7 @@ GameObject:
   - component: {fileID: 1998752639157058010}
   m_Layer: 6
   m_Name: Runway
-  m_TagString: Floor
+  m_TagString: Runway
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -934,7 +934,7 @@ GameObject:
   - component: {fileID: 7162779192615280484}
   m_Layer: 6
   m_Name: Collider
-  m_TagString: Floor
+  m_TagString: Runway
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -986,7 +986,7 @@ BoxCollider2D:
   m_IsTrigger: 1
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: -0.08274764, y: 0.29490203}
+  m_Offset: {x: 0.0005096197, y: -0.017737627}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0, y: 0}
@@ -997,7 +997,7 @@ BoxCollider2D:
     adaptiveTiling: 0
   m_AutoTiling: 0
   serializedVersion: 2
-  m_Size: {x: 2.9532428, y: 0.89340746}
+  m_Size: {x: 3.0621483, y: 1.5186868}
   m_EdgeRadius: 0
 --- !u!114 &7162779192615280484
 MonoBehaviour:
@@ -1078,7 +1078,7 @@ BoxCollider2D:
   m_IsTrigger: 1
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: -0.03932309, y: 0.31420162}
+  m_Offset: {x: 0.0005096197, y: -0.017737627}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0, y: 0}
@@ -1089,7 +1089,7 @@ BoxCollider2D:
     adaptiveTiling: 0
   m_AutoTiling: 0
   serializedVersion: 2
-  m_Size: {x: 2.5576005, y: 0.8548083}
+  m_Size: {x: 3.0621483, y: 1.5186868}
   m_EdgeRadius: 0
 --- !u!114 &2521353991150472976
 MonoBehaviour:
@@ -1366,7 +1366,7 @@ BoxCollider2D:
   m_IsTrigger: 1
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: -0.033504248, y: 0.4570866}
+  m_Offset: {x: -0.033504248, y: 0.7391223}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0, y: 0}
@@ -1377,7 +1377,7 @@ BoxCollider2D:
     adaptiveTiling: 0
   m_AutoTiling: 0
   serializedVersion: 2
-  m_Size: {x: 4.0153446, y: 2.2848659}
+  m_Size: {x: 4.0153446, y: 1.7207944}
   m_EdgeRadius: 0
 --- !u!1 &4894072180274447455
 GameObject:
@@ -2740,7 +2740,7 @@ BoxCollider2D:
   m_IsTrigger: 1
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: -0.033504248, y: 0.48133853}
+  m_Offset: {x: -0.033504248, y: 0.74591464}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0, y: 0}
@@ -2751,5 +2751,5 @@ BoxCollider2D:
     adaptiveTiling: 0
   m_AutoTiling: 0
   serializedVersion: 2
-  m_Size: {x: 4.0153446, y: 2.236362}
+  m_Size: {x: 4.0153446, y: 1.7072097}
   m_EdgeRadius: 0

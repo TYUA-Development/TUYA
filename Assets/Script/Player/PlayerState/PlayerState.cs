@@ -296,7 +296,12 @@ public class PlayerJumpState : PlayerState
         jumpPower = controller.jumpPower;
 
         col = controller.GetComponent<CapsuleCollider2D>();
-        groundLayer = LayerMask.GetMask("Floor") | LayerMask.GetMask("Default") | LayerMask.GetMask("Runway");
+
+        // CheckGrounded()는 경사로(Floor)에 몸이 파고드는 것만 잡기 위한 폴백이다. Default/Runway까지
+        // 포함하면 착지를 최종 확정하는 PlayerFallState.CheckLanding()(Floor만 검사)보다 훨씬 넓은
+        // 범위를 "바닥"으로 오판해, 실제로 착지하지 않았는데도 Fall -> Move/Idle로 넘어가는 문제가
+        // 있었다 - 두 검사가 같은 레이어를 보도록 Floor만 남긴다.
+        groundLayer = LayerMask.GetMask("Floor");
     }
 
     public override void Enter()
@@ -367,17 +372,20 @@ public class PlayerJumpState : PlayerState
 
     // 경사로에 몸이 파고들며 물리 솔버가 velocity.y를 계속 밀어올려서
     // isGround/velocity.y 조건만으로는 Fall 전환이 안 되는 경우를 잡기 위한 보조 지면 감지.
-    // PlayerMoveState.CheckFall() / PlayerFallState.CheckLanding()과 동일한 방식.
+    // PlayerMoveState.CheckFall() / PlayerFallState.CheckLanding()과 위쪽 경계(발밑 기준 +0.2)는
+    // 동일하게 유지해 경사로 파고듦 감지 범위는 그대로 두되, 아래쪽으로는 훨씬 덜 관대하게
+    // 잡는다(기존 -0.3 -> -0.1) - 원래 범위는 아직 착지하지 않은 근처 콜라이더까지 "바닥"으로
+    // 오판하기 쉬웠다.
     private bool CheckGrounded()
     {
         Vector2 checkPos = new Vector2(
             col.bounds.center.x,
-            col.bounds.min.y - 0.05f
+            col.bounds.min.y + 0.05f
         );
 
         Vector2 checkSize = new Vector2(
             col.bounds.size.x * 0.9f,
-            0.5f
+            0.3f
         );
 
         Collider2D[] hits = Physics2D.OverlapBoxAll(checkPos, checkSize, 0f, groundLayer);
