@@ -83,6 +83,12 @@ public class CoreObjectToggle : MonoBehaviour
                 continue;
             }
 
+            if (obj.TryGetComponent<ObjectWindLayerControll>(out var windLayerControll))
+            {
+                windLayerControll.Toggle();
+                continue;
+            }
+
             Object_Wind[] winds = obj.GetComponentsInChildren<Object_Wind>(true);
             Object_Wind_Particle[] windParticles = obj.GetComponentsInChildren<Object_Wind_Particle>(true);
 

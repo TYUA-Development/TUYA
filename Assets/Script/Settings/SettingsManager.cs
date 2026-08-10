@@ -31,6 +31,18 @@ public class SettingsManager : MonoBehaviour
         }
     }
 
+    private const int MinResolutionWidth = 1280;
+    private const int MinResolutionHeight = 720;
+
+    private static bool IsAllowedResolution(int width, int height)
+    {
+        if (width < MinResolutionWidth || height < MinResolutionHeight)
+            return false;
+
+        // 16:9 only (integer check avoids floating-point rounding issues)
+        return width * 9 == height * 16;
+    }
+
     private static ResolutionOption[] BuildSupportedResolutions()
     {
         Resolution[] systemResolutions = Screen.resolutions;
@@ -39,6 +51,10 @@ public class SettingsManager : MonoBehaviour
         for (int i = systemResolutions.Length - 1; i >= 0; i--)
         {
             Resolution candidate = systemResolutions[i];
+
+            if (!IsAllowedResolution(candidate.width, candidate.height))
+                continue;
+
             bool alreadyAdded = false;
 
             for (int j = 0; j < unique.Count; j++)
@@ -55,7 +71,7 @@ public class SettingsManager : MonoBehaviour
         }
 
         if (unique.Count == 0)
-            unique.Add(new ResolutionOption(Screen.currentResolution.width, Screen.currentResolution.height));
+            unique.Add(new ResolutionOption(MinResolutionWidth, MinResolutionHeight));
 
         return unique.ToArray();
     }

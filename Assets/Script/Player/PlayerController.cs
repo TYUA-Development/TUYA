@@ -304,6 +304,13 @@ public class PlayerController : MonoBehaviour
 
     public void FinishAttackAnimation()
     {
+        // AttackEnd.anim의 애니메이션 이벤트로 호출되는데, 이 이벤트는 Animator 자신의 재생
+        // 타임라인 기준으로 발동되므로 그 사이 플레이어가 재빨리 재조준해 currentState가 이미
+        // 새 attackState 사이클로 넘어가 있으면 "이전" 사이클이 끝났다는 낡은 신호일 수 있다.
+        // 그 경우 새 사이클의 IsAiming/IsAttack 값을 건드리거나 OnIdle()로 되돌리면 안 된다.
+        if (currentState == attackState && attackState.IsFinishingCycleStale)
+            return;
+
         HideHeldArrow();
 
         if (animator != null)

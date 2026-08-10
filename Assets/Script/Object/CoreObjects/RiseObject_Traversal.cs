@@ -72,10 +72,13 @@ public class RiseObject_Traversal : MonoBehaviour
 
     [Header("Audio")]
     [Tooltip("이동 시작 소리")]
-    public AudioSource riseStartAudio;
+    public AudioAssist riseStartAudio;
 
     [Tooltip("이동 중 반복되는 마찰 소리 / 로프 등. AudioAssist의 Volume Curve로 이동 중 볼륨 변화를 설정할 수 있고, Loop를 켜두어야 전체 이동이 끝날 때까지 계속 반복 재생됩니다.")]
     public AudioAssist riseLoopAudio;
+
+    [Tooltip("각 목표 지점에 도착해서 이동이 끝났을 때 재생할 소리")]
+    public AudioAssist riseEndAudio;
 
     private enum State
     {
@@ -139,7 +142,7 @@ public class RiseObject_Traversal : MonoBehaviour
         PlayParticle(lightParticle);
         PlayParticle(debrisParticle);
 
-        PlayAudio(riseStartAudio);
+        PlayAudioAssist(riseStartAudio);
 
         if (riseLoopAudio != null)
             riseLoopAudio.Play();
@@ -154,6 +157,7 @@ public class RiseObject_Traversal : MonoBehaviour
             yield return StartCoroutine(MoveRoutine(from, point.targetPosition, point.moveDuration));
 
             PlayParticle(completeParticle);
+            PlayAudioAssist(riseEndAudio);
 
             if (point.waitTime > 0f)
                 yield return new WaitForSeconds(point.waitTime);
@@ -261,12 +265,11 @@ public class RiseObject_Traversal : MonoBehaviour
         particle.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
     }
 
-    private void PlayAudio(AudioSource audioSource)
+    private void PlayAudioAssist(AudioAssist audioAssist)
     {
-        if (audioSource == null)
+        if (audioAssist == null)
             return;
 
-        audioSource.Stop();
-        audioSource.Play();
+        audioAssist.Play();
     }
 }
