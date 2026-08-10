@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Rendering.Universal;
 
 public class Arrow : MonoBehaviour
 {
@@ -10,6 +12,13 @@ public class Arrow : MonoBehaviour
     [Header("Hit FX")]
     public GameObject arrowHitFX;
 
+    [Header("Wind Light")]
+    [Tooltip("켜면 arrowLight가 바람(Object_Wind)의 영향을 받고 있는 동안에만 켜집니다. 꺼두면(기본값) arrowLight는 항상 켜진 채로 둡니다.")]
+    public bool windLight = false;
+
+    [Tooltip("windLight가 켜져 있을 때 켰다 껐다 할 대상 Light 2D. 비워두면 자식에서 자동으로 찾습니다.")]
+    public Light2D arrowLight;
+
     private Rigidbody2D rb;
     private Transform shooter;
 
@@ -18,11 +27,22 @@ public class Arrow : MonoBehaviour
     private ParticleSystem[] flightParticles;
     private TrailRenderer[] flightTrails;
 
+    private readonly HashSet<Collider2D> activeWindColliders = new HashSet<Collider2D>();
+
     void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
         flightParticles = GetComponentsInChildren<ParticleSystem>(true);
         flightTrails = GetComponentsInChildren<TrailRenderer>(true);
+
+        if (windLight)
+        {
+            if (arrowLight == null)
+                arrowLight = GetComponentInChildren<Light2D>(true);
+
+            if (arrowLight != null)
+                arrowLight.enabled = false;
+        }
     }
 
     private void Start()
@@ -69,6 +89,8 @@ public class Arrow : MonoBehaviour
 
 public void OnTriggerEnter2D(Collider2D other)
     {
+        HandleWindTriggerEnter(other);
+
         if (hasHit)
             return;
 
@@ -113,6 +135,35 @@ public void OnTriggerEnter2D(Collider2D other)
         }
 
         // IArrowHit도 IArrowPassThrough도 없는 콜라이더는 무시하고 지나감
+    }
+
+    private void OnTriggerExit2D(Collider2D other)
+    {
+        if (activeWindColliders.Remove(other))
+            UpdateWindLightState();
+    }
+
+    private void HandleWindTriggerEnter(Collider2D other)
+    {
+        if (!windLight)
+            return;
+
+        if (!other.TryGetComponent<Object_Wind>(out Object_Wind wind))
+            return;
+
+        if (((1 << gameObject.layer) & wind.ignoredLayer.value) != 0)
+            return;
+
+        activeWindColliders.Add(other);
+        UpdateWindLightState();
+    }
+
+    private void UpdateWindLightState()
+    {
+        if (!windLight || arrowLight == null)
+            return;
+
+        arrowLight.enabled = activeWindColliders.Count > 0;
     }
 
     void StartFlightFX()

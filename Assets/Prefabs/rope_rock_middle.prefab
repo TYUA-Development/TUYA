@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1121012353916706391}
   - component: {fileID: 5409543756598787121}
+  - component: {fileID: 641081668954540018}
   m_Layer: 6
   m_Name: Runway
   m_TagString: Runway
@@ -65,7 +66,7 @@ BoxCollider2D:
   m_IsTrigger: 0
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: 0.00298208, y: 0.727111}
+  m_Offset: {x: -0.0013048649, y: 0.72818285}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0, y: 0}
@@ -76,8 +77,20 @@ BoxCollider2D:
     adaptiveTiling: 0
   m_AutoTiling: 0
   serializedVersion: 2
-  m_Size: {x: 1.5295962, y: 0.08126098}
+  m_Size: {x: 1.5381701, y: 0.08340466}
   m_EdgeRadius: 0
+--- !u!114 &641081668954540018
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1235747783960662651}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: afca11d06b425e146a532d0243a15f7c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &2059202878704735220
 GameObject:
   m_ObjectHideFlags: 0
@@ -861,7 +874,7 @@ BoxCollider2D:
   m_IsTrigger: 0
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: 0, y: 0}
+  m_Offset: {x: 0, y: -0.02960962}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
@@ -872,7 +885,7 @@ BoxCollider2D:
     adaptiveTiling: 0
   m_AutoTiling: 0
   serializedVersion: 2
-  m_Size: {x: 1.54, y: 1.54}
+  m_Size: {x: 1.54, y: 1.4807807}
   m_EdgeRadius: 0
 --- !u!114 &2505731530440038261
 MonoBehaviour:
@@ -899,7 +912,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d9076220d53de15449a4209fddd5ae2d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  knockbackForce: 50
+  knockbackForce: 15
   fall_Box: {fileID: 5562892055989497129}
   hit_Box: {fileID: 7718484042099068374}
   hitSoundStopVelocity: 0.05

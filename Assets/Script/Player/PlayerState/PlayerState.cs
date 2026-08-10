@@ -483,6 +483,17 @@ public class PlayerAttackState : PlayerState
     private float arrowFlyTime;
     private float arrowGravityValue;
 
+    // Enter()마다 증가하는 이번 공격 "세대" 번호. AttackEnd.anim의 애니메이션 이벤트
+    // (FinishAttackAnimation)는 Animator 자신의 재생 타임라인을 기준으로 뒤늦게 도착할 수
+    // 있는데, 그 사이에 플레이어가 재빨리 다시 조준을 시작해 currentState가 이미 새로운
+    // attackState 사이클로 넘어가 있었다면 그 이벤트는 "지금" 사이클이 아니라 "이전" 사이클이
+    // 끝났다는 신호다. finishingCycleId(이벤트가 걸릴 당시의 cycleId)와 현재 cycleId를
+    // 비교해서 이런 낡은 신호를 걸러낸다.
+    private int cycleId;
+    private int finishingCycleId = -1;
+
+    public bool IsFinishingCycleStale => finishingCycleId != cycleId;
+
     public PlayerAttackState(PlayerController controller) : base(controller)
     {
         minAngle = controller.upperBodyMinAngle * -1;
@@ -507,6 +518,7 @@ public class PlayerAttackState : PlayerState
 
     public override void Enter()
     {
+        cycleId++;
 
         isAiming = true;
         isFinishingAttack = false;
@@ -656,6 +668,8 @@ public class PlayerAttackState : PlayerState
 
     private void StartAttackEnd()
     {
+        finishingCycleId = cycleId;
+
         controller.HideTrajectory();
         controller.HideHeldArrow();
 

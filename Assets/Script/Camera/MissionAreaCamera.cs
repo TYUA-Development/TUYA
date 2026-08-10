@@ -269,8 +269,13 @@ public class MissionAreaCamera : MonoBehaviour
 
         float playerX = player.position.x;
 
-        float leftZoomEndX = targetPos.x - maxSizeXPos;
-        float rightZoomStartX = targetPos.x + maxSizeXPos;
+        // targetPos가 콜라이더 중앙에서 벗어나 있으면(offset) leftZoomEndX/rightZoomStartX가
+        // enterX~exitX 범위를 벗어날 수 있다 - 그러면 그쪽 이징 구간(진입/재이탈 시 부드럽게
+        // 보간되는 구간)이 아예 콜라이더 바깥으로 밀려나 도달 불가능해지고, 진입하자마자
+        // hold 분기로 떨어져 카메라가 즉시 고정된 뒤 트리거를 벗어나는 순간 플레이어 위치로
+        // 툭 튀는 문제가 생긴다. 항상 콜라이더 경계 안쪽으로 clamp해서 이징 구간이 유효하게 만든다.
+        float leftZoomEndX = Mathf.Max(enterX, targetPos.x - maxSizeXPos);
+        float rightZoomStartX = Mathf.Min(exitX, targetPos.x + maxSizeXPos);
 
         Vector3 activeExitCameraPos = exitCameraPos;
 
