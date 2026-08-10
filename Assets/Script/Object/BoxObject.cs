@@ -172,7 +172,12 @@ public class BoxObject : MonoBehaviour, IArrowHit, IArrowKnockbackReceiver
 
         pendingContactReleases.Remove(collider);
         currentContacts.Remove(collider);
-        settleWaitingContacts.Remove(collider);
+        // settleWaitingContacts는 여기서 지우지 않는다. 튕기는 간격이
+        // contactReleaseGraceDuration보다 길면(흔함) 접촉이 완전히 끊겼다가 다시 붙는데,
+        // 여기서 같이 지워버리면 RegisterContact가 그걸 "새 충돌"로 보고 아직 정착하지도
+        // 않은 상태에서 hit_Box를 또 재생한다. settleWaitingContacts는 오직
+        // UpdateHitSoundSettle(속도 기준)에서만 정리되어야, 박스가 실제로 멈출 때까지는
+        // 같은 콜라이더에 대해 소리가 한 번만 나는 게 보장된다.
         knockbackFreeContacts.Remove(collider);
     }
 

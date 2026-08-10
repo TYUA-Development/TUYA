@@ -16,6 +16,10 @@ public class CoreObjectToggle : MonoBehaviour
     [Tooltip("대상에 Object_Wind/Object_Wind_Particle이 자식으로 있으면 즉시 켜고 끄는 대신 WindPower를 이 시간(초) 동안 서서히 올리고 내린다.")]
     public float windFadeDuration = 1f;
 
+    [Header("Timing")]
+    [Tooltip("코어가 활성화된 뒤 Target Objects들이 실제로 동작하기까지 대기하는 시간(초). 0이면 즉시 동작합니다.")]
+    public float delay = 0f;
+
     private readonly Dictionary<GameObject, Coroutine> windFadeCoroutines = new Dictionary<GameObject, Coroutine>();
 
     void Start()
@@ -37,6 +41,24 @@ public class CoreObjectToggle : MonoBehaviour
     }
 
     private void HandleCoreActivated()
+    {
+        if (delay > 0f)
+        {
+            StartCoroutine(HandleCoreActivatedAfterDelay(delay));
+            return;
+        }
+
+        ApplyToTargetObjects();
+    }
+
+    private IEnumerator HandleCoreActivatedAfterDelay(float delaySeconds)
+    {
+        yield return new WaitForSeconds(delaySeconds);
+
+        ApplyToTargetObjects();
+    }
+
+    private void ApplyToTargetObjects()
     {
         foreach (var obj in targetObjects)
         {

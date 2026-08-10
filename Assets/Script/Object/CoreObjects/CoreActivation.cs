@@ -46,6 +46,7 @@ public class CoreActivation : MonoBehaviour, IArrowHit, ICoreEvent
 
     private bool isRunning;
     private Coroutine activationCoroutine;
+    private Coroutine playerLockCoroutine;
 
     private void Awake()
     {
@@ -149,8 +150,6 @@ public class CoreActivation : MonoBehaviour, IArrowHit, ICoreEvent
         if (!activateOnlyOnce)
             yield return StartCoroutine(FadeRendererAlpha(activateGlowRenderer, activateGlowAlpha, 0f, activateGlowFadeOutTime));
 
-        UnlockPlayer();
-
         isRunning = false;
         activationCoroutine = null;
     }
@@ -161,18 +160,32 @@ public class CoreActivation : MonoBehaviour, IArrowHit, ICoreEvent
             return;
 
         if (playerCutsceneLocker != null)
+        {
             playerCutsceneLocker.LockNow();
+
+            // PlayerCutsceneLocker2D.LockNow()/UnlockNow()는 자체 타이머가 없는 즉시 잠금/해제
+            // 메서드라, 연출 코루틴이 얼마나 걸리는지와 무관하게 playerLockTime이 실제 잠금
+            // 시간이 되도록 여기서 직접 타이머를 돌린다.
+            if (playerLockCoroutine != null)
+                StopCoroutine(playerLockCoroutine);
+
+            playerLockCoroutine = StartCoroutine(UnlockPlayerAfterDelay(playerLockTime));
+        }
         else if (playerController != null)
+        {
             playerController.LockPlayerInput(playerLockTime);
+        }
     }
 
-    private void UnlockPlayer()
+    private IEnumerator UnlockPlayerAfterDelay(float delay)
     {
-        if (!lockPlayerDuringEvent)
-            return;
+        if (delay > 0f)
+            yield return new WaitForSeconds(delay);
 
         if (playerCutsceneLocker != null)
             playerCutsceneLocker.UnlockNow();
+
+        playerLockCoroutine = null;
     }
 
     private IEnumerator FlashRenderer(SpriteRenderer renderer, float maxAlpha, float duration)

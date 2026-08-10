@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 3129858048820927434}
   - component: {fileID: 7471283063678023456}
   - component: {fileID: 3937560136708646121}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Arrow
   m_TagString: Arrow
   m_Icon: {fileID: 0}
@@ -76,8 +76,8 @@ SpriteRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
+  m_SortingLayerID: 778606801
+  m_SortingLayer: 6
   m_SortingOrder: -20
   m_Sprite: {fileID: 21300000, guid: cfa90bc696a5777438c1680307c85aa2, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -302,7 +302,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5870931798740816655}
   - component: {fileID: 5424263213310550088}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Light 2D
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -344,7 +344,7 @@ MonoBehaviour:
   m_Intensity: 3.85
   m_LightVolumeIntensity: 1
   m_LightVolumeIntensityEnabled: 0
-  m_ApplyToSortingLayers: 00000000297bdc40ab71c8612d125bf7a332b84fb16c77ccd198682eed4c87a0bd4490ce
+  m_ApplyToSortingLayers: d198682e
   m_LightCookieSprite: {fileID: 21300000, guid: cfa90bc696a5777438c1680307c85aa2, type: 3}
   m_DeprecatedPointLightCookieSprite: {fileID: 0}
   m_LightOrder: 0
@@ -385,7 +385,7 @@ GameObject:
   - component: {fileID: 3201549343414845106}
   - component: {fileID: 8979947219463214766}
   - component: {fileID: 1575426860832813926}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: FlyParticle
   m_TagString: Untagged
   m_Icon: {fileID: 0}

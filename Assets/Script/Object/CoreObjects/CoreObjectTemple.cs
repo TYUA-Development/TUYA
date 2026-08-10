@@ -60,8 +60,18 @@ public class CoreObjectTemple : MonoBehaviour, IArrowHit, ICoreEvent
     public float risePosY;
     public float riseSpeed = 2f;
 
+    [Header("Core Activation Link")]
+    [Tooltip("이 신전과 연결된 CoreActivation. 화살이 이 CoreActivation을 맞춰 활성화되면(코어 이펙트가 재생되면) 신전도 함께 상승합니다.")]
+    public CoreActivation coreActivation;
+
     private Coroutine coreEventCoroutine;
     private Coroutine templeAudioCoroutine;
+
+    private void Reset()
+    {
+        if (coreActivation == null)
+            coreActivation = GetComponent<CoreActivation>();
+    }
 
     void Awake()
     {
@@ -69,6 +79,23 @@ public class CoreObjectTemple : MonoBehaviour, IArrowHit, ICoreEvent
         {
             controller = FindObjectOfType<PlayerController>();
         }
+    }
+
+    private void OnEnable()
+    {
+        if (coreActivation != null)
+            coreActivation.onActivated += HandleCoreActivationActivated;
+    }
+
+    private void OnDisable()
+    {
+        if (coreActivation != null)
+            coreActivation.onActivated -= HandleCoreActivationActivated;
+    }
+
+    private void HandleCoreActivationActivated()
+    {
+        OnCoreEvent();
     }
 
     public void OnCoreEvent(bool isPressed = true)
