@@ -90,8 +90,19 @@ public class SettingsManager : MonoBehaviour
         "전체 창모드"
     };
 
+    // Language enum(SettingsData.cs)의 값과 인덱스가 일치해야 한다: 0=Korean, 1=English, 2=Japanese, 3=ChineseSimplified, 4=ChineseTraditional
+    private static readonly string[] LanguageLabels =
+    {
+        "한국어",
+        "English",
+        "日本語",
+        "简体中文",
+        "繁體中文"
+    };
+
     public static SettingsManager Instance { get; private set; }
     public static int ScreenModeCount => ScreenModes.Length;
+    public static int LanguageCount => LanguageLabels.Length;
 
     public int MinBrightness => defaultSettings != null ? defaultSettings.minBrightness : 0;
 
@@ -203,6 +214,19 @@ public class SettingsManager : MonoBehaviour
         return GetScreenModeString(settings.screenModeIndex);
     }
 
+    public string GetLanguageString(int index)
+    {
+        index = Mathf.Clamp(index, 0, LanguageLabels.Length - 1);
+        return LanguageLabels[index];
+    }
+
+    public string GetCurrentLanguageString()
+    {
+        return GetLanguageString(settings.languageIndex);
+    }
+
+    public Language CurrentLanguage => (Language)Mathf.Clamp(settings.languageIndex, 0, LanguageCount - 1);
+
     private void Update()
     {
         ClearDestroyedSettingsUIReference();
@@ -291,6 +315,17 @@ public class SettingsManager : MonoBehaviour
     public void CycleScreenMode()
     {
         SetScreenModeIndex((settings.screenModeIndex + 1) % ScreenModes.Length);
+    }
+
+    public void SetLanguageIndex(int index)
+    {
+        settings.languageIndex = Mathf.Clamp(index, 0, LanguageCount - 1);
+        SaveSettings();
+    }
+
+    public void CycleLanguage()
+    {
+        SetLanguageIndex((settings.languageIndex + 1) % LanguageCount);
     }
 
     public void ApplySettings()

@@ -95,6 +95,50 @@ public class AudioAssist : MonoBehaviour, IAudioAssist
         audioSource.Stop();
     }
 
+    public void FadeIn(float duration)
+    {
+        EnsureAudioSource();
+
+        if (clips == null || clips.Count == 0)
+            return;
+
+        AudioAssistClip entry = clips[Random.Range(0, clips.Count)];
+
+        if (entry.clip == null)
+            return;
+
+        if (curveRoutine != null)
+        {
+            StopCoroutine(curveRoutine);
+            curveRoutine = null;
+        }
+
+        audioSource.Stop();
+        audioSource.clip = entry.clip;
+        audioSource.loop = loop;
+        audioSource.pitch = Random.Range(minPitch, maxPitch);
+        audioSource.volume = 0f;
+        audioSource.Play();
+
+        curveRoutine = StartCoroutine(FadeInRoutine(duration, entry.volume));
+    }
+
+    private IEnumerator FadeInRoutine(float duration, float clipVolume)
+    {
+        float targetVolume = volumeCurve.Evaluate(0f) * volume * clipVolume;
+        float timer = 0f;
+
+        while (timer < duration)
+        {
+            timer += Time.deltaTime;
+            audioSource.volume = Mathf.Lerp(0f, targetVolume, timer / duration);
+            yield return null;
+        }
+
+        audioSource.volume = targetVolume;
+        curveRoutine = StartCoroutine(ApplyVolumeCurve(clipVolume));
+    }
+
     public void FadeOut(float duration)
     {
         EnsureAudioSource();

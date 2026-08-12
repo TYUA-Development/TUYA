@@ -19,11 +19,13 @@ public class SettingsUI : MonoBehaviour
     public GameObject audioPanel;
     public GameObject graphicsPanel;
     public GameObject controlPanel;
+    public GameObject languagePanel;
 
     [Header("Main Panel Buttons")]
     public Button audioButton;
     public Button graphicsButton;
     public Button controlButton;
+    public Button languageButton;
     public Button mainCloseButton;
 
     [Header("Audio")]
@@ -43,6 +45,11 @@ public class SettingsUI : MonoBehaviour
 
     [Header("Control")]
     public Button controlBackButton;
+
+    [Header("Language")]
+    public Button languageBoxButton;
+    public TMP_Text languageValueText;
+    public Button languageBackButton;
 
     private bool listenersReady;
     private ControlBindingUI[] controlBindings;
@@ -122,6 +129,7 @@ public class SettingsUI : MonoBehaviour
 
         UpdateResolutionText();
         UpdateScreenModeText();
+        UpdateLanguageText();
         UpdateControlBindingTexts();
     }
 
@@ -140,6 +148,9 @@ public class SettingsUI : MonoBehaviour
 
         if (controlButton != null)
             controlButton.onClick.AddListener(() => ShowSubPanel(controlPanel));
+
+        if (languageButton != null)
+            languageButton.onClick.AddListener(() => ShowSubPanel(languagePanel));
 
         if (mainCloseButton != null)
             mainCloseButton.onClick.AddListener(() => gameObject.SetActive(false));
@@ -177,6 +188,14 @@ public class SettingsUI : MonoBehaviour
 
         if (controlBackButton != null)
             controlBackButton.onClick.AddListener(ShowMainPanel);
+
+        bool hasLanguageSelector = HasLanguageSelector();
+
+        if (!hasLanguageSelector && languageBoxButton != null)
+            languageBoxButton.onClick.AddListener(ToggleLanguage);
+
+        if (languageBackButton != null)
+            languageBackButton.onClick.AddListener(ShowMainPanel);
 
         SetupControlBindings();
     }
@@ -231,6 +250,19 @@ public class SettingsUI : MonoBehaviour
         return false;
     }
 
+    private bool HasLanguageSelector()
+    {
+        LanguageBoxSelectorUI[] selectors = GetComponentsInChildren<LanguageBoxSelectorUI>(true);
+        for (int i = 0; i < selectors.Length; i++)
+        {
+            LanguageBoxSelectorUI selector = selectors[i];
+            if (selector.boxButton == languageBoxButton)
+                return true;
+        }
+
+        return false;
+    }
+
     private void ShowMainPanel()
     {
         CancelKeyInputWait();
@@ -246,6 +278,9 @@ public class SettingsUI : MonoBehaviour
 
         if (controlPanel != null)
             controlPanel.SetActive(false);
+
+        if (languagePanel != null)
+            languagePanel.SetActive(false);
     }
 
     private void ShowSubPanel(GameObject panel)
@@ -264,11 +299,17 @@ public class SettingsUI : MonoBehaviour
         if (controlPanel != null)
             controlPanel.SetActive(false);
 
+        if (languagePanel != null)
+            languagePanel.SetActive(false);
+
         if (panel != null)
             panel.SetActive(true);
 
         if (panel == controlPanel)
             UpdateControlBindingTexts();
+
+        if (panel == languagePanel)
+            UpdateLanguageText();
     }
 
     private void ChangeResolution(int direction)
@@ -310,6 +351,23 @@ public class SettingsUI : MonoBehaviour
             return;
 
         screenModeText.text = SettingsManager.Instance.GetCurrentScreenModeString();
+    }
+
+    private void ToggleLanguage()
+    {
+        if (SettingsManager.Instance == null)
+            return;
+
+        SettingsManager.Instance.CycleLanguage();
+        UpdateLanguageText();
+    }
+
+    private void UpdateLanguageText()
+    {
+        if (languageValueText == null || SettingsManager.Instance == null)
+            return;
+
+        languageValueText.text = SettingsManager.Instance.GetCurrentLanguageString();
     }
 
     private void SetupControlBindings()

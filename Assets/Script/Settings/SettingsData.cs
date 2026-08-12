@@ -1,5 +1,14 @@
 using UnityEngine;
 
+public enum Language
+{
+    Korean = 0,
+    English = 1,
+    Japanese = 2,
+    ChineseSimplified = 3,
+    ChineseTraditional = 4
+}
+
 [System.Serializable]
 public class SettingsData
 {
@@ -9,6 +18,7 @@ public class SettingsData
     public const string BrightnessKey = "Settings.Brightness";
     public const string ResolutionIndexKey = "Settings.ResolutionIndex";
     public const string ScreenModeIndexKey = "Settings.ScreenModeIndex";
+    public const string LanguageIndexKey = "Settings.LanguageIndex";
 
     public int masterVolume;
     public int bgmVolume;
@@ -16,6 +26,7 @@ public class SettingsData
     public int brightness;
     public int resolutionIndex;
     public int screenModeIndex;
+    public int languageIndex;
 
     public bool fullscreen
     {
@@ -34,6 +45,7 @@ public class SettingsData
         PlayerPrefs.SetInt(BrightnessKey, Mathf.Clamp(data.brightness, 0, 100));
         PlayerPrefs.SetInt(ResolutionIndexKey, Mathf.Clamp(data.resolutionIndex, 0, SettingsManager.FixedResolutions.Length - 1));
         PlayerPrefs.SetInt(ScreenModeIndexKey, Mathf.Clamp(data.screenModeIndex, 0, SettingsManager.ScreenModeCount - 1));
+        PlayerPrefs.SetInt(LanguageIndexKey, Mathf.Clamp(data.languageIndex, 0, SettingsManager.LanguageCount - 1));
 
         PlayerPrefs.Save();
     }
@@ -53,6 +65,8 @@ public class SettingsData
         int legacyScreenMode = legacyFullscreen == 1 ? 0 : 1;
         data.screenModeIndex = PlayerPrefs.GetInt(ScreenModeIndexKey, legacyScreenMode);
 
+        data.languageIndex = PlayerPrefs.GetInt(LanguageIndexKey, fallback.languageIndex);
+
         data.Clamp();
         return data;
     }
@@ -66,7 +80,8 @@ public class SettingsData
             sfxVolume = 100,
             brightness = 100,
             resolutionIndex = 2,
-            screenModeIndex = 0
+            screenModeIndex = 0,
+            languageIndex = 0
         };
     }
 
@@ -78,6 +93,7 @@ public class SettingsData
         brightness = Mathf.Clamp(brightness, 0, 100);
         resolutionIndex = Mathf.Clamp(resolutionIndex, 0, SettingsManager.FixedResolutions.Length - 1);
         screenModeIndex = Mathf.Clamp(screenModeIndex, 0, SettingsManager.ScreenModeCount - 1);
+        languageIndex = Mathf.Clamp(languageIndex, 0, SettingsManager.LanguageCount - 1);
     }
 }
 
@@ -92,6 +108,7 @@ public class DefaultSettings : ScriptableObject
     public int minBrightness = 0;
     public int resolutionIndex = 2;
     public int screenModeIndex = 0;
+    public int languageIndex = 0;
 
     public bool fullscreen
     {
@@ -108,7 +125,8 @@ public class DefaultSettings : ScriptableObject
             sfxVolume = sfxVolume,
             brightness = brightness,
             resolutionIndex = resolutionIndex,
-            screenModeIndex = screenModeIndex
+            screenModeIndex = screenModeIndex,
+            languageIndex = languageIndex
         };
 
         data.Clamp();

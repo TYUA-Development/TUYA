@@ -16,8 +16,11 @@ public class Arrow : MonoBehaviour
     [Tooltip("켜면 arrowLight가 바람(Object_Wind)의 영향을 받고 있는 동안에만 켜집니다. 꺼두면(기본값) arrowLight는 항상 켜진 채로 둡니다.")]
     public bool windLight = false;
 
-    [Tooltip("windLight가 켜져 있을 때 켰다 껐다 할 대상 Light 2D. 비워두면 자식에서 자동으로 찾습니다.")]
+    [Tooltip("windLight가 켜져 있을 때 밝기를 페이드시킬 대상 Light 2D. 비워두면 자식에서 자동으로 찾습니다.")]
     public Light2D arrowLight;
+
+    [Tooltip("windLight의 밝기가 0<->기본 밝기로 페이드 인/아웃되는 데 걸리는 시간(초).")]
+    public float windLightFadeDuration = 0.25f;
 
     private Rigidbody2D rb;
     private Transform shooter;
@@ -28,6 +31,9 @@ public class Arrow : MonoBehaviour
     private TrailRenderer[] flightTrails;
 
     private readonly HashSet<Collider2D> activeWindColliders = new HashSet<Collider2D>();
+
+    private float arrowLightBaseIntensity = 1f;
+    private float arrowLightTargetIntensity = 0f;
 
     void Awake()
     {
@@ -41,7 +47,11 @@ public class Arrow : MonoBehaviour
                 arrowLight = GetComponentInChildren<Light2D>(true);
 
             if (arrowLight != null)
-                arrowLight.enabled = false;
+            {
+                arrowLightBaseIntensity = arrowLight.intensity;
+                arrowLight.intensity = 0f;
+                arrowLight.enabled = true;
+            }
         }
     }
 
@@ -68,6 +78,8 @@ public class Arrow : MonoBehaviour
 
     private void Update()
     {
+        UpdateWindLightFade();
+
         if (hasHit)
             return;
 
@@ -163,7 +175,16 @@ public void OnTriggerEnter2D(Collider2D other)
         if (!windLight || arrowLight == null)
             return;
 
-        arrowLight.enabled = activeWindColliders.Count > 0;
+        arrowLightTargetIntensity = activeWindColliders.Count > 0 ? arrowLightBaseIntensity : 0f;
+    }
+
+    private void UpdateWindLightFade()
+    {
+        if (!windLight || arrowLight == null)
+            return;
+
+        float rate = arrowLightBaseIntensity / Mathf.Max(windLightFadeDuration, 0.0001f);
+        arrowLight.intensity = Mathf.MoveTowards(arrowLight.intensity, arrowLightTargetIntensity, rate * Time.deltaTime);
     }
 
     void StartFlightFX()
