@@ -35,6 +35,13 @@ public class RopeRegenerator : MonoBehaviour
     [Header("Timing")]
     [SerializeField] private float glowFadeDuration = 1f;
 
+    [Header("Kinematic On Regenerate")]
+    [Tooltip("체크하면 로프/박스가 재생성되는 순간 Rigidbody2D를 잠깐 Kinematic으로 바꿔서, 생성 직후 중력/Joint 장력 등 물리 때문에 순간적으로 튀거나 처지는 것을 막습니다. 기본값은 꺼짐(false)입니다.")]
+    [SerializeField] private bool useKinematicWhileRegenerating = false;
+
+    [Tooltip("Use Kinematic While Regenerating가 켜져 있을 때, Kinematic 상태를 유지할 시간(초). 이 시간이 지나면 원래 Body Type(Dynamic)으로 되돌립니다.")]
+    [SerializeField] private float kinematicDuration = 0.5f;
+
     [Header("Glow")]
     [SerializeField] private Color glowColor = Color.white;
 
@@ -139,9 +146,56 @@ public class RopeRegenerator : MonoBehaviour
 
         rope.BuildRope();
 
+        if (useKinematicWhileRegenerating)
+            StartCoroutine(TemporarilySetKinematic(newlySpawnedBoxes));
+
         yield return StartCoroutine(PlayGlowFade(newlySpawnedBoxes));
 
         isRegenerating = false;
+    }
+
+    // 재생성 직후 kinematicDuration 동안만 새로 생성된 박스를 Kinematic으로 바꿔 물리(중력/Joint
+    // 장력)의 영향을 받지 않게 했다가, 시간이 지나면 원래 Body Type(Dynamic)으로 되돌린다.
+    // 로프 세그먼트는 대상이 아니다. PlayGlowFade와는 별도의 지속시간으로 독립 실행되므로
+    // RegenerateRoutine을 막지 않는다.
+    private IEnumerator TemporarilySetKinematic(List<GameObject> newlySpawnedBoxes)
+    {
+        List<Rigidbody2D> rigidbodies = CollectBoxRigidbodies(newlySpawnedBoxes);
+        if (rigidbodies.Count == 0)
+            yield break;
+
+        var originalTypes = new RigidbodyType2D[rigidbodies.Count];
+        for (int i = 0; i < rigidbodies.Count; i++)
+        {
+            originalTypes[i] = rigidbodies[i].bodyType;
+            rigidbodies[i].velocity = Vector2.zero;
+            rigidbodies[i].angularVelocity = 0f;
+            rigidbodies[i].bodyType = RigidbodyType2D.Kinematic;
+        }
+
+        yield return new WaitForSeconds(kinematicDuration);
+
+        for (int i = 0; i < rigidbodies.Count; i++)
+        {
+            if (rigidbodies[i] != null)
+                rigidbodies[i].bodyType = originalTypes[i];
+        }
+    }
+
+    private List<Rigidbody2D> CollectBoxRigidbodies(List<GameObject> newlySpawnedBoxes)
+    {
+        var rigidbodies = new List<Rigidbody2D>();
+
+        if (newlySpawnedBoxes != null)
+        {
+            foreach (GameObject box in newlySpawnedBoxes)
+            {
+                if (box != null && box.TryGetComponent(out Rigidbody2D rb))
+                    rigidbodies.Add(rb);
+            }
+        }
+
+        return rigidbodies;
     }
 
     private List<GameObject> AdvanceHangingBoxes()
