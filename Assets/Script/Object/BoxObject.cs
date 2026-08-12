@@ -35,6 +35,9 @@ public class BoxObject : MonoBehaviour, IArrowHit, IArrowKnockbackReceiver
     private Rigidbody2D rb;
     private bool isFallAudioPlaying;
     private readonly HashSet<Collider2D> knockbackFreeContacts = new HashSet<Collider2D>();
+    // BoxKnockBackDown 컴포넌트를 가진 오브젝트와 한 번이라도 닿으면 true로 고정된다.
+    // knockbackFreeContacts와 달리 접촉이 끊겨도 다시 false로 돌아가지 않는다(영구 적용).
+    private bool knockbackPermanentlyDisabled;
     private readonly HashSet<Collider2D> currentContacts = new HashSet<Collider2D>();
     private readonly Dictionary<Collider2D, Coroutine> pendingContactReleases = new Dictionary<Collider2D, Coroutine>();
 
@@ -235,6 +238,11 @@ public class BoxObject : MonoBehaviour, IArrowHit, IArrowKnockbackReceiver
         // 실제로 부딪히는 "Top" 자식이 아니라 그 부모에 붙어있음).
         if (collider.GetComponentInParent<IBoxKnockbackFree>() != null)
             knockbackFreeContacts.Add(collider);
+
+        // BoxKnockBackDown은 IBoxKnockbackFree와 달리 "닿아있는 동안만"이 아니라
+        // 한 번 닿으면 그 뒤로 계속 넉백이 면제되도록(영구 적용) 별도로 처리한다.
+        if (!knockbackPermanentlyDisabled && collider.GetComponentInParent<BoxKnockBackDown>() != null)
+            knockbackPermanentlyDisabled = true;
     }
 
     // RopeRegenerator 등 외부에서 이전에 떨어진 박스를 치울 때, 바로 Destroy하는 대신
@@ -291,7 +299,9 @@ public class BoxObject : MonoBehaviour, IArrowHit, IArrowKnockbackReceiver
 
         // IBoxKnockbackFree를 구현한 오브젝트(예: PressureCorePlatform)에 닿아있는 동안은
         // 넉백력을 0으로 만들어(=아예 힘을 가하지 않아) 화살에 맞아도 밀리지 않게 한다.
-        if (knockbackFreeContacts.Count > 0)
+        // knockbackPermanentlyDisabled는 BoxKnockBackDown을 가진 오브젝트에 한 번이라도
+        // 닿았으면 접촉 여부와 무관하게 계속 true로 유지되어 마찬가지로 넉백을 막는다.
+        if (knockbackFreeContacts.Count > 0 || knockbackPermanentlyDisabled)
             return;
 
         float xDir = Mathf.Sign(hitDirection.x);

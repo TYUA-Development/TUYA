@@ -11,14 +11,14 @@ public class TitleFadeSceneLoader : MonoBehaviour
     public string nextSceneName = "Forest";
 
     [Header("Fade Settings")]
-    public float fadeOutTime = 2.8f;
+    public float fadeOutTime = 1.5f;
 
     [Range(0f, 1f)]
     public float maxFadeAlpha = 1f;
 
     [Header("Title Audio Fade")]
     public AudioSource[] titleAudioSources;
-    public float audioFadeOutTime = 2.4f;
+    public float audioFadeOutTime = 1.3f;
 
     private bool isLoading = false;
 
