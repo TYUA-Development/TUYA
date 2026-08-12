@@ -3999,7 +3999,7 @@ ParticleSystem:
         m_PreInfinity: 2
         m_PostInfinity: 2
         m_RotationOrder: 4
-    minVertexDistance: 0.2
+    minVertexDistance: 0.03
     textureMode: 0
     textureScale: {x: 1, y: 1}
     ribbonCount: 1
@@ -13678,7 +13678,7 @@ ParticleSystem:
         m_PreInfinity: 2
         m_PostInfinity: 2
         m_RotationOrder: 4
-    minVertexDistance: 0.2
+    minVertexDistance: 0.03
     textureMode: 0
     textureScale: {x: 1, y: 1}
     ribbonCount: 1
@@ -19473,10 +19473,11 @@ MonoBehaviour:
     m_Bits: 4160
   blockedFadeOutDuration: 0.15
   connectionPoint: {fileID: 0}
-  connectionTargetPoint: {fileID: 0}
   connectionRadius: 0.5
   connectionCollider: {fileID: 0}
-  connectionColliderReleaseGrace: 0.2
+  linkedParticleSystems: []
+  linkedRiseObject: {fileID: 0}
+  connectionReleaseGrace: 0.2
   releaseFadeDistance: 100
 --- !u!114 &6831228509714802384
 MonoBehaviour:
