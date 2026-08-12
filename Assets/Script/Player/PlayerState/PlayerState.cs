@@ -290,6 +290,15 @@ public class PlayerJumpState : PlayerState
     private float groundCheckGraceTimer;
     private const float GroundCheckGracePeriod = 0.08f;
 
+    // CheckGrounded()가 단 한 프레임만 true여도 바로 착지로 처리하면, 이동하면서 점프할 때
+    // 지나가는 길목의 다른 바닥 조각을 스쳐 지나가는 순간(한두 프레임)까지 착지로 오판한다.
+    // "얼마나 올라갔는가"로는 경사로에 파묻힌 채 타고 올라가는 경우(실제로 Y가 계속
+    // 증가함)와 구분이 안 되므로, 대신 "연속으로 얼마나 오래 겹쳐 있는가"로 구분한다 -
+    // 스쳐 지나가는 건 아주 잠깐만 겹치고, 경사로에 파묻혀 타고 올라가는 건 계속 겹친
+    // 상태가 유지된다.
+    private float groundedContactTimer;
+    private const float RequiredGroundedContactDuration = 0.1f;
+
     public PlayerJumpState(PlayerController controller) : base(controller)
     {
         moveSpeed = controller.moveSpeed;
@@ -320,6 +329,7 @@ public class PlayerJumpState : PlayerState
         controller.isGround = false;
 
         groundCheckGraceTimer = GroundCheckGracePeriod;
+        groundedContactTimer = 0f;
 
         //if(controller.animator.GetBool("IsJump"))
         //{
@@ -353,8 +363,22 @@ public class PlayerJumpState : PlayerState
         if (groundCheckGraceTimer > 0f)
             groundCheckGraceTimer -= Time.fixedDeltaTime;
 
-        if (controller.isGround || controller.Rigidbody2D.velocity.y <= 0.01f ||
-            (groundCheckGraceTimer <= 0f && CheckGrounded()))
+        bool stuckInGround = false;
+
+        if (groundCheckGraceTimer <= 0f)
+        {
+            if (CheckGrounded())
+            {
+                groundedContactTimer += Time.fixedDeltaTime;
+                stuckInGround = groundedContactTimer >= RequiredGroundedContactDuration;
+            }
+            else
+            {
+                groundedContactTimer = 0f;
+            }
+        }
+
+        if (controller.isGround || controller.Rigidbody2D.velocity.y <= 0.01f || stuckInGround)
         {
             controller.OnFall();
             return;

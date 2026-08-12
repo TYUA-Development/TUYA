@@ -245,7 +245,7 @@ public class Object_Wind : MonoBehaviour, ICoreEvent
     // 거리를 트리밍하던 이전 방식은 대상이 정확히 그 위에 서 있는(틈이 0인) 차단벽까지 검사
     // 범위 밖으로 밀어내 버려서, 정작 "차단벽 위에 서 있어서 안전한" 가장 흔한 경우를
     // 놓치는 문제가 있었다.
-    private bool IsBlocked(Collider2D targetCollider)
+    public bool IsBlocked(Collider2D targetCollider)
     {
         if (blockingLayer.value == 0 || targetCollider == null)
             return false;
