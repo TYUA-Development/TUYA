@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class CoreActivationController : MonoBehaviour, IArrowHit, ICoreEvent
@@ -19,9 +20,11 @@ public class CoreActivationController : MonoBehaviour, IArrowHit, ICoreEvent
     public bool showTutorialAfterLetterbox = false;
     public TutorialAreaPrompt afterLetterboxTutorialPrompt;
 
-    [TextArea(2, 5)]
-    public string afterLetterboxTutorialMessage =
-        "투야는 바람을 지나갈 수 없습니다.\n화살은 바람의 영향을 받아 궤적이 바뀝니다.";
+    [Tooltip("언어별 문구. Language enum 값을 인덱스로 사용 - 0=Korean, 1=English, 2=Japanese, 3=ChineseSimplified, 4=ChineseTraditional. 특정 언어 칸이 비어있으면 0번(Korean)으로 대체 표시된다.")]
+    public List<string> afterLetterboxTutorialMessage = new List<string>
+    {
+        "투야는 바람을 지나갈 수 없습니다.\n화살은 바람의 영향을 받아 궤적이 바뀝니다."
+    };
 
     [Header("Player Lock")]
     public PlayerCutsceneLocker2D playerCutsceneLocker;

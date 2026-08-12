@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 
@@ -16,17 +17,19 @@ public class TutorialAreaPrompt : MonoBehaviour
     public TextMeshProUGUI promptText;
     public RectTransform promptRect;
 
+    [Header("Fonts By Language")]
+    [Tooltip("언어별 폰트. Language enum 값을 인덱스로 사용 - 0=Korean, 1=English, 2=Japanese, 3=ChineseSimplified, 4=ChineseTraditional. 특정 언어 칸이 비어있으면 0번(Korean) 폰트로 대체되고, 리스트 전체가 비어있으면 promptText에 원래 지정된 폰트를 그대로 쓴다.")]
+    public List<TMP_FontAsset> fontsByLanguage = new List<TMP_FontAsset>();
+
     [Header("First Text")]
-    [TextArea(2, 5)]
-    public string tutorialMessage =
-        "��Ŭ������ �����ϰ� ��Ŭ������ ȭ���� �����ϴ�.";
+    [Tooltip("언어별 문구. Language enum 값을 인덱스로 사용 - 0=Korean, 1=English, 2=Japanese, 3=ChineseSimplified, 4=ChineseTraditional. 특정 언어 칸이 비어있으면 0번(Korean)으로 대체 표시된다.")]
+    public List<string> tutorialMessage = new List<string>();
 
     [Header("Follow Up Text")]
     public bool useFollowUpPrompt = false;
 
-    [TextArea(2, 5)]
-    public string followUpMessage =
-        "�ھ ȭ���� ���� ���� ������.";
+    [Tooltip("언어별 문구. Language enum 값을 인덱스로 사용 - 0=Korean, 1=English, 2=Japanese, 3=ChineseSimplified, 4=ChineseTraditional. 특정 언어 칸이 비어있으면 0번(Korean)으로 대체 표시된다.")]
+    public List<string> followUpMessage = new List<string>();
 
     public float followUpDelay = 0.2f;
     public float followUpFadeInTime = 0.6f;
@@ -69,7 +72,7 @@ public class TutorialAreaPrompt : MonoBehaviour
         HideInstant();
 
         if (showDebugLog)
-            Debug.Log("[TutorialAreaPrompt] �غ� �Ϸ�: " + gameObject.name);
+            Debug.Log("[TutorialAreaPrompt] �غ� �Ϸ�: " + gameObject.name);
     }
 
     private void OnTriggerEnter2D(Collider2D other)
@@ -130,7 +133,7 @@ public class TutorialAreaPrompt : MonoBehaviour
         showCoroutine = StartCoroutine(ShowRoutine());
     }
 
-    [ContextMenu("�׽�Ʈ�� Ʃ�丮�� ǥ��")]
+    [ContextMenu("�׽�Ʈ�� Ʃ�丮�� ǥ��")]
     public void TestShowPrompt()
     {
         hasShown = false;
@@ -152,7 +155,7 @@ public class TutorialAreaPrompt : MonoBehaviour
         CacheOriginalPosition();
 
         yield return StartCoroutine(ShowSingleMessage(
-            tutorialMessage,
+            GetLocalizedMessage(tutorialMessage),
             fadeInTime,
             GetFirstMessageStayTime(),
             fadeOutTime,
@@ -168,7 +171,7 @@ public class TutorialAreaPrompt : MonoBehaviour
                 coreActivationController.ShowCoreHintRing();
 
             yield return StartCoroutine(ShowSingleMessage(
-                followUpMessage,
+                GetLocalizedMessage(followUpMessage),
                 followUpFadeInTime,
                 followUpStayTime,
                 followUpFadeOutTime,
@@ -187,6 +190,10 @@ public class TutorialAreaPrompt : MonoBehaviour
         ForcePrepareUI();
 
         promptText.text = message;
+
+        TMP_FontAsset localizedFont = GetLocalizedFont();
+        if (localizedFont != null)
+            promptText.font = localizedFont;
 
         Color textColor = promptText.color;
         textColor.a = 1f;
@@ -227,7 +234,11 @@ public class TutorialAreaPrompt : MonoBehaviour
 
     private float GetFirstMessageStayTime()
     {
-        if (IsAimShootTutorialMessage(tutorialMessage))
+        // 언어와 무관하게 항상 0번(Korean) 원문 기준으로 판별한다 - 표시 언어가 바뀌어도
+        // 이 감지 로직 자체는 흔들리지 않아야 하기 때문.
+        string koreanText = tutorialMessage != null && tutorialMessage.Count > 0 ? tutorialMessage[0] : string.Empty;
+
+        if (IsAimShootTutorialMessage(koreanText))
             return stayTime + aimShootTutorialExtraStayTime;
 
         return stayTime;
@@ -239,6 +250,37 @@ public class TutorialAreaPrompt : MonoBehaviour
             return false;
 
         return message.Contains("\uC6B0\uD074\uB9AD\uC73C\uB85C \uC870\uC900") && message.Contains("\uC88C\uD074\uB9AD\uC73C\uB85C \uD654\uC0B4");
+    }
+
+    private string GetLocalizedMessage(List<string> messages)
+    {
+        if (messages == null || messages.Count == 0)
+            return string.Empty;
+
+        int index = SettingsManager.Instance != null ? (int)SettingsManager.Instance.CurrentLanguage : 0;
+
+        if (index < 0 || index >= messages.Count || string.IsNullOrEmpty(messages[index]))
+            index = 0; // 해당 언어 번역이 비어있으면 0번(Korean)으로 대체
+
+        index = Mathf.Clamp(index, 0, messages.Count - 1);
+
+        return messages[index];
+    }
+
+    private TMP_FontAsset GetLocalizedFont()
+    {
+        if (fontsByLanguage == null || fontsByLanguage.Count == 0)
+            return null;
+
+        int index = SettingsManager.Instance != null ? (int)SettingsManager.Instance.CurrentLanguage : 0;
+
+        if (index < 0 || index >= fontsByLanguage.Count || fontsByLanguage[index] == null)
+            index = 0; // 해당 언어 폰트가 비어있으면 0번(Korean) 폰트로 대체
+
+        if (index < 0 || index >= fontsByLanguage.Count)
+            return null;
+
+        return fontsByLanguage[index];
     }
 
     private IEnumerator FadeAndMove(float fromAlpha, float toAlpha, float duration, bool moveIn)
@@ -362,25 +404,25 @@ public class TutorialAreaPrompt : MonoBehaviour
 
         if (promptRoot == null)
         {
-            Debug.LogWarning("[TutorialAreaPrompt] Prompt Root�� ����ֽ��ϴ�.");
+            Debug.LogWarning("[TutorialAreaPrompt] Prompt Root�� ����ֽ��ϴ�.");
             result = false;
         }
 
         if (promptCanvasGroup == null)
         {
-            Debug.LogWarning("[TutorialAreaPrompt] Prompt Canvas Group�� ����ֽ��ϴ�.");
+            Debug.LogWarning("[TutorialAreaPrompt] Prompt Canvas Group�� ����ֽ��ϴ�.");
             result = false;
         }
 
         if (promptText == null)
         {
-            Debug.LogWarning("[TutorialAreaPrompt] Prompt Text�� ����ֽ��ϴ�.");
+            Debug.LogWarning("[TutorialAreaPrompt] Prompt Text�� ����ֽ��ϴ�.");
             result = false;
         }
 
         if (promptRect == null)
         {
-            Debug.LogWarning("[TutorialAreaPrompt] Prompt Rect�� ����ֽ��ϴ�.");
+            Debug.LogWarning("[TutorialAreaPrompt] Prompt Rect�� ����ֽ��ϴ�.");
             result = false;
         }
 

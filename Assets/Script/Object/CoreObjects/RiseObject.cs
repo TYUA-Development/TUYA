@@ -66,11 +66,21 @@ public class RiseObject : MonoBehaviour
     [Tooltip("상승 시작 소리")]
     public AudioAssist riseStartAudio;
 
-    [Tooltip("상승 중 반복되는 마찰 소리 / 로프 등. AudioAssist의 Volume Curve로 상승 중 볼륨 변화를 설정할 수 있고, Loop를 켜두어야 상승이 끝날 때까지 계속 반복 재생됩니다.")]
+    [Tooltip("상승 중 반복되는 마찰 소리 / 로프 등. AudioAssist의 Volume Curve로 상승 중 볼륨 변화를 설정할 수 있고, Loop를 켜두어야 이동이 끝날 때까지 계속 반복 재생됩니다.")]
     public AudioAssist riseLoopAudio;
 
-    [Tooltip("목표 위치까지 상승이 끝났을 때 재생할 소리")]
+    [Tooltip("riseLoopAudio가 이동 시작과 함께 서서히 커지는데 걸리는 시간(초)")]
+    public float riseLoopFadeInDuration = 0.5f;
+
+    [Tooltip("riseLoopAudio가 도착과 함께 서서히 작아지는데 걸리는 시간(초)")]
+    public float riseLoopFadeOutDuration = 0.5f;
+
+    [Tooltip("기존 위치로 돌아왔을 때 재생할 소리")]
     public AudioAssist riseEndAudio;
+
+    [Header("Collider")]
+    [Tooltip("이동(상승/하강)하는 동안 비활성화했다가 도착하면 다시 활성화할 콜라이더")]
+    public Collider2D colliderToDisableWhileMoving;
 
     private Coroutine moveCoroutine;
     private bool isMoving;
@@ -126,19 +136,22 @@ public class RiseObject : MonoBehaviour
         PlayAudioAssist(riseStartAudio);
 
         if (riseLoopAudio != null)
-            riseLoopAudio.Play();
+            riseLoopAudio.FadeIn(riseLoopFadeInDuration);
+
+        SetColliderEnabled(false);
 
         yield return StartCoroutine(MoveRoutine(from, targetPosition));
+
+        SetColliderEnabled(true);
 
         StopParticle(dustParticle);
         StopParticle(lightParticle);
         StopParticle(debrisParticle);
 
         if (riseLoopAudio != null)
-            riseLoopAudio.Stop();
+            riseLoopAudio.FadeOut(riseLoopFadeOutDuration);
 
         PlayParticle(completeParticle);
-        PlayAudioAssist(riseEndAudio);
 
         isUp = true;
 
@@ -166,15 +179,21 @@ public class RiseObject : MonoBehaviour
         PlayParticle(debrisParticle);
 
         if (riseLoopAudio != null)
-            riseLoopAudio.Play();
+            riseLoopAudio.FadeIn(riseLoopFadeInDuration);
+
+        SetColliderEnabled(false);
 
         yield return StartCoroutine(MoveRoutine(from, restPosition));
+
+        SetColliderEnabled(true);
 
         StopParticle(dustParticle);
         StopParticle(debrisParticle);
 
         if (riseLoopAudio != null)
-            riseLoopAudio.Stop();
+            riseLoopAudio.FadeOut(riseLoopFadeOutDuration);
+
+        PlayAudioAssist(riseEndAudio);
 
         isUp = false;
         isMoving = false;
@@ -232,6 +251,14 @@ public class RiseObject : MonoBehaviour
         }
 
         transform.position = originalPosition;
+    }
+
+    private void SetColliderEnabled(bool isEnabled)
+    {
+        if (colliderToDisableWhileMoving == null)
+            return;
+
+        colliderToDisableWhileMoving.enabled = isEnabled;
     }
 
     private void PlayParticle(ParticleSystem particle)

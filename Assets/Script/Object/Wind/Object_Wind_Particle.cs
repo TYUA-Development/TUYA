@@ -48,21 +48,24 @@ public class Object_Wind_Particle : MonoBehaviour
     [Tooltip("차단됐을 때 즉시 사라지는 대신, 그 시점의 알파에서 0이 될 때까지 걸리는 시간(초). 0이면 기존처럼 즉시 사라집니다.")]
     public float blockedFadeOutDuration = 0.15f;
 
-    [Header("Wind Link (다른 Wind_Particle로 연결)")]
-    [Tooltip("이 지점 반경 안에 들어온 파티클은 속도(크기)는 유지한 채 방향만 Connection Target Point 쪽으로 꺾입니다. 비워두면 연결 기능을 사용하지 않습니다.")]
+    [Header("Connection Trigger (Connection Point에 파티클 감지 시 연결된 대상 제어)")]
+    [Tooltip("이 지점 반경 안에 파티클이 있는지를 감지해서 Connection Collider / Linked Particle System / Linked Rise Object를 켜고 끕니다. 비워두면 연결 기능을 사용하지 않습니다.")]
     public Transform connectionPoint;
 
-    [Tooltip("연결 시 파티클이 향할 지점. 보통 연결하려는 다른 Wind_Particle의 시작 지점에 배치합니다. 이 지점에 도달한 뒤로는 그 Wind_Particle이 자기 콜라이더 안에서 알아서 밀어줍니다.")]
-    public Transform connectionTargetPoint;
-
-    [Tooltip("Connection Point로부터 이 반경(유닛) 안에 들어오면 방향 전환이 시작됩니다.")]
+    [Tooltip("Connection Point로부터 이 반경(유닛) 안에 파티클이 들어오면 감지된 것으로 판단합니다.")]
     public float connectionRadius = 0.5f;
 
-    [Tooltip("연결된 반대편 Wind의 Collider. Connection Point 반경 안에 파티클이 있으면 켜지고, 없으면 (Connection Collider Release Grace만큼 유예를 둔 뒤) 꺼집니다. 비워두면 아무 동작도 하지 않습니다.")]
+    [Tooltip("Connection Point 반경 안에 파티클이 있으면 켜지고, 없으면 (Connection Release Grace만큼 유예를 둔 뒤) 꺼지는 Collider. 비워두면 아무 동작도 하지 않습니다.")]
     public Collider2D connectionCollider;
 
-    [Tooltip("Connection Point 반경 안에서 파티클이 마지막으로 감지된 뒤, Connection Collider를 끄기까지 기다리는 유예 시간(초). 파티클이 반경을 스치듯 드나들 때 콜라이더가 매 프레임 켜졌다 꺼졌다 떨리는 것을 막아준다. 0이면 유예 없이 즉시 꺼진다.")]
-    public float connectionColliderReleaseGrace = 0.2f;
+    [Tooltip("Connection Point 반경 안에 파티클이 있으면 Emission이 켜지고, 없으면 (Connection Release Grace만큼 유예를 둔 뒤) Emission이 꺼지는 ParticleSystem 목록. 이미 나온 파티클은 각자의 수명/페이드 설정대로 자연스럽게 사라집니다. 비워두면 아무 동작도 하지 않습니다.")]
+    public List<ParticleSystem> linkedParticleSystems = new List<ParticleSystem>();
+
+    [Tooltip("Connection Point 반경 안에 파티클이 감지되면 Rise(), 감지가 (Connection Release Grace만큼 유예를 둔 뒤) 사라지면 다시 Rise()를 호출해 원래 위치로 되돌리는 RiseObject. RiseObject.Rise()는 상태를 토글하므로, 이 오브젝트를 다른 곳(코어 등)에서 별도로 Rise()시키지 않는 경우에만 사용하세요. 비워두면 아무 동작도 하지 않습니다.")]
+    public RiseObject linkedRiseObject;
+
+    [Tooltip("Connection Point 반경 안에서 파티클이 마지막으로 감지된 뒤, Connection Collider / Linked Particle System / Linked Rise Object를 끄기(되돌리기)까지 기다리는 유예 시간(초). 파티클이 반경을 스치듯 드나들 때 매 프레임 켜졌다 꺼졌다 떨리는 것을 막아준다. 0이면 유예 없이 즉시 꺼진다.")]
+    public float connectionReleaseGrace = 0.2f;
 
     [Header("Release (파티클 생성을 멈출 때)")]
     [Tooltip("Release()가 호출되면(예: CoreObjectToggle에서 바람을 끌 때), 그 순간 살아있는 파티클은 더 이상 바람에 밀리지 않고 그 시점의 속도 그대로 직진합니다. Release된 지점부터 이 거리(유닛)만큼 날아가는 동안 알파가 1에서 0으로 선형 감소하다가 사라집니다.")]
@@ -72,6 +75,7 @@ public class Object_Wind_Particle : MonoBehaviour
     private Collider2D windCollider;
     private bool released;
     private float lastParticleNearConnectionTime = -Mathf.Infinity;
+    private bool wasConnectionTriggered;
 
     private struct BlockedFadeState
     {
@@ -305,19 +309,40 @@ public class Object_Wind_Particle : MonoBehaviour
                 PushParticlesInRange(ps);
         }
 
-        UpdateConnectionCollider();
+        UpdateConnectionTrigger();
     }
 
-    // Connection Point 반경 안에 파티클이 있는 동안 connectionCollider를 켜고, 마지막으로
-    // 감지된 뒤 connectionColliderReleaseGrace가 지나면 끈다 (즉시 끄면 파티클이 반경
-    // 경계를 스치듯 드나들 때 매 프레임 켜졌다 꺼졌다 떨릴 수 있어서 유예를 둔다).
-    private void UpdateConnectionCollider()
+    // Connection Point 반경 안에 파티클이 있는 동안 connectionCollider를 켜고 linkedParticleSystem의
+    // Emission을 켠 상태로 유지하며, 마지막으로 감지된 뒤 connectionReleaseGrace가 지나면 다시 끈다
+    // (즉시 끄면 파티클이 반경 경계를 스치듯 드나들 때 매 프레임 켜졌다 꺼졌다 떨릴 수 있어서 유예를 둔다).
+    // linkedRiseObject는 매 프레임 다시 호출하면 안 되므로(Rise()가 토글이라 이동이 끝나자마자 다시
+    // 뒤집혀버림), 감지 상태가 실제로 바뀐 프레임(엣지)에서만 한 번씩 호출한다.
+    private void UpdateConnectionTrigger()
     {
-        if (connectionCollider == null)
-            return;
+        bool withinGrace = Time.time - lastParticleNearConnectionTime <= connectionReleaseGrace;
 
-        bool withinGrace = Time.time - lastParticleNearConnectionTime <= connectionColliderReleaseGrace;
-        connectionCollider.enabled = withinGrace;
+        if (connectionCollider != null)
+            connectionCollider.enabled = withinGrace;
+
+        if (linkedParticleSystems != null)
+        {
+            foreach (var ps in linkedParticleSystems)
+            {
+                if (ps == null)
+                    continue;
+
+                ParticleSystem.EmissionModule emission = ps.emission;
+                emission.enabled = withinGrace;
+            }
+        }
+
+        if (withinGrace != wasConnectionTriggered)
+        {
+            wasConnectionTriggered = withinGrace;
+
+            if (linkedRiseObject != null)
+                linkedRiseObject.Rise();
+        }
     }
 
     private void PushParticlesInRange(ParticleSystem ps)
@@ -348,24 +373,17 @@ public class Object_Wind_Particle : MonoBehaviour
                 ? particleBuffer[i].position
                 : ps.transform.TransformPoint(particleBuffer[i].position);
 
-            // connectionCollider 감지는 실제 리다이렉트(connectionTargetPoint 필요) 여부와
-            // 무관하게, connectionPoint 반경 안에 파티클이 있다는 사실 자체만 본다.
+            // connectionPoint는 이제 리다이렉트가 아니라 단순 감지 트리거이므로, 이 파티클이
+            // 반경 안에 있다는 사실만 기록해서 Connection Collider / Linked Particle System /
+            // Linked Rise Object를 켜고 끄는 데 쓴다 (킬/차단 판정과는 무관).
             if (connectionPoint != null &&
                 ((Vector2)connectionPoint.position - (Vector2)worldPos).sqrMagnitude <= connectionRadius * connectionRadius)
             {
                 lastParticleNearConnectionTime = Time.time;
             }
 
-            // 킬/차단 판정은 이 파티클이 지금 이 Wind와 실제로 관련 있는 위치에 있을 때만 한다
-            // (이 Wind 자신의 콜라이더 안이거나, 막 리다이렉트하려는 connectionPoint 반경 안).
-            // 이 조건이 없으면 Wind Link로 같은 파티클 시스템을 두 Wind의 affectedParticleSystems에
-            // 함께 넣었을 때, 아직 반대편 Wind 근처에도 안 간 파티클까지 "내 위치에서 시야가
-            // 막혔다"고 즉시 죽여버리는 문제가 생긴다 (연결이 필요했던 이유 자체가 두 Wind
-            // 사이를 막는 지형이라, 멀리 있는 파티클은 십중팔구 차단 판정에 걸린다).
-            bool relevantToThisWind =
-                (windCollider != null && windCollider.OverlapPoint(worldPos)) ||
-                (connectionPoint != null &&
-                    ((Vector2)connectionPoint.position - (Vector2)worldPos).sqrMagnitude <= connectionRadius * connectionRadius);
+            // 킬/차단 판정은 이 파티클이 지금 이 Wind 자신의 콜라이더 안에 있을 때만 한다.
+            bool relevantToThisWind = windCollider != null && windCollider.OverlapPoint(worldPos);
 
             if (relevantToThisWind)
             {
@@ -448,30 +466,6 @@ public class Object_Wind_Particle : MonoBehaviour
                 continue;
             }
 
-            if (connectionPoint != null && connectionTargetPoint != null)
-            {
-                Vector2 particlePos2D = worldPos;
-                float connectionDistSqr = ((Vector2)connectionPoint.position - particlePos2D).sqrMagnitude;
-
-                if (connectionDistSqr <= connectionRadius * connectionRadius)
-                {
-                    // 방향을 꺾어서 날아가게 하면 그 이동 경로가 부자연스러워 보이므로,
-                    // 목표 지점(연결된 Wind의 시작 지점)으로 즉시 순간이동시킨다. 이때 모든
-                    // 파티클을 같은 좌표로 모으면 부자연스러우므로, connectionPoint 대비
-                    // 어긋나 있던 만큼(발사 폭에 따른 Y 편차 등)을 connectionTargetPoint에도
-                    // 그대로 유지한다. 속도는 건드리지 않고 그대로 유지해서, 도착 직후
-                    // 반대편 Wind가 이어받아 밀어줄 때(또는 관성으로 계속 날아갈 때) 부드럽게
-                    // 이어지도록 한다.
-                    Vector2 offsetFromConnectionPoint = particlePos2D - (Vector2)connectionPoint.position;
-                    Vector3 targetWorldPos = connectionTargetPoint.position + (Vector3)offsetFromConnectionPoint;
-                    particleBuffer[i].position = isWorldSpace
-                        ? targetWorldPos
-                        : ps.transform.InverseTransformPoint(targetWorldPos);
-
-                    continue;
-                }
-            }
-
             if (windDir != Vector2.zero && windCollider != null && windCollider.OverlapPoint(worldPos))
             {
                 // 매 프레임 힘을 누적(+=)하면 시간이 지날수록 속도가 계속 쌓이는 문제가 있었다.
@@ -516,8 +510,5 @@ public class Object_Wind_Particle : MonoBehaviour
 
         Gizmos.color = Color.cyan;
         Gizmos.DrawWireSphere(connectionPoint.position, connectionRadius);
-
-        if (connectionTargetPoint != null)
-            Gizmos.DrawLine(connectionPoint.position, connectionTargetPoint.position);
     }
 }
