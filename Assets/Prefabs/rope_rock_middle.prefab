@@ -912,7 +912,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d9076220d53de15449a4209fddd5ae2d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  knockbackForce: 15
+  knockbackForce: 20
   fall_Box: {fileID: 5562892055989497129}
   hit_Box: {fileID: 7718484042099068374}
   hitSoundStopVelocity: 0.05
@@ -944,7 +944,7 @@ Rigidbody2D:
   m_Simulated: 1
   m_UseFullKinematicContacts: 0
   m_UseAutoMass: 0
-  m_Mass: 0.0001
+  m_Mass: 1
   m_LinearDrag: 0
   m_AngularDrag: 0.05
   m_GravityScale: 1
