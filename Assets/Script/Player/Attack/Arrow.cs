@@ -13,7 +13,7 @@ public class Arrow : MonoBehaviour
     public GameObject arrowHitFX;
 
     [Header("Wind Light")]
-    [Tooltip("켜면 arrowLight가 바람(Object_Wind)의 영향을 받고 있는 동안에만 켜집니다. 꺼두면(기본값) arrowLight는 항상 켜진 채로 둡니다.")]
+    [Tooltip("켜면 arrowLight가 바람(Object_Wind)에 실제로 힘을 받고 있는 동안에만(차단되지 않은 경우에만) 켜집니다. 트리거에 들어와 있어도 장애물에 막혀 있으면 켜지지 않습니다. 꺼두면(기본값) arrowLight는 항상 켜진 채로 둡니다.")]
     public bool windLight = false;
 
     [Tooltip("windLight가 켜져 있을 때 밝기를 페이드시킬 대상 Light 2D. 비워두면 자식에서 자동으로 찾습니다.")]
@@ -23,6 +23,7 @@ public class Arrow : MonoBehaviour
     public float windLightFadeDuration = 0.25f;
 
     private Rigidbody2D rb;
+    private Collider2D selfCollider;
     private Transform shooter;
 
     private bool hasHit = false;
@@ -30,7 +31,10 @@ public class Arrow : MonoBehaviour
     private ParticleSystem[] flightParticles;
     private TrailRenderer[] flightTrails;
 
-    private readonly HashSet<Collider2D> activeWindColliders = new HashSet<Collider2D>();
+    // 트리거에 들어와 있는 Object_Wind들. 실제로 빛을 켤지는 매 프레임 이 중 하나라도
+    // IsBlocked()가 false인(=차단되지 않고 힘을 받는) 게 있는지로 다시 판단한다 - 단순히
+    // 트리거 안에 있다는 것만으로는 장애물에 막혀 실제로 힘을 안 받는 경우까지 켜져 버린다.
+    private readonly HashSet<Object_Wind> activeWinds = new HashSet<Object_Wind>();
 
     private float arrowLightBaseIntensity = 1f;
     private float arrowLightTargetIntensity = 0f;
@@ -38,6 +42,7 @@ public class Arrow : MonoBehaviour
     void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
+        selfCollider = GetComponent<Collider2D>();
         flightParticles = GetComponentsInChildren<ParticleSystem>(true);
         flightTrails = GetComponentsInChildren<TrailRenderer>(true);
 
@@ -78,6 +83,7 @@ public class Arrow : MonoBehaviour
 
     private void Update()
     {
+        UpdateWindLightTarget();
         UpdateWindLightFade();
 
         if (hasHit)
@@ -151,8 +157,8 @@ public void OnTriggerEnter2D(Collider2D other)
 
     private void OnTriggerExit2D(Collider2D other)
     {
-        if (activeWindColliders.Remove(other))
-            UpdateWindLightState();
+        if (other.TryGetComponent<Object_Wind>(out Object_Wind wind))
+            activeWinds.Remove(wind);
     }
 
     private void HandleWindTriggerEnter(Collider2D other)
@@ -166,16 +172,28 @@ public void OnTriggerEnter2D(Collider2D other)
         if (((1 << gameObject.layer) & wind.ignoredLayer.value) != 0)
             return;
 
-        activeWindColliders.Add(other);
-        UpdateWindLightState();
+        activeWinds.Add(wind);
     }
 
-    private void UpdateWindLightState()
+    // 트리거 안에 있는 바람들 중 실제로(차단되지 않고) 힘을 주고 있는 게 하나라도 있는지
+    // 매 프레임 다시 확인한다 - 장애물에 막혀 있으면 트리거 안에 있어도 켜지지 않는다.
+    private void UpdateWindLightTarget()
     {
         if (!windLight || arrowLight == null)
             return;
 
-        arrowLightTargetIntensity = activeWindColliders.Count > 0 ? arrowLightBaseIntensity : 0f;
+        bool receivingForce = false;
+
+        foreach (Object_Wind wind in activeWinds)
+        {
+            if (wind != null && !wind.IsBlocked(selfCollider))
+            {
+                receivingForce = true;
+                break;
+            }
+        }
+
+        arrowLightTargetIntensity = receivingForce ? arrowLightBaseIntensity : 0f;
     }
 
     private void UpdateWindLightFade()
