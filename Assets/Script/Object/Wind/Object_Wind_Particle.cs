@@ -61,14 +61,14 @@ public class Object_Wind_Particle : MonoBehaviour
     [Tooltip("Connection Point 반경 안에 파티클이 있으면 Emission이 켜지고, 없으면 (Connection Release Grace만큼 유예를 둔 뒤) Emission이 꺼지는 ParticleSystem 목록. 이미 나온 파티클은 각자의 수명/페이드 설정대로 자연스럽게 사라집니다. 비워두면 아무 동작도 하지 않습니다.")]
     public List<ParticleSystem> linkedParticleSystems = new List<ParticleSystem>();
 
-    [Tooltip("Connection Point 반경 안에 파티클이 감지되면 Rise(), 감지가 (Linked Rise Object Release Grace만큼 유예를 둔 뒤) 사라지면 다시 Rise()를 호출해 원래 위치로 되돌리는 RiseObject. RiseObject.Rise()는 상태를 토글하므로, 이 오브젝트를 다른 곳(코어 등)에서 별도로 Rise()시키지 않는 경우에만 사용하세요. 비워두면 아무 동작도 하지 않습니다.")]
+    [Tooltip("Connection Point 반경 안에 파티클이 감지되면 Rise(), 감지가 사라지면 다시 Rise()를 호출해 원래 위치로 되돌리는 RiseObject(연결/해제 판정은 Linked Rise Object Trigger Grace 참고). RiseObject.Rise()는 상태를 토글하므로, 이 오브젝트를 다른 곳(코어 등)에서 별도로 Rise()시키지 않는 경우에만 사용하세요. 비워두면 아무 동작도 하지 않습니다.")]
     public RiseObject linkedRiseObject;
 
     [Tooltip("Connection Point 반경 안에서 파티클이 마지막으로 감지된 뒤, Connection Collider / Linked Particle System을 끄기까지 기다리는 유예 시간(초). 파티클이 반경을 스치듯 드나들 때 매 프레임 켜졌다 꺼졌다 떨리는 것을 막아준다. 0이면 유예 없이 즉시 꺼진다.")]
     public float connectionReleaseGrace = 0.2f;
 
-    [Tooltip("Linked Rise Object 전용 유예 시간(초). 파티클 방출 간격 등으로 Connection Point 반경 안이 아주 짧게 비는 순간까지 '연결이 끊겼다'고 인정해 Rise()가 매번 왕복하는 걸 막기 위해, Connection Release Grace와 별도로 더 길게 잡을 수 있다. 이 시간 동안 계속 파티클이 감지되지 않아야만 실제로 끊긴 것으로 보고 Rise()를 호출해 되돌린다.")]
-    public float linkedRiseObjectReleaseGrace = 0.5f;
+    [Tooltip("Linked Rise Object 전용 판정 유예 시간(초). 연결(감지)과 해제(미감지) 양쪽 모두, 이 시간 동안 계속 같은 상태가 유지되어야만 실제로 바뀐 것으로 인정해 Rise()를 호출한다. 파티클 방출 간격 등으로 Connection Point 반경 안이 아주 짧게 비거나 스치듯 지나가는 순간까지 연결/해제로 인정해 Rise()가 매번 왕복하는 걸 막아준다. Connection Release Grace와는 별도로 설정할 수 있다.")]
+    public float linkedRiseObjectTriggerGrace = 0.5f;
 
     [Header("Release (파티클 생성을 멈출 때)")]
     [Tooltip("Release()가 호출되면(예: CoreObjectToggle에서 바람을 끌 때), 그 순간 살아있는 파티클은 더 이상 바람에 밀리지 않고 그 시점의 속도 그대로 직진합니다. Release된 지점부터 이 거리(유닛)만큼 날아가는 동안 알파가 1에서 0으로 선형 감소하다가 사라집니다.")]
@@ -78,6 +78,8 @@ public class Object_Wind_Particle : MonoBehaviour
     private Collider2D windCollider;
     private bool released;
     private float lastParticleNearConnectionTime = -Mathf.Infinity;
+    private float lastParticleAbsentTime = -Mathf.Infinity;
+    private bool particleFoundThisFixedUpdate;
     private bool wasRiseObjectTriggered;
 
     private struct BlockedFadeState
@@ -127,6 +129,10 @@ public class Object_Wind_Particle : MonoBehaviour
 
         released = false;
         releaseOrigins.Clear();
+
+        // Confirmed-connected 판정("마지막으로 감지 안 된 시점 이후 Trigger Grace가 지났는가")이
+        // 시작부터 곧바로 true가 되지 않도록, "지금 막 감지 안 된 상태"로 기준 시각을 잡아둔다.
+        lastParticleAbsentTime = Time.time;
 
         ApplyStretchSettings();
         ApplyLifetimeFadeSettings();
@@ -306,11 +312,16 @@ public class Object_Wind_Particle : MonoBehaviour
         if (affectedParticleSystems == null)
             return;
 
+        particleFoundThisFixedUpdate = false;
+
         foreach (var ps in affectedParticleSystems)
         {
             if (ps != null)
                 PushParticlesInRange(ps);
         }
+
+        if (!particleFoundThisFixedUpdate)
+            lastParticleAbsentTime = Time.time;
 
         UpdateConnectionTrigger();
     }
@@ -319,18 +330,20 @@ public class Object_Wind_Particle : MonoBehaviour
     // Emission을 켠 상태로 유지하며, 마지막으로 감지된 뒤 connectionReleaseGrace가 지나면 다시 끈다
     // (즉시 끄면 파티클이 반경 경계를 스치듯 드나들 때 매 프레임 켜졌다 꺼졌다 떨릴 수 있어서 유예를 둔다).
     //
-    // linkedRiseObject는 별도의 (보통 더 긴) linkedRiseObjectReleaseGrace로 판단한다 - 파티클 방출
-    // 간격 때문에 Connection Point 반경 안이 아주 짧게 비는 순간(예: 파티클 하나가 지나가고 다음
-    // 파티클이 아직 안 왔을 때)까지 connectionReleaseGrace가 "끊김"으로 잡아버리면, Rise()가 토글이라
-    // 매번 왕복 이동을 시작해버린다. 그래서 콜라이더/파티클 쪽보다 더 관대한 유예를 따로 둬서,
-    // 그 시간 동안 계속 감지가 안 됐을 때만 실제로 끊긴 것으로 본다. 또한 Rise()는 매 프레임 다시
-    // 호출하면 안 되므로(토글이라 이동이 끝나자마자 다시 뒤집혀버림), 감지 상태가 실제로 바뀐
-    // 프레임(엣지)에서만 한 번씩 호출한다.
+    // linkedRiseObject는 연결/해제 양쪽 모두 별도의 (보통 더 긴) linkedRiseObjectTriggerGrace 동안
+    // 같은 상태가 "끊김 없이 계속" 유지되어야만 실제로 바뀐 것으로 본다:
+    // - confirmedDisconnected: lastParticleNearConnectionTime(마지막으로 감지된 시각) 이후
+    //   Trigger Grace가 지나도록 한 번도 감지되지 않았는가.
+    // - confirmedConnected: lastParticleAbsentTime(마지막으로 감지가 안 됐던 시각) 이후
+    //   Trigger Grace가 지나도록 계속 감지되고 있었는가.
+    // 파티클 방출 간격 때문에 Connection Point 반경 안이 아주 짧게 비거나(파티클 하나가 지나가고
+    // 다음 파티클이 아직 안 왔을 때) 스치듯 지나가는 순간까지 연결/해제로 잡아버리면, Rise()가
+    // 토글이라 매번 왕복 이동을 시작해버린다. 그래서 콜라이더/파티클 쪽보다 더 관대한 유예를 따로
+    // 두고, 감지 상태가 실제로 확정된 프레임(엣지)에서만 Rise()를 한 번씩 호출한다.
     private void UpdateConnectionTrigger()
     {
         float timeSinceLastSeen = Time.time - lastParticleNearConnectionTime;
         bool withinGrace = timeSinceLastSeen <= connectionReleaseGrace;
-        bool withinRiseObjectGrace = timeSinceLastSeen <= linkedRiseObjectReleaseGrace;
 
         if (connectionCollider != null)
             connectionCollider.enabled = withinGrace;
@@ -347,9 +360,19 @@ public class Object_Wind_Particle : MonoBehaviour
             }
         }
 
-        if (withinRiseObjectGrace != wasRiseObjectTriggered)
+        bool confirmedDisconnected = timeSinceLastSeen >= linkedRiseObjectTriggerGrace;
+        bool confirmedConnected = Time.time - lastParticleAbsentTime >= linkedRiseObjectTriggerGrace;
+
+        if (!wasRiseObjectTriggered && confirmedConnected)
         {
-            wasRiseObjectTriggered = withinRiseObjectGrace;
+            wasRiseObjectTriggered = true;
+
+            if (linkedRiseObject != null)
+                linkedRiseObject.Rise();
+        }
+        else if (wasRiseObjectTriggered && confirmedDisconnected)
+        {
+            wasRiseObjectTriggered = false;
 
             if (linkedRiseObject != null)
                 linkedRiseObject.Rise();
@@ -391,6 +414,7 @@ public class Object_Wind_Particle : MonoBehaviour
                 ((Vector2)connectionPoint.position - (Vector2)worldPos).sqrMagnitude <= connectionRadius * connectionRadius)
             {
                 lastParticleNearConnectionTime = Time.time;
+                particleFoundThisFixedUpdate = true;
             }
 
             // 킬/차단 판정은 이 파티클이 지금 이 Wind 자신의 콜라이더 안에 있을 때만 한다.
