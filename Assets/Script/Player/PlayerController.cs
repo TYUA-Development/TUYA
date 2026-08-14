@@ -221,6 +221,29 @@ public class PlayerController : MonoBehaviour
         ChangeState(idleState);
     }
 
+    // CoreActivationController/CoreActivation의 PlayerLock처럼 플레이어가 어떤 상태(Attack
+    // 재생 도중 등)였든 상관없이 즉시 Idle로 끊어내야 하는 경우 전용. 일반적인 OnIdle()
+    // 흐름(이동 정지, 착지 후 정지 등)은 애니메이터가 이미 자연스럽게 Idle/Move 클립에
+    // 도달한 뒤에 호출되므로 애니메이터를 건드릴 필요가 없지만, 이 강제 잠금 경로는 로직
+    // 상태만 Idle로 바뀌고 애니메이터는 이전 상태(예: Aiming/Attack/AttackEnd)의 클립을
+    // 계속 재생 중일 수 있어 따로 강제 동기화가 필요하다.
+    public void ForceIdleForLock()
+    {
+        OnIdle();
+
+        if (animator == null)
+            return;
+
+        animator.SetBool("IsMove", false);
+        animator.SetBool("IsJump", false);
+        animator.SetBool("IsFall", false);
+        animator.SetBool("IsAiming", false);
+        animator.SetBool("IsAttack", false);
+        animator.ResetTrigger("DetectFloor");
+
+        animator.Play("Idle", 0, 0f);
+    }
+
     public void OnMove()
     {
         HideHeldArrow();

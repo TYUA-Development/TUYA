@@ -328,7 +328,7 @@ public class CoreActivationController : MonoBehaviour, IArrowHit, ICoreEvent
         // 상태를 강제로 되돌리는 처리가 전혀 없었으므로, 어느 잠금 경로를 타든 항상 보장되도록
         // 여기서 먼저 처리한다.
         if (playerController != null && playerController.currentState != playerController.idleState)
-            playerController.OnIdle();
+            playerController.ForceIdleForLock();
 
         if (playerCutsceneLocker != null)
             playerCutsceneLocker.LockNow();
