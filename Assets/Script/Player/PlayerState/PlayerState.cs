@@ -537,6 +537,13 @@ public class PlayerAttackState : PlayerState
     // MoveState/JumpState로 전환되고도 그 입력이 반영되지 않는 문제가 생긴다.
     private bool cancelledEarly;
 
+    // Enter() 시점에 이동키가 이미 눌려있던 상태(예: 달리다가 우클릭)라면 true. Aiming
+    // 단계의 이동 취소 체크는 이게 false가 될 때까지(=이동키를 한 번이라도 뗄 때까지)
+    // 건너뛴다 - 안 그러면 Move에서 Attack으로 넘어간 바로 다음 프레임에, 아직도 눌려있는
+    // 그 이동키 때문에 곧바로 다시 Move로 취소되어버려서 달리는 중엔 사실상 Attack에
+    // 진입할 수 없게 된다. AttackEnd의 이동 취소 체크는 이 예외 없이 그대로 즉시 동작한다.
+    private bool suppressMoveCancelUntilRelease;
+
     public PlayerAttackState(PlayerController controller) : base(controller)
     {
         minAngle = controller.upperBodyMinAngle * -1;
@@ -568,6 +575,7 @@ public class PlayerAttackState : PlayerState
         attackQueued = false;
         firedThisAim = false;
         cancelledEarly = false;
+        suppressMoveCancelUntilRelease = InputData.moveAxis.x != 0;
 
         controller.Rigidbody2D.velocity = new Vector2(0f, controller.Rigidbody2D.velocity.y);
 
@@ -600,11 +608,18 @@ public class PlayerAttackState : PlayerState
         if (isAiming)
         {
             // 아직 화살을 쏘지 않은 조준 단계에서는 이동 입력이 들어오면 Attack.anim이 끝나길
-            // 기다리지 않고 즉시 MoveState로 전환한다(상태/애니메이션 모두). 이 시점엔 발사
-            // 없이 취소되는 것이므로, Enter()에서 이미 재생을 시작했을 수 있는 활 당기는
-            // 소리도 같이 끊는다 - 안 그러면 아무 효과도 없는 취소인데 소리만 계속 흘러나온다.
-            if (InputData.moveAxis.x != 0)
+            // 기다리지 않고 즉시 MoveState로 전환한다(상태/애니메이션 모두). 단, Enter() 시점에
+            // 이미 눌려있던 이동키(달리다가 우클릭한 경우)는 새 입력으로 치지 않는다 - 한 번
+            // 떼었다가 다시 누르는 진짜 새 입력만 취소 신호로 인정한다.
+            if (InputData.moveAxis.x == 0)
             {
+                suppressMoveCancelUntilRelease = false;
+            }
+            else if (!suppressMoveCancelUntilRelease)
+            {
+                // 발사 없이 취소되는 것이므로, Enter()에서 이미 재생을 시작했을 수 있는 활
+                // 당기는 소리도 같이 끊는다 - 안 그러면 아무 효과도 없는 취소인데 소리만
+                // 계속 흘러나온다.
                 controller.StopBowPullSound();
                 CancelToMove();
                 return;
@@ -845,6 +860,12 @@ public class PlayerAttackState : PlayerState
         isFinishingAttack = false;
         attackQueued = false;
         firedThisAim = false;
+
+        // Enter()를 다시 거치지 않는 재진입 경로라 여기서도 같은 초기화가 필요하다. 이 시점엔
+        // 이 프레임의 AttackEnd 이동 취소 체크를 이미 통과한 뒤(=이동키가 눌려있지 않은
+        // 상태)라 항상 false로 정리되지만, Enter()와 동일한 규칙을 유지하기 위해 조건식을
+        // 그대로 재사용한다.
+        suppressMoveCancelUntilRelease = InputData.moveAxis.x != 0;
 
         controller.Rigidbody2D.velocity = new Vector2(0f, controller.Rigidbody2D.velocity.y);
     }
