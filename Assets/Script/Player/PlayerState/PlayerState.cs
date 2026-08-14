@@ -140,7 +140,12 @@ public class PlayerMoveState : PlayerState
 
         wasGrounded = controller.isGround;
 
-        if (InputData.aimingPressed)
+        // CanStartAttack()을 먼저 확인해야 한다 - AttackState의 Aiming/AttackEnd 단계에서
+        // 이동 입력으로 즉시 취소되어 돌아온 경우 RequireAimingReleaseBeforeAttack()에 의해
+        // waitForAimingRelease가 true라, 조준 버튼을 계속 누르고 있는 동안 OnAttack()은 아무
+        // 효과 없이 no-op된다. 그런데도 무조건 return해버리면 이 아래의 정지/낙하/점프 판정과
+        // Debug.Log("Move")가 조준 버튼을 뗄 때까지 영원히 실행되지 않는다.
+        if (InputData.aimingPressed && controller.CanStartAttack())
         {
             controller.OnAttack();
             return;
@@ -526,6 +531,12 @@ public class PlayerAttackState : PlayerState
 
     public bool IsFinishingCycleStale => finishingCycleId != cycleId;
 
+    // Aiming/AttackEnd 단계에서 이동 또는 점프 입력으로 즉시 취소되는 경우 true. Exit()에서
+    // 이 값을 확인해 재조준 스팸 방지용 입력 잠금(LockPlayerInput)을 건너뛴다 - 그 잠금을
+    // 걸면 방금 눌러 취소를 유발한 입력마저 다음 프레임에 ClearInput()으로 지워져,
+    // MoveState/JumpState로 전환되고도 그 입력이 반영되지 않는 문제가 생긴다.
+    private bool cancelledEarly;
+
     public PlayerAttackState(PlayerController controller) : base(controller)
     {
         minAngle = controller.upperBodyMinAngle * -1;
@@ -556,6 +567,7 @@ public class PlayerAttackState : PlayerState
         isFinishingAttack = false;
         attackQueued = false;
         firedThisAim = false;
+        cancelledEarly = false;
 
         controller.Rigidbody2D.velocity = new Vector2(0f, controller.Rigidbody2D.velocity.y);
 
@@ -567,7 +579,10 @@ public class PlayerAttackState : PlayerState
     public override void Exit()
     {
         controller.HideTrajectory();
-        controller.LockPlayerInput(0.25f);
+
+        if (!cancelledEarly)
+            controller.LockPlayerInput(0.25f);
+
         controller.RequireAimingReleaseBeforeAttack();
 
         controller.animator.SetBool("IsAiming", false);
@@ -584,6 +599,26 @@ public class PlayerAttackState : PlayerState
 
         if (isAiming)
         {
+            // 아직 화살을 쏘지 않은 조준 단계에서는 이동 입력이 들어오면 Attack.anim이 끝나길
+            // 기다리지 않고 즉시 MoveState로 전환한다(상태/애니메이션 모두). 이 시점엔 발사
+            // 없이 취소되는 것이므로, Enter()에서 이미 재생을 시작했을 수 있는 활 당기는
+            // 소리도 같이 끊는다 - 안 그러면 아무 효과도 없는 취소인데 소리만 계속 흘러나온다.
+            if (InputData.moveAxis.x != 0)
+            {
+                controller.StopBowPullSound();
+                CancelToMove();
+                return;
+            }
+
+            // 이동과 마찬가지로, 아직 발사 전인 조준 단계에서 점프 입력이 들어오면 즉시
+            // JumpState로 전환한다(상태/애니메이션 모두).
+            if (InputData.jumpPressed && (controller.isGround || controller.CanCoyoteJump))
+            {
+                controller.StopBowPullSound();
+                CancelToJump();
+                return;
+            }
+
             Debug.Log("Aiming");
 
             if (!attackQueued)
@@ -722,6 +757,21 @@ public class PlayerAttackState : PlayerState
 
     private void UpdateFinishingAttack()
     {
+        // AttackEnd(반동/후속 동작) 단계도 마찬가지로, 이동 입력이 들어오면 애니메이션이
+        // 끝나길 기다리지 않고 즉시 MoveState로 전환한다.
+        if (InputData.moveAxis.x != 0)
+        {
+            CancelToMove();
+            return;
+        }
+
+        // 점프 입력도 동일하게 즉시 JumpState로 전환한다.
+        if (InputData.jumpPressed && (controller.isGround || controller.CanCoyoteJump))
+        {
+            CancelToJump();
+            return;
+        }
+
         controller.animator.SetBool("IsAiming", false);
         controller.animator.SetBool("IsAttack", false);
 
@@ -797,6 +847,18 @@ public class PlayerAttackState : PlayerState
         firedThisAim = false;
 
         controller.Rigidbody2D.velocity = new Vector2(0f, controller.Rigidbody2D.velocity.y);
+    }
+
+    private void CancelToMove()
+    {
+        cancelledEarly = true;
+        controller.ForceMoveForAttackCancel();
+    }
+
+    private void CancelToJump()
+    {
+        cancelledEarly = true;
+        controller.ForceJumpForAttackCancel();
     }
 
     public override void PhysicsUpdate()

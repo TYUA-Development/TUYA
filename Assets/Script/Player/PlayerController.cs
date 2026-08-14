@@ -244,6 +244,47 @@ public class PlayerController : MonoBehaviour
         animator.Play("Idle", 0, 0f);
     }
 
+    // PlayerAttackState의 Aiming/AttackEnd 단계에서 이동 입력으로 즉시 취소될 때 전용.
+    // OnMove()만으로는 로직 상태만 MoveState로 바뀔 뿐, 애니메이터는 여전히 Aiming/Attack/
+    // AttackEnd 클립을 재생 중일 수 있어 애니메이션도 함께 강제로 Move로 동기화한다.
+    public void ForceMoveForAttackCancel()
+    {
+        OnMove();
+
+        if (animator == null)
+            return;
+
+        animator.SetBool("IsAiming", false);
+        animator.SetBool("IsAttack", false);
+        animator.SetBool("IsJump", false);
+        animator.SetBool("IsFall", false);
+        animator.ResetTrigger("DetectFloor");
+        animator.SetBool("IsMove", true);
+
+        animator.Play("Move", 0, 0f);
+    }
+
+    // PlayerAttackState의 Aiming/AttackEnd 단계에서 점프 입력으로 즉시 취소될 때 전용.
+    // ForceMoveForAttackCancel()과 동일한 이유로, OnJump()만으로는 로직 상태만 바뀔 뿐
+    // 애니메이터가 여전히 Aiming/Attack/AttackEnd 클립을 재생 중일 수 있어 함께 강제한다.
+    public void ForceJumpForAttackCancel()
+    {
+        ConsumeCoyoteTime();
+        OnJump();
+
+        if (animator == null)
+            return;
+
+        animator.SetBool("IsAiming", false);
+        animator.SetBool("IsAttack", false);
+        animator.SetBool("IsMove", false);
+        animator.SetBool("IsFall", false);
+        animator.ResetTrigger("DetectFloor");
+        animator.SetBool("IsJump", true);
+
+        animator.Play("JumpStart", 0, 0f);
+    }
+
     public void OnMove()
     {
         HideHeldArrow();
@@ -299,6 +340,13 @@ public class PlayerController : MonoBehaviour
     public void RequireAimingReleaseBeforeAttack()
     {
         waitForAimingRelease = true;
+    }
+
+    // Aiming 단계가 발사 없이 즉시 취소될 때, 이미 재생 중일 수 있는 활 당기는 소리를 끊는다.
+    public void StopBowPullSound()
+    {
+        if (bowSFX != null)
+            bowSFX.StopPull();
     }
 
     private void UpdateAimingReleaseLock()
@@ -637,7 +685,11 @@ public class PlayerController : MonoBehaviour
         if (footstepSource == null)
             return;
 
-        bool isMoving = InputReader.InputData.moveAxis.x != 0f;
+        // 입력 신호만으로 판단하면, AttackState의 발사 애니메이션처럼 실제로는 Rigidbody가
+        // 멈춰 있는데도 이동키를 누르고 있으면 발소리가 재생된다(Attack 상태는 발사 중엔
+        // MoveState로 전환되지 않고 그대로 유지되므로). 실제로 MoveState일 때만 발소리가
+        // 나도록 currentState도 함께 확인한다.
+        bool isMoving = currentState == moveState && InputReader.InputData.moveAxis.x != 0f;
 
         if (!isGround || !isMoving)
         {

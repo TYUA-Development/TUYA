@@ -28,15 +28,45 @@ public class BowSFXRandomizer : MonoBehaviour
     public float minPitch = 0.97f;
     public float maxPitch = 1.03f;
 
+    // Pull 전용 AudioSource. Shoot/Hit는 PlayOneShot으로 겹쳐 재생되어야 하지만(동시에 여러
+    // 발이 맞는 경우 등), PlayOneShot으로 재생한 소리는 AudioSource.Stop()으로 중간에 끊을 수
+    // 없다는 Unity의 제약이 있다. 조준을 즉시 취소했을 때 이미 재생 중인 Pull 사운드를
+    // 확실히 끊을 수 있도록 Pull만 별도 AudioSource에서 Play()/Stop()으로 재생한다.
+    private AudioSource pullAudioSource;
+
     void Awake()
     {
         if (audioSource == null)
             audioSource = GetComponent<AudioSource>();
+
+        pullAudioSource = gameObject.AddComponent<AudioSource>();
+        pullAudioSource.playOnAwake = false;
+        pullAudioSource.loop = false;
+
+        if (audioSource != null)
+        {
+            pullAudioSource.outputAudioMixerGroup = audioSource.outputAudioMixerGroup;
+            pullAudioSource.spatialBlend = audioSource.spatialBlend;
+        }
     }
 
     public void PlayPull()
     {
-        PlayRandom(pullSounds, pullVolume);
+        if (pullAudioSource == null) return;
+        if (pullSounds == null || pullSounds.Length == 0) return;
+
+        pullAudioSource.clip = pullSounds[Random.Range(0, pullSounds.Length)];
+        pullAudioSource.pitch = Random.Range(minPitch, maxPitch);
+        pullAudioSource.volume = pullVolume;
+        pullAudioSource.Play();
+    }
+
+    // 조준이 실제 효과(발사 등) 없이 즉시 취소되었을 때, 이미 재생 중일 수 있는 Pull
+    // 사운드를 끊기 위한 용도.
+    public void StopPull()
+    {
+        if (pullAudioSource == null) return;
+        pullAudioSource.Stop();
     }
 
     public void PlayShoot()
