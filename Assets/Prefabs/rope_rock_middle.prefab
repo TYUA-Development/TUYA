@@ -746,7 +746,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 5409543756598787121}
-  stairs: 0
 --- !u!1 &8666532238974513267
 GameObject:
   m_ObjectHideFlags: 0
@@ -781,7 +780,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -33.1, y: 18.05, z: 0}
-  m_LocalScale: {x: 3.67, y: 3.67, z: 3.67}
+  m_LocalScale: {x: 3, y: 3, z: 3}
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 1121012353916706391}
@@ -920,6 +919,8 @@ MonoBehaviour:
   disappearDestroyDelay: 1
   landingNormalThreshold: 0.5
   contactReleaseGraceDuration: 0.15
+  carryPlayerOnTop: 1
+  carryNormalThreshold: 0.5
 --- !u!114 &5529608457170820869
 MonoBehaviour:
   m_ObjectHideFlags: 0

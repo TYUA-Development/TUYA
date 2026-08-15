@@ -32,7 +32,18 @@ public class BoxObject : MonoBehaviour, IArrowHit, IArrowKnockbackReceiver
     [Tooltip("접촉이 순간적으로 끊겼다가 이 시간 안에 같은 콜라이더와 다시 닿으면 접촉이 계속 이어진 것으로 처리한다(진짜로 끊긴 게 아니라고 봄). 예를 들어 PressureCorePlatform의 Top이 Bottom에 부딪혀 멈추는 순간처럼 물리적으로 미세하게 떨어졌다 다시 붙는 경우, 이 값이 없으면 그걸 새 충돌로 오인해 착지 사운드가 처음엔 묻히고 멈추는 순간에야 뒤늦게 재생된다.")]
     public float contactReleaseGraceDuration = 0.15f;
 
+    [Header("Player Carry")]
+    [Tooltip("켜면 플레이어가 이 박스 위에 서 있을 때 박스가 움직인 만큼 플레이어도 같이 따라 움직인다. Inspector에서 언제든 켜고 끌 수 있다.")]
+    public bool carryPlayerOnTop = false;
+
+    [Tooltip("플레이어가 박스 '위'에 서 있다고 인정할 접촉면 법선의 최소 크기(박스 쪽에서 봤을 때 아래 방향, StopFallBounce의 landingNormalThreshold와 반대 부호). 값이 클수록 거의 수직으로 위에 서 있어야만 인정한다.")]
+    [Range(0f, 1f)]
+    public float carryNormalThreshold = 0.5f;
+
     private Rigidbody2D rb;
+    private Vector3 prevCarryPosition;
+    private bool playerOnTop;
+    private PlayerController carriedPlayer;
     private bool isFallAudioPlaying;
     private readonly HashSet<Collider2D> knockbackFreeContacts = new HashSet<Collider2D>();
     // BoxKnockBackDown 컴포넌트를 가진 오브젝트와 한 번이라도 닿으면 true로 고정된다.
@@ -55,6 +66,7 @@ public class BoxObject : MonoBehaviour, IArrowHit, IArrowKnockbackReceiver
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
+        prevCarryPosition = transform.position;
         DisableRunwayReactionForceFromPlayer();
     }
 
@@ -62,6 +74,61 @@ public class BoxObject : MonoBehaviour, IArrowHit, IArrowKnockbackReceiver
     {
         UpdateFallAudio();
         UpdateHitSoundSettle();
+        CarryPlayerIfOnTop();
+    }
+
+    // isGround 플래그를 다루는 PlayerController.FixedUpdate와 같은 패턴: 이번 프레임 시작 시점의
+    // 값을 먼저 저장해두고 플래그를 초기화한 뒤, 그 저장해둔 값으로 실제 캐리 이동을 적용한다.
+    // 접촉이 계속 유지되는 동안에는 OnCollisionStay2D가 매 물리 스텝마다 playerOnTop을 다시
+    // true로 세팅하므로 결과적으로 끊기지 않고 유지되고, 접촉이 실제로 끊기면(Stay/Enter가
+    // 더 이상 호출되지 않으면) 자연히 false로 떨어진다.
+    private void CarryPlayerIfOnTop()
+    {
+        bool wasPlayerOnTop = playerOnTop;
+        playerOnTop = false;
+
+        Vector3 delta = transform.position - prevCarryPosition;
+        prevCarryPosition = transform.position;
+
+        if (!carryPlayerOnTop || !wasPlayerOnTop || carriedPlayer == null || delta == Vector3.zero)
+            return;
+
+        Rigidbody2D playerRb = carriedPlayer.Rigidbody2D;
+        if (playerRb == null)
+            return;
+
+        // MovePosition은 쓰지 않는다 - Dynamic 바디에서 MovePosition은 "이번 물리 스텝이 끝날 때
+        // 정확히 이 위치에 도달해야 한다"는 목표이고, Box2D는 이를 달성하기 위해 그 스텝의 속도를
+        // 내부적으로 덮어쓴다. PlayerMoveState/PlayerJumpState가 같은 프레임에 입력을 반영해
+        // 설정한 이동/점프 velocity가 그 과정에서 지워져, 박스 위에서는 플레이어 자신의 이동/점프가
+        // 전혀 먹히지 않는 문제가 있었다. 대신 position을 직접 더해 순간 이동시키면 velocity는
+        // 전혀 건드리지 않으므로, 플레이어 자신의 velocity 기반 이동이 그대로 유지된 채 물리 스텝에서
+        // 정상적으로 함께 적분된다(박스 delta + 플레이어 자신의 이동이 합산됨).
+        playerRb.position += (Vector2)delta;
+    }
+
+    // 박스 자신의 콜리전 콜백에서 접촉면 법선을 확인해 "플레이어가 이 박스 위에 서 있는지"를
+    // 판단한다. StopFallBounce()가 쓰는 것과 같은 좌표 관례(자신의 콜백에서 법선이 위를 향하면
+    // 자신 아래에 바닥이 있다는 뜻)의 반대 경우 - 법선이 아래를 향하면 자신 위에 다른 물체(플레이어)가
+    // 있다는 뜻이다.
+    private void UpdatePlayerCarryContact(Collision2D collision)
+    {
+        if (!carryPlayerOnTop)
+            return;
+
+        PlayerController player = collision.collider.GetComponentInParent<PlayerController>();
+        if (player == null)
+            return;
+
+        for (int i = 0; i < collision.contactCount; i++)
+        {
+            if (collision.GetContact(i).normal.y <= -carryNormalThreshold)
+            {
+                playerOnTop = true;
+                carriedPlayer = player;
+                return;
+            }
+        }
     }
 
     // hit_Box가 재생을 시작하면(첫 충돌), Rigidbody2D 속도가 hitSoundStopVelocity 이하로
@@ -130,6 +197,7 @@ public class BoxObject : MonoBehaviour, IArrowHit, IArrowKnockbackReceiver
     {
         StopFallBounce(collision);
         RegisterContact(collision.collider);
+        UpdatePlayerCarryContact(collision);
     }
 
     // Unity는 물리 시뮬레이션이 시작되기 전부터 이미 겹쳐있던 콜라이더 쌍에 대해서는
@@ -146,6 +214,7 @@ public class BoxObject : MonoBehaviour, IArrowHit, IArrowKnockbackReceiver
         // 정리해줘야 그 사이 프레임들에서 다시 튀어 보이는 걸 막을 수 있다.
         StopFallBounce(collision);
         RegisterContact(collision.collider);
+        UpdatePlayerCarryContact(collision);
     }
 
     private void OnCollisionExit2D(Collision2D collision)

@@ -722,6 +722,8 @@ MonoBehaviour:
   disappearDestroyDelay: 1
   landingNormalThreshold: 0.5
   contactReleaseGraceDuration: 0.15
+  carryPlayerOnTop: 0
+  carryNormalThreshold: 0.5
 --- !u!114 &7921397085178993480
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -852,7 +854,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 2510118672144329121}
-  stairs: 0
 --- !u!61 &5812160439968113193
 BoxCollider2D:
   m_ObjectHideFlags: 0

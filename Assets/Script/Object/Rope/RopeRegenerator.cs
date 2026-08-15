@@ -177,8 +177,17 @@ public class RopeRegenerator : MonoBehaviour
 
         for (int i = 0; i < rigidbodies.Count; i++)
         {
-            if (rigidbodies[i] != null)
-                rigidbodies[i].bodyType = originalTypes[i];
+            if (rigidbodies[i] == null)
+                continue;
+
+            rigidbodies[i].bodyType = originalTypes[i];
+
+            // Kinematic인 동안에도 Object_Wind.FixedUpdate()가 velocity를 계속 누적시키므로,
+            // Dynamic으로 되돌리는 순간 그 누적된 속도가 그대로 남아있어 평소보다 훨씬 강하게
+            // 날아간다. 풀리는 시점에 velocity를 0으로 초기화해 그 이후부터 자연스럽게
+            // 바람의 영향을 받기 시작하도록 한다.
+            rigidbodies[i].velocity = Vector2.zero;
+            rigidbodies[i].angularVelocity = 0f;
         }
     }
 
