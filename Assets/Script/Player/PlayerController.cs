@@ -200,8 +200,7 @@ public class PlayerController : MonoBehaviour
                             currentState != fallState &&
                             currentState != dashState &&
                             (currentState == attackState ||
-                             (InputReader.InputData.moveAxis.x == 0 &&
-                              InputReader.InputData.moveAxis.y >= 0));
+                             InputReader.InputData.moveAxis.x == 0);
 
         if (shouldFreeze)
         {

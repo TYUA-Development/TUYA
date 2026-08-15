@@ -722,6 +722,8 @@ MonoBehaviour:
   disappearDestroyDelay: 1
   landingNormalThreshold: 0.5
   contactReleaseGraceDuration: 0.15
+  carryPlayerOnTop: 0
+  carryNormalThreshold: 0.5
 --- !u!114 &7921397085178993480
 MonoBehaviour:
   m_ObjectHideFlags: 0
