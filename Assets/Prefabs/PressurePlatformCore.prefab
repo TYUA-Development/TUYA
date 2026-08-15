@@ -1012,7 +1012,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 1998752639157058010}
-  stairs: 0
 --- !u!1 &4144393353484466597
 GameObject:
   m_ObjectHideFlags: 0
@@ -1104,7 +1103,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 8952602290366576701}
-  stairs: 0
 --- !u!1 &4204723288577231985
 GameObject:
   m_ObjectHideFlags: 0
@@ -1333,7 +1331,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 2223646079015679584}
-  stairs: 0
 --- !u!61 &1869897124339580166
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -2707,7 +2704,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 2535972423387831256}
-  stairs: 0
 --- !u!61 &2412635221972979669
 BoxCollider2D:
   m_ObjectHideFlags: 0

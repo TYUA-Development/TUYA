@@ -228,7 +228,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 4343669759602307181}
-  stairs: 0
 --- !u!61 &8807026929996817997
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -703,7 +702,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d9076220d53de15449a4209fddd5ae2d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  knockbackForce: 25
+  knockbackForce: 30
   fall_Box: {fileID: 3794054979734838646}
   hit_Box: {fileID: 2429391573811213319}
   hitSoundStopVelocity: 0.3

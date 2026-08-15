@@ -852,7 +852,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RunwayCollider: {fileID: 2510118672144329121}
-  stairs: 0
 --- !u!61 &5812160439968113193
 BoxCollider2D:
   m_ObjectHideFlags: 0
