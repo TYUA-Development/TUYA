@@ -14,6 +14,10 @@ public class PressureCorePlatform : MonoBehaviour, IBoxKnockbackFree
     [Tooltip("실제로 무게를 받는 Top 자식 오브젝트의 콜라이더. 이 스크립트는 부모(Rigidbody2D가 있는)에 붙이고, 이 필드에 Top의 Collider2D를 연결합니다.")]
     public Collider2D topCollider;
 
+    [Header("Weight")]
+    [Tooltip("이 플랫폼에 항상 적용되는 기본 무게. 접촉 감지(TY_Weight)와 무관하게 currentWeight에 항상 더해집니다. Rigidbody2D/Collider가 없어 물리적으로 감지할 수 없는 오브젝트의 무게를 흉내 내거나, 두 플랫폼 사이에 처음부터 무게 차이를 주고 싶을 때 사용하세요.")]
+    public float baseWeight = 0f;
+
     [Header("Detection")]
     [Tooltip("이 레이어의 오브젝트만 무게로 인정합니다")]
     public LayerMask weighableLayer = ~0;
@@ -38,6 +42,10 @@ public class PressureCorePlatform : MonoBehaviour, IBoxKnockbackFree
     [Header("Bottom Runway")]
     [Tooltip("Top이 bottomStopper와 맞닿아 있는 동안 비활성화하고, 떨어지면 다시 활성화할 Bottom 쪽 Runway 콜라이더. 비워두면 아무 동작도 하지 않습니다.")]
     public Collider2D bottomRunwayCollider;
+
+    [Header("Full State Collider")]
+    [Tooltip("Top이 완전히 Down 상태(bottomStopper에 닿음)에 도달하면 켜고, 완전히 Up 상태(upLocalPosition에 도달)에 도달하면 끄는 콜라이더. 이동 중에는 상태를 바꾸지 않고 직전 상태를 유지합니다. 비워두면 아무 동작도 하지 않습니다.")]
+    public Collider2D colliderEnabledWhenDown;
 
     [Header("Initial State")]
     [Tooltip("씬 배치 상 이 플랫폼이 시작부터 Down 위치(바닥에 닿아 있음)인지 여부. 무게가 같아 판정이 없을 때(히스테리시스) 기준이 됩니다.")]
@@ -70,9 +78,20 @@ public class PressureCorePlatform : MonoBehaviour, IBoxKnockbackFree
         currentState = startsDown ? PlatformState.Down : PlatformState.Up;
     }
 
+    // baseWeight가 있으면 접촉 하나 없이도 두 플랫폼의 무게가 다를 수 있으므로, 씬 시작 시점에
+    // 한 번 계산/비교해 startsDown 배치와 실제 무게 차이가 어긋나 있으면 즉시 맞는 쪽으로 움직인다.
+    // connectedPlatform의 currentWeight도 그 쪽의 Start()에서 같은 방식으로 계산되므로, 양쪽
+    // Start()가 어떤 순서로 실행되든 EvaluatePair()가 서로를 다시 부르며 최종적으로 올바른 상태로
+    // 수렴한다(무게 값이 실시간으로 바뀔 때 이미 동일한 방식으로 동작하는 것과 같다).
+    private void Start()
+    {
+        RecalculateWeight();
+    }
+
     private void FixedUpdate()
     {
         UpdateBottomRunwayCollider();
+        UpdateFullStateCollider();
     }
 
     // Top이 bottomStopper와 맞닿아 있는 동안(=완전히 눌려 내려간 상태) bottomRunwayCollider를
@@ -86,6 +105,34 @@ public class PressureCorePlatform : MonoBehaviour, IBoxKnockbackFree
 
         bool isTouching = topCollider.Distance(bottomStopper).distance <= StopEpsilon;
         bottomRunwayCollider.enabled = !isTouching;
+    }
+
+    // 목표(Up) 상태의 월드 좌표. MoveUpRoutine과 UpdateFullStateCollider가 같은 계산을 공유한다 -
+    // 두 곳이 서로 다른 방식으로 계산하면 "완전히 Up" 판정 기준이 실제 이동 목표와 어긋날 수 있다.
+    private Vector3 GetUpWorldPosition()
+    {
+        Transform topTransform = topCollider.transform;
+        return topTransform.parent != null
+            ? topTransform.parent.TransformPoint(upLocalPosition)
+            : upLocalPosition;
+    }
+
+    // Top이 완전히 Down/Up에 도달했을 때만 colliderEnabledWhenDown을 켜고 끈다. currentState(목표
+    // 상태)가 아니라 UpdateBottomRunwayCollider와 같은 실측 거리 기준으로 판정하므로, 이동 중에는
+    // 어느 조건도 만족하지 않아 직전 상태를 그대로 유지한다.
+    private void UpdateFullStateCollider()
+    {
+        if (colliderEnabledWhenDown == null || topCollider == null)
+            return;
+
+        if (bottomStopper != null && topCollider.Distance(bottomStopper).distance <= StopEpsilon)
+        {
+            colliderEnabledWhenDown.enabled = true;
+        }
+        else if (Vector3.Distance(topCollider.transform.position, GetUpWorldPosition()) <= StopEpsilon)
+        {
+            colliderEnabledWhenDown.enabled = false;
+        }
     }
 
     // Top 콜라이더는 자식 오브젝트에 있어 이 부모는 OnCollision2D 메시지를 직접 받지 못한다.
@@ -189,7 +236,7 @@ public class PressureCorePlatform : MonoBehaviour, IBoxKnockbackFree
 
     private void RecalculateWeight()
     {
-        float total = 0f;
+        float total = baseWeight;
         foreach (float value in pressingWeights.Values)
             total += value;
 
@@ -296,9 +343,7 @@ public class PressureCorePlatform : MonoBehaviour, IBoxKnockbackFree
         // Down과 동일하게 월드 공간에서 진행한다. 부모(PressurePlatform)의 localScale이
         // 1이 아니면(예: 3배) localPosition 기준 이동이 같은 speed 값으로도 실제 월드
         // 이동 거리가 배로 커져 Down/Up 속도가 어긋나기 때문이다.
-        Vector3 targetWorldPosition = topTransform.parent != null
-            ? topTransform.parent.TransformPoint(upLocalPosition)
-            : upLocalPosition;
+        Vector3 targetWorldPosition = GetUpWorldPosition();
 
         bool wasMoving = Vector3.Distance(topTransform.position, targetWorldPosition) > StopEpsilon;
 
