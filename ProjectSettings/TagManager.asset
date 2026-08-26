@@ -43,9 +43,6 @@ TagManager:
   - 
   - 
   m_SortingLayers:
-  - name: CameraSortingLayer
-    uniqueID: 1967196949
-    locked: 0
   - name: Default
     uniqueID: 0
     locked: 0
@@ -72,4 +69,7 @@ TagManager:
     locked: 0
   - name: foregroundoverlay
     uniqueID: 3465561277
+    locked: 0
+  - name: CameraSortingLayer
+    uniqueID: 1967196949
     locked: 0

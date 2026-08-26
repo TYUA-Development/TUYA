@@ -83,6 +83,12 @@ public class CoreObjectToggle : MonoBehaviour
                 continue;
             }
 
+            if (obj.TryGetComponent<ShockWaveController>(out var shockWaveController))
+            {
+                shockWaveController.TriggerShockWave();
+                continue;
+            }
+
             if (obj.TryGetComponent<ObjectWindLayerControll>(out var windLayerControll))
             {
                 windLayerControll.Toggle();

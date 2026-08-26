@@ -42,9 +42,9 @@ Material:
     m_Ints: []
     m_Floats:
     - _AspectRatio: 1.777
-    - _Size: 0.05
+    - _Size: 0.2
     - _Strength: -0.1
-    - _WaveDistance: 0.5
+    - _WaveDistance: -0.1
     m_Colors:
-    - _FocalPoint: {r: 0.5, g: 0.5, b: 0, a: 0}
+    - _FocalPoint: {r: 0.53603876, g: 0.5154627, b: 0, a: 0}
   m_BuildTextureStacks: []
