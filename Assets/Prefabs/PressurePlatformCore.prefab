@@ -1599,6 +1599,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   connectedPlatform: {fileID: 4860457202128206942}
   topCollider: {fileID: 2042744809656448183}
+  baseWeight: 0
   weighableLayer:
     serializedVersion: 2
     m_Bits: 4294967295
@@ -1608,6 +1609,7 @@ MonoBehaviour:
   bottomStopper: {fileID: 6642438118796555250}
   moveSpeed: 2.5
   bottomRunwayCollider: {fileID: 8952602290366576701}
+  colliderEnabledWhenDown: {fileID: 0}
   startsDown: 0
   loop_Down: {fileID: 8762316165193662893}
   loop_Up: {fileID: 3568959894403321256}
@@ -1691,6 +1693,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   connectedPlatform: {fileID: 4408572981333677475}
   topCollider: {fileID: 5730190753317837247}
+  baseWeight: 0
   weighableLayer:
     serializedVersion: 2
     m_Bits: 4294967295
@@ -1700,6 +1703,7 @@ MonoBehaviour:
   bottomStopper: {fileID: 2707281520873673046}
   moveSpeed: 2.5
   bottomRunwayCollider: {fileID: 1998752639157058010}
+  colliderEnabledWhenDown: {fileID: 0}
   startsDown: 1
   loop_Down: {fileID: 9144314897171640890}
   loop_Up: {fileID: 8392909866117013414}
