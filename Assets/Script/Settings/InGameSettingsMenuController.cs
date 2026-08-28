@@ -189,6 +189,8 @@ public class InGameSettingsMenuController : MonoBehaviour
 
         DisableMenuInteraction();
 
+        AudioListener.pause = false;
+
         AudioSource[] audioSources = FindObjectsOfType<AudioSource>();
         float[] startVolumes = new float[audioSources.Length];
 
@@ -527,12 +529,16 @@ public class InGameSettingsMenuController : MonoBehaviour
 
         previousTimeScale = Time.timeScale;
         Time.timeScale = 0f;
+        AudioListener.pause = true;
     }
 
     private void RestoreTimeScale()
     {
-        if (pauseWithTimeScale)
-            Time.timeScale = previousTimeScale <= 0f ? 1f : previousTimeScale;
+        if (!pauseWithTimeScale)
+            return;
+
+        Time.timeScale = previousTimeScale <= 0f ? 1f : previousTimeScale;
+        AudioListener.pause = false;
     }
 
     private void LockPlayerInput()
