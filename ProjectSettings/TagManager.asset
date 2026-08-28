@@ -9,6 +9,7 @@ TagManager:
   - grass
   - Arrow
   - Wall
+  - FxTemporaire
   layers:
   - Default
   - TransparentFX
@@ -58,9 +59,6 @@ TagManager:
   - name: ground
     uniqueID: 1337471651
     locked: 0
-  - name: character
-    uniqueID: 3430378673
-    locked: 0
   - name: effect
     uniqueID: 778606801
     locked: 0
@@ -72,4 +70,19 @@ TagManager:
     locked: 0
   - name: CameraSortingLayer
     uniqueID: 1967196949
+    locked: 0
+  - name: blue_steppe
+    uniqueID: 1289386821
+    locked: 0
+  - name: Burning_Village
+    uniqueID: 134494809
+    locked: 0
+  - name: character
+    uniqueID: 3430378673
+    locked: 0
+  - name: blue_steppe_Foreground
+    uniqueID: 1567654305
+    locked: 0
+  - name: Burning_Village_Foreground
+    uniqueID: 4260779819
     locked: 0
