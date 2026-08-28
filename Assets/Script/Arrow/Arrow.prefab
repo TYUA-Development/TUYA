@@ -76,8 +76,8 @@ SpriteRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
-  m_SortingLayerID: 778606801
-  m_SortingLayer: 6
+  m_SortingLayerID: 134494809
+  m_SortingLayer: 10
   m_SortingOrder: -20
   m_Sprite: {fileID: 21300000, guid: cfa90bc696a5777438c1680307c85aa2, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -109,6 +109,7 @@ MonoBehaviour:
   arrowHitFX: {fileID: 3366150316666598880, guid: 4135448288fd673408dac4a26d6b8f42, type: 3}
   windLight: 1
   arrowLight: {fileID: 5424263213310550088}
+  windLightFadeDuration: 0.25
 --- !u!50 &3129858048820927434
 Rigidbody2D:
   serializedVersion: 4
