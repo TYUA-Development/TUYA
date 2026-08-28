@@ -106,6 +106,8 @@ public class PlayerController : MonoBehaviour
     public int trajectoryPointCount = 40;
     public float trajectoryMaxTime = 3f;
     [Range(0f, 1f)] [SerializeField] private float trajectoryFadeStart = 0.6f;
+    [SortingLayer] public int trajectorySortingLayerID;
+    public int trajectorySortingOrder;
 
     private List<GameObject> trajectoryDots = new List<GameObject>();
     private List<SpriteRenderer> trajectoryRenderers = new List<SpriteRenderer>();
@@ -633,7 +635,26 @@ public class PlayerController : MonoBehaviour
             GameObject dot = Instantiate(trajectoryDotPrefab, transform);
             dot.SetActive(false);
             trajectoryDots.Add(dot);
-            trajectoryRenderers.Add(dot.GetComponent<SpriteRenderer>());
+
+            SpriteRenderer renderer = dot.GetComponent<SpriteRenderer>();
+            if (renderer != null)
+            {
+                renderer.sortingLayerID = trajectorySortingLayerID;
+                renderer.sortingOrder = trajectorySortingOrder;
+            }
+            trajectoryRenderers.Add(renderer);
+        }
+    }
+
+    private void OnValidate()
+    {
+        for (int i = 0; i < trajectoryRenderers.Count; i++)
+        {
+            if (trajectoryRenderers[i] == null)
+                continue;
+
+            trajectoryRenderers[i].sortingLayerID = trajectorySortingLayerID;
+            trajectoryRenderers[i].sortingOrder = trajectorySortingOrder;
         }
     }
 
