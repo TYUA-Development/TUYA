@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
 using UnityEngine.UI;
 
 public class ShockWaveController : MonoBehaviour
@@ -56,17 +57,36 @@ public class ShockWaveController : MonoBehaviour
     // 카메라 하나에 대해 "전용으로 보여야 할" 오브젝트들의 실제 렌더/조명/충돌 컴포넌트를
     // 모아둔다. Renderer에는 SpriteRenderer/MeshRenderer뿐 아니라 ParticleSystemRenderer도
     // 포함된다(ParticleSystemRenderer가 Renderer를 상속하므로 GetComponentsInChildren<Renderer>
-    // 한 번으로 파티클 비주얼까지 함께 잡힌다). Light는 Renderer가 아니라서 따로 모은다.
+    // 한 번으로 파티클 비주얼까지 함께 잡힌다). Light2D는 Renderer가 아니라서 따로 모은다.
+    // 이 프로젝트는 URP 2D 조명(Light2D)만 사용하므로(레거시 3D Light는 씬에 존재하지 않음)
+    // Light가 아니라 Light2D를 기준으로 수집한다.
+    //
+    // Light2D는 절대 Behaviour.enabled로 껐다 켜면 안 된다 - Light2D.boundingSphere는
+    // LateUpdate()에서만 갱신되는데, LateUpdate는 컴포넌트가 enabled인 상태로 "그 프레임의
+    // 일반 스크립트 업데이트 단계"를 맞아야만 실행된다. 이 클래스가 라이트를 켜는 시점은
+    // OnBeginCameraRendering~OnEndCameraRendering 사이(렌더링 단계, 스크립트 업데이트 단계보다
+    // 뒤)뿐이라, enabled를 매 프레임 껐다 켜면 LateUpdate가 영원히 실행되지 않아 boundingSphere가
+    // 기본값(원점, 반지름 0)에 고정되고, URP의 Light2DCullResult가 이를 항상 프러스텀 밖으로
+    // 컬링해버려 해당 카메라에서는 라이트가 절대 보이지 않는다. 그래서 enabled는 항상 true로
+    // 유지하고, intensity를 0으로 낮춰서 "꺼짐"을 표현한다.
     private class CameraObjectGroup
     {
         public readonly List<Renderer> renderers = new List<Renderer>();
-        public readonly List<Light> lights = new List<Light>();
+        public readonly List<Light2D> lights = new List<Light2D>();
+        private readonly List<float> lightBaseIntensities = new List<float>();
         public readonly List<Collider2D> colliders = new List<Collider2D>();
 
         public void Collect(GameObject go)
         {
             renderers.AddRange(go.GetComponentsInChildren<Renderer>(true));
-            lights.AddRange(go.GetComponentsInChildren<Light>(true));
+
+            foreach (Light2D light in go.GetComponentsInChildren<Light2D>(true))
+            {
+                light.enabled = true;
+                lights.Add(light);
+                lightBaseIntensities.Add(light.intensity);
+            }
+
             colliders.AddRange(go.GetComponentsInChildren<Collider2D>(true));
         }
 
@@ -81,7 +101,7 @@ public class ShockWaveController : MonoBehaviour
             for (int i = 0; i < lights.Count; i++)
             {
                 if (lights[i] != null)
-                    lights[i].enabled = visible;
+                    lights[i].intensity = visible ? lightBaseIntensities[i] : 0f;
             }
         }
 
